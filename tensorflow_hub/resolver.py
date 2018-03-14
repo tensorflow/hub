@@ -90,35 +90,40 @@ def extract_file(tgz, tarinfo, dst_path, buffer_size=10*1024*1024):
   src.close()
 
 
-def download_and_uncompress(fileobj, dst_path):
+def download_and_uncompress(filename, fileobj, dst_path):
   """Streams the content for the 'fileobj' and stores the result in dst_path.
 
   Args:
+    filename: Name of the file (used for logging).
     fileobj: File handle pointing to .tar/.tar.gz content.
     dst_path: Absolute path where to store uncompressed data from 'fileobj'.
 
   Raises:
     ValueError: Unknown object encountered inside the TAR file.
   """
-  with tarfile.open(mode="r|*", fileobj=fileobj) as tgz:
-    for tarinfo in tgz:
-      if tarinfo.name.startswith("/"):
-        tarinfo.name = tarinfo.name[1:]
+  try:
+    with tarfile.open(mode="r|*", fileobj=fileobj) as tgz:
+      for tarinfo in tgz:
+        if tarinfo.name.startswith("/"):
+          tarinfo.name = tarinfo.name[1:]
 
-      # Check that the absolute path of the object to extract is inside `path`.
-      abs_target_path = os.path.join(dst_path, tarinfo.name)
-      if not abs_target_path.startswith(dst_path):
-        raise ValueError("Module archive contains files outside its directory")
+        # Check that the absolute path of the object to extract is inside
+        # `path`.
+        abs_target_path = os.path.join(dst_path, tarinfo.name)
+        if not abs_target_path.startswith(dst_path):
+          raise ValueError(
+              "Module archive contains files outside its directory")
 
-      if tarinfo.isfile():
-        extract_file(tgz, tarinfo, abs_target_path)
-      elif tarinfo.isdir():
-        tf.gfile.MakeDirs(abs_target_path)
-      else:
-        # We do not support symlinks and other uncommon objects.
-        raise ValueError(
-            "Unexpected object type in tar archive: %s" % tarinfo.type)
-
+        if tarinfo.isfile():
+          extract_file(tgz, tarinfo, abs_target_path)
+        elif tarinfo.isdir():
+          tf.gfile.MakeDirs(abs_target_path)
+        else:
+          # We do not support symlinks and other uncommon objects.
+          raise ValueError(
+              "Unexpected object type in tar archive: %s" % tarinfo.type)
+  except tarfile.ReadError:
+    raise IOError("%s is not a valid tar archive." % filename)
 
 def _module_descriptor_file(module_dir):
   """Returns the name of the file containing descriptor for the 'module_dir'."""

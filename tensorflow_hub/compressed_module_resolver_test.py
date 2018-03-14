@@ -70,6 +70,8 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     self.server_port = test_utils.start_http_server()
     self.module_handle = (
         "http://localhost:%d/mock_module.tar.gz" % self.server_port)
+    self.redirect_server_port = test_utils.start_http_server(
+        "http://localhost:%d" % self.server_port)
 
   def testGetModulePathTar(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
@@ -158,6 +160,28 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     self.assertListEqual(
         creation_times,
         [tf.gfile.Stat(os.path.join(path, f)).mtime_nsec for f in files])
+
+  def testCorruptedArchive(self):
+    with tf.gfile.GFile("bad_archive.tar.gz", mode="w") as f:
+      f.write("bad_archive")
+    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
+    try:
+      http_resolver.get_module_path(
+          "http://localhost:%d/bad_archive.tar.gz" % self.server_port)
+      self.fail("Corrupted archive should have failed to resolve.")
+    except IOError as e:
+      self.assertEqual(
+          "http://localhost:%d/bad_archive.tar.gz is not a valid tar archive." %
+          self.server_port, str(e))
+    try:
+      http_resolver.get_module_path(
+          "http://localhost:%d/bad_archive.tar.gz" % self.redirect_server_port)
+      self.fail("Corrupted archive should have failed to resolve.")
+    except IOError as e:
+      # Check that the error message contain the ultimate (redirected to) URL.
+      self.assertEqual(
+          "http://localhost:%d/bad_archive.tar.gz is not a valid tar archive." %
+          self.redirect_server_port, str(e))
 
 
 if __name__ == "__main__":

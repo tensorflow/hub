@@ -193,7 +193,7 @@ py_library(
 
 py_test(
     name = "compressed_module_resolver_test",
-    size = "small",
+    size = "medium",
     srcs = ["compressed_module_resolver_test.py"],
     srcs_version = "PY2AND3",
     tags = ["nofixdeps"],

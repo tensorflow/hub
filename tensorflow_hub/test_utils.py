@@ -26,7 +26,7 @@ import threading
 import tensorflow as tf
 
 
-def start_http_server():
+def start_http_server(redirect=None):
   """Returns the port of the newly started HTTP server."""
 
   # Start HTTP server to serve TAR files.
@@ -39,14 +39,28 @@ def start_http_server():
 
       address_family = socket.AF_INET6
 
-    server = HTTPServerV6(("", 0),
+    class RedirectHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+      def do_GET(self):
+        self.send_response(301)
+        self.send_header('Location', redirect)
+        self.end_headers()
+
+    server = HTTPServerV6(("", 0), RedirectHandler if redirect else
                           SimpleHTTPServer.SimpleHTTPRequestHandler)
     server_port = server.server_port
   else:
     import http.server
     import socketserver
-    server = socketserver.TCPServer(
-        ("", 0), http.server.SimpleHTTPRequestHandler)
+
+    class RedirectHandler(http.server.SimpleHTTPRequestHandler):
+      def do_GET(self):
+        self.send_response(301)
+        self.send_header('Location', redirect)
+        self.end_headers()
+
+
+    server = socketserver.TCPServer(("", 0), RedirectHandler if redirect else
+                                    http.server.SimpleHTTPRequestHandler)
     _, server_port = server.server_address
   # pylint:disable=g-import-not-at-top
 
