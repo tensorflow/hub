@@ -17,4 +17,4 @@ limitations under the License.
  * Initial TensorFlow Hub release.
 
 ## Requirements
- * tf-nightly >= "1.7.0-dev20180308"
+ * tf-nightly>=1.7.0.dev20180308 || tensorflow>=1.7.0rc0

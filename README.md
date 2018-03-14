@@ -57,13 +57,13 @@ and data used to create and train it.
 ## Installation
 
 Currently, TensorFlow Hub depends on bug fixes and enhancements not present in a
-stable TensorFlow release. For now, please install or upgrade [TensorFlow
-Nightly](https://github.com/tensorflow/tensorflow/#installation) package before
-using TensorFlow Hub. For instance:
+stable TensorFlow release. For now, please
+[install or upgrade](https://www.tensorflow.org/install/)
+TensorFlow package past 1.7.0rc0. For instance:
 
 ```bash
-pip install -U tf-nightly
-pip install -U tensorflow-hub
+pip install --upgrade tensorflow>=1.7.0rc0
+pip install --upgrade tensorflow-hub
 ```
 
 This section will be updated to include a specific TensorFlow version
