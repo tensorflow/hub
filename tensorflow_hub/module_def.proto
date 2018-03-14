@@ -1,0 +1,44 @@
+// Copyright 2018 The TensorFlow Hub Authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =============================================================================
+syntax = "proto3";
+
+package tensorflow_hub;
+
+// A Hub Module is stored in a directory with a file 'tfhub_module.pb'
+// containing a serialized protocol message of this type. The further contents
+// of the directory depend on the storage format described by the message.
+message ModuleDef {
+  enum Format {
+    // This value is never set in a ModuleDef message. Proto parsing will return
+    // it in lieu of a missing value.
+    FORMAT_UNSPECIFIED = 0;
+
+    // Hub SavedModel format v3:
+    //  - The remaining files in the Module directory are a SavedModel
+    //    with variables and assets.
+    //  - The reader must adhere to the required_features protocol (see below).
+    FORMAT_V3 = 3;
+  }
+  // The storage format of this module. Unknown values (likely from future
+  // formats) or an unspecified value should be treated as unsupported.
+  Format format = 1;
+
+  // List of feature names that must be supported by the reader to successfully
+  // interpret this module.
+  //
+  // Features for FORMAT_V3:
+  // - None yet.
+  repeated string required_features = 2;
+}
