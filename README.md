@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-**TensorFlow Hub** is a library to foster the publication, discovery, and
-consumption of reusable parts of machine learning models. A *module* is a
+# TensorFlow Hub
+
+TensorFlow Hub is a library to foster the publication, discovery, and
+consumption of reusable parts of machine learning models. A **module** is a
 self-contained piece of a TensorFlow graph, along with its weights and assets,
 that can be reused across different tasks.
 

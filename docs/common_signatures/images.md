@@ -9,15 +9,15 @@ provides (1) named signatures for all the tasks anticipated by the publisher,
 and (2) a default signature `output = m(images)` for its designated primary
 task.
 
-## Image Feature Vector {#feature-vector}
+## Image Feature Vector
 
 ### Usage summary
 
 An **image feature vector** is a dense 1-D tensor that represents a whole image,
 typically for classification by the consumer model. (Unlike the intermediate
 activations of CNNs, it does not offer a spatial breakdown. Unlike [image
-classification](#classification), it discards the classification learned by the
-publisher model.)
+classification](#image-classification), it discards the classification learned
+by the publisher model.)
 
 A module for image feature extraction has a default signature that maps a batch
 of images to a batch of feature vectors. It can be used like so:
@@ -42,7 +42,8 @@ The named signature for extracting image feature vectors is invoked as
   features = outputs["default"]
 ```
 
-The input follows the general convention for [input of images](#input).
+The input follows the general convention for
+[input of images](#image-input).
 
 The outputs dictionary contains a `"default"` output of dtype `float32` and
 shape `[batch_size, num_features]`. The `batch_size` is the same as in the
@@ -61,7 +62,7 @@ The outputs dictionary may provide the activations of hidden layers inside the
 module. Their keys and values are module-dependent. It is recommended to prefix
 keys with an architecture name (e.g., `"InceptionV3/Mixed_5c"`).
 
-## Image Classification {#classification}
+## Image Classification
 
 ### Usage summary
 
@@ -69,7 +70,7 @@ keys with an architecture name (e.g., `"InceptionV3/Mixed_5c"`).
 for membership in the classes of a taxonomy _selected by the module publisher_.
 This allows consumers to draw conclusions from the particular classification
 learned by the publisher module, and not just its underlying features (cf.
-[Image Feature Vector](#feature-vector)).
+[Image Feature Vector](#image-feature-vector)).
 
 A module for image feature extraction has a default signature that maps a batch
 of images to a batch of logits. It can be used like so:
@@ -94,7 +95,8 @@ The named signature for extracting image feature vectors is invoked as
   logits = outputs["default"]
 ```
 
-The input follows the general convention for [input of images](#input).
+The input follows the general convention for
+[input of images](#image-input).
 
 The outputs dictionary contains a `"default"` output of dtype `float32` and
 shape `[batch_size, num_classes]`. The `batch_size` is the same as in the input,
@@ -115,7 +117,7 @@ It is recommended to prefix architecture-dependent keys with an architecture
 name (e.g., to avoid confusing the intermediate layer `"InceptionV3/Mixed_5c"`
 with the topmost convolutional layer `"InceptionV2/Mixed_5c"`).
 
-## Input of images {#input}
+## Image input
 
 This is common to all types of image modules and image signatures.
 

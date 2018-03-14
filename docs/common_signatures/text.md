@@ -3,7 +3,7 @@
 This page describes common signatures for [TensorFlow Hub
 Modules](../../README.md) for tasks that accept text inputs.
 
-## Text feature vector {#feature-vector}
+## Text feature vector
 
 A **text feature vector** module creates a dense vector representation
 from text features.
