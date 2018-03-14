@@ -64,7 +64,7 @@ stable TensorFlow release. For now, please
 TensorFlow package past 1.7.0rc0. For instance:
 
 ```bash
-pip install --upgrade tensorflow>=1.7.0rc0
+pip install --upgrade "tensorflow>=1.7.0rc0"
 pip install --upgrade tensorflow-hub
 ```
 
