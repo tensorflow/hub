@@ -1,78 +1,98 @@
 # Image Modules
 
-## Inception V3
+These are [TensorFlow Hub modules](../../README.md) to extract
+[image feature vectors](../common_signatures/images#image-feature-vector)
+for use in custom image classifiers, and to do
+[image classification](../common_signatures/images#image-classification)
+with the original classes from the training dataset.
 
-### Classification
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/inception_v3/classification/1.tar.gz
-   * **Description:** TODO
-
-### Feature Vector
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/inception_v3/feature_vector/1.tar.gz
-   * **Description:** TODO
+The "doc" links can be clicked to see documentation.
+The "module" links can be copy&pasted for use in Python code like
+`m = hub.Module("https://storage.googleapis.com/...")`.
 
 
-## MobileNet V1 25
+## Trained on Imagenet (ILSVRC-2012-CLS)
 
-### Classification
+### Inception and Inception-ResNet
 
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/mobilenet_v1_025/classification/1.tar.gz
-   * **Description:** TODO
+  * **inception_v1**:
+      classification: [doc](google/image/imagenet/inception_v1/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_v1/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/inception_v1/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_v1/feature_vector/1.tar.gz).
+  * **inception_v2**:
+      classification: [doc](google/image/imagenet/inception_v2/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_v2/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/inception_v2/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_v2/feature_vector/1.tar.gz).
+  * **inception_v3**:
+      classification: [doc](google/image/imagenet/inception_v3/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_v3/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/inception_v3/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_v3/feature_vector/1.tar.gz).
+  * **inception_resnet_v2**:
+      classification: [doc](google/image/imagenet/inception_resnet_v2/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_resnet_v2/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/inception_resnet_v2/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_resnet_v2/feature_vector/1.tar.gz).
 
-### Feature Vector
+### MobileNet V1
 
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/mobilenet_v1_025/feature_vector/1.tar.gz
-   * **Description:** TODO
-
-
-## MobileNet V1 50
-
-### Classification
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/mobilenet_v1_050/classification/1.tar.gz
-   * **Description:** TODO
-
-### Feature Vector
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/mobilenet_v1_050/feature_vector/1.tar.gz
-   * **Description:** TODO
-
-
-## MobileNet V1 75
-
-### Classification
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/mobilenet_v1_075/classification/1.tar.gz
-   * **Description:** TODO
-
-### Feature Vector
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/mobilenet_v1_075/feature_vector/1.tar.gz
-   * **Description:** TODO
-
-
-## NasNet Large
-
-### Classification
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/nasnet_large/classification/1.tar.gz
-   * **Description:** TODO
-
-### Feature Vector
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/nasnet_large/feature_vector/1.tar.gz
-   * **Description:** TODO
+  * **mobilenet_v1_025_128**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_128/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.tar.gz).
+  * **mobilenet_v1_100_224**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_224/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_224/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/feature_vector/1.tar.gz).
 
 
-## NasNet Mobile
+### NASNet
 
-### Classification
+  * **nasnet_large**:
+      classification: [doc](google/image/imagenet/nasnet_large/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/nasnet_large/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/nasnet_large/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/nasnet_large/feature_vector/1.tar.gz).
+  * **nasnet_mobile**:
+      classification: [doc](google/image/imagenet/nasnet_mobile/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/nasnet_mobile/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/nasnet_mobile/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/nasnet_mobile/feature_vector/1.tar.gz).
 
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/nasnet_mobile/classification/1.tar.gz
-   * **Description:** TODO
 
-### Feature Vector
+### ResNet
 
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/image/imagenet/nasnet_mobile/feature_vector/1.tar.gz
-   * **Description:** TODO
+  * **resnet_v1_50**:
+      classification: [doc](google/image/imagenet/resnet_v1_50/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v1_50/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/resnet_v1_50/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v1_50/feature_vector/1.tar.gz).
+  * **resnet_v1_101**:
+      classification: [doc](google/image/imagenet/resnet_v1_101/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v1_101/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/resnet_v1_101/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v1_101/feature_vector/1.tar.gz).
+  * **resnet_v1_152**:
+      classification: [doc](google/image/imagenet/resnet_v1_152/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v1_152/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/resnet_v1_152/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v1_152/feature_vector/1.tar.gz).
+  * **resnet_v2_50**:
+      classification: [doc](google/image/imagenet/resnet_v2_50/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v2_50/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/resnet_v2_50/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v2_50/feature_vector/1.tar.gz).
+  * **resnet_v2_101**:
+      classification: [doc](google/image/imagenet/resnet_v2_101/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v2_101/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/resnet_v2_101/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v2_101/feature_vector/1.tar.gz).
+  * **resnet_v2_152**:
+      classification: [doc](google/image/imagenet/resnet_v2_152/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v2_152/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/resnet_v2_152/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/resnet_v2_152/feature_vector/1.tar.gz).
