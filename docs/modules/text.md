@@ -1,31 +1,28 @@
 # Text Modules
 
-### nnlm-en-dim128-normalized
+These are [TensorFlow Hub modules](../../README.md) pre-trained to embed
+words, phrases, and sentences as many-dimensional vectors.
 
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/text/nnlm-en-dim128-normalized/1.tar.gz
-   * **Description:** TODO
+The "doc" links can be clicked to see documentation.
+The "module" links can be copy&pasted for use in Python code like
+`m = hub.Module("https://storage.googleapis.com/...")`.
 
-### nnlm-en-dim128
 
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/text/nnlm-en-dim128/1.tar.gz
-   * **Description:** TODO
-
-### nnlm-en-dim50-normalized
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/text/nnlm-en-dim50-normalized/1.tar.gz
-   * **Description:** TODO
-
-### nnlm-en-dim50
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/text/nnlm-en-dim50/1.tar.gz
-   * **Description:** TODO
-
-### random-nnlm-en-dim128
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/text/random-nnlm-en-dim128/1.tar.gz
-   * **Description:** TODO
-
-### random-nnlm-en-dim50
-
-   * **URL:** https://storage.googleapis.com/tensorflow-hub/google/text/random-nnlm-en-dim50/1.tar.gz
-   * **Description:** TODO
+   * **nnlm-en-dim128-with-normalization**:
+       [doc](google/text/nnlm-en/dim128-with-normalization/1.md),
+       [module](https://storage.googleapis.com/tfhub-test-modules/google/text/nnlm-en-dim128-with-normalization/1.tar.gz).
+   * **nnlm-en-dim128**:
+       [doc](google/text/nnlm-en-dim128/1.md),
+       [module](https://storage.googleapis.com/tfhub-test-modules/google/text/nnlm-en-dim128/1.tar.gz).
+   * **nnlm-en-dim50-with-normalization**:
+       [doc](google/text/nnlm-en-dim50-with-normalization/1.md),
+       [module](https://storage.googleapis.com/tfhub-test-modules/google/text/nnlm-en-dim50-with-normalization/1.tar.gz).
+   * **nnlm-en-dim50**:
+       [doc](google/text/nnlm-en-dim50/1.md),
+       [module](https://storage.googleapis.com/tfhub-test-modules/google/text/nnlm-en-dim50/1.tar.gz).
+   * **random-nnlm-en-dim128**:
+       [doc](google/text/random-nnlm-en-dim128/1.md),
+       [module](https://storage.googleapis.com/tfhub-test-modules/google/text/random-nnlm-en-dim128/1.tar.gz).
+   * **random-nnlm-en-dim50**:
+       [doc](google/text/random-nnlm-en-dim50/1.md),
+       [module](https://storage.googleapis.com/tfhub-test-modules/google/text/random-nnlm-en-dim50/1.tar.gz).
