@@ -13,19 +13,21 @@
 # limitations under the License.
 # ==============================================================================
 # NOTICE: This work was derived from tensorflow/examples/image_retraining
-# and modified to use TF-Hub modules.
-r"""Simple transfer learning with image modules from TF-Hub.
+# and modified to use TensorFlow Hub modules.
 
-With support for TensorBoard.
+# pylint: disable=line-too-long
+r"""Simple transfer learning with image modules from TensorFlow Hub.
 
-This example shows how to take any image module from TF-Hub and train a new
-top layer that can recognize other classes of images. By default, it uses
-Inception V3 trained on ImageNet.
+This example shows how to train an image classifier based on any
+TensorFlow Hub module that computes image feature vectors. By default,
+it uses the feature vectors computed by NASNet Large trained on ImageNet.
+See https://github.com/tensorflow/hub/blob/master/docs/modules/image.md
+for more options.
 
-The top layer receives as input a 2048-dimensional vector (assuming
-Inception V3) for each image. We train a softmax layer on top of this
+The top layer receives as input a 4032-dimensional vector (assuming
+NASNet Large) for each image. We train a softmax layer on top of this
 representation. If the softmax layer contains N labels, this corresponds
-to learning N + 2048*N model parameters for the biases and weights.
+to learning N + 4032*N model parameters for the biases and weights.
 
 Here's an example, which assumes you have a folder containing class-named
 subfolders, each full of images for each label. The example folder flower_photos
@@ -40,8 +42,8 @@ should have a structure like this:
 
 The subfolder names are important, since they define what label is applied to
 each image, but the filenames themselves don't matter. Once your images are
-prepared, and you have pip-installed tensorflow and tensorflow_hub, you can
-run the training with a command like this:
+prepared, and you have pip-installed tensorflow-hub and a sufficiently recent
+version of tensorflow, you can run the training with a command like this:
 
 ```bash
 python retrain.py --image_dir ~/flower_photos
@@ -54,8 +56,8 @@ in.
 This produces a new model file that can be loaded and run by any TensorFlow
 program, for example the tensorflow/examples/label_image sample code.
 
-By default this script will use the high accuracy, but comparatively large and
-slow Inception v3 model architecture. It's recommended that you start with this
+By default this script will use the highly accurate, but comparatively large and
+slow NASNet Large model architecture. It's recommended that you start with this
 to validate that you have gathered good training data, but if you want to deploy
 on resource-limited platforms, you can try the `--tfhub_module` flag with a
 Mobilenet model. For more information on Mobilenet, see
@@ -67,28 +69,27 @@ Run floating-point version of Mobilenet:
 
 ```bash
 python retrain.py --image_dir ~/flower_photos \
-    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1/feature_vector/1.tar.gz
+    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/feature_vector/1.tar.gz
 ```
 
 Run Mobilenet, instrumented for quantization:
 
 ```bash
 python retrain.py --image_dir ~/flower_photos/ \
-    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1/tflite_fakequant/feature_vector/1.tar.gz
+    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/quantops/feature_vector/1.tar.gz
 ```
 
 These instrumented models can be converted to fully quantized mobile models via
 TensorFlow Lite.
 
-TODO(b/74054371): Refer to TF-Hub's initial module directory for the available
-Mobilenet versions, including quantized ones, and other choices. For now,
-there is really only the single quantized one from that example, and no
-choice of Mobilenet image sizes (just feature depth multipliers).
-
 There are different Mobilenet models to choose from, with a variety of file
-size and latency options. The first number can be '1.0', '0.75', '0.50', or
-'0.25' to control the size, and the second controls the input image size, either
-'224', '192', '160', or '128', with smaller sizes running faster.
+size and latency options.
+  - The first number can be '100', '075', '050', or '025' to control the number
+    of neurons (activations of hidden layers); the number of weights (and hence
+    to some extent the file size and speed) shrinks with the square of that
+    fraction.
+  - The second number is the input image size. You can choose '224', '192',
+    '160', or '128', with smaller sizes giving faster speeds.
 
 To use with TensorBoard:
 
@@ -98,13 +99,18 @@ Visualize the summaries with this command:
 
 tensorboard --logdir /tmp/retrain_logs
 
-To use with Tensorflow Serving:
+To use with Tensorflow Serving, run this tool with --saved_model_dir set
+to some increasingly numbered export location under the model base path, e.g.:
 
 ```bash
-tensorflow_model_server --port=9000 --model_name=inception \
+python retrain.py (... other args as before ...) \
+    --saved_model_dir=/tmp/saved_models/$(date +%s)/
+tensorflow_model_server --port=9000 --model_name=my_image_classifier \
     --model_base_path=/tmp/saved_models/
 ```
 """
+# pylint: enable=line-too-long
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -116,10 +122,8 @@ import os.path
 import random
 import re
 import sys
-import tarfile
 
 import numpy as np
-from six.moves import urllib
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -132,8 +136,9 @@ CHECKPOINT_NAME = '/tmp/_retrain_checkpoint'
 
 # A module is understood as instrumented for quantization with TF-Lite
 # if it contains any of these ops.
-FAKE_QUANT_OPS = ("FakeQuantWithMinMaxVars",
-                  "FakeQuantWithMinMaxVarsPerChannel")
+FAKE_QUANT_OPS = ('FakeQuantWithMinMaxVars',
+                  'FakeQuantWithMinMaxVarsPerChannel')
+
 
 def create_image_lists(image_dir, testing_percentage, validation_percentage):
   """Builds a list of training images from the file system.
@@ -269,7 +274,7 @@ def get_bottleneck_path(image_lists, label_name, index, bottleneck_dir,
   Returns:
     File system path string to an image that meets the requested parameters.
   """
-  module_name = module_name.lstrip("@/").replace("/", "~")
+  module_name = module_name.lstrip('@/').replace('/', '~')
   return get_image_path(image_lists, label_name, index, bottleneck_dir,
                         category) + '_' + module_name + '.txt'
 
@@ -728,7 +733,7 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     bottleneck input and ground truth input.
   """
   batch_size, bottleneck_tensor_size = bottleneck_tensor.get_shape().as_list()
-  assert batch_size is None, "We want to work with arbitrary batch size."
+  assert batch_size is None, 'We want to work with arbitrary batch size.'
   with tf.name_scope('input'):
     bottleneck_input = tf.placeholder_with_default(
         bottleneck_tensor,
@@ -974,6 +979,10 @@ def main(_):
   # See https://github.com/tensorflow/tensorflow/issues/3047
   tf.logging.set_verbosity(tf.logging.INFO)
 
+  if not FLAGS.image_dir:
+    tf.logging.error('Must set flag --image_dir.')
+    return -1
+
   # Prepare necessary directories that can be used during training
   prepare_file_system()
 
@@ -1121,8 +1130,8 @@ def main(_):
 
     # We've completed all our training, so run a final test evaluation on
     # some new images we haven't used before.
-    run_final_eval(sess, module_spec, class_count, image_lists, jpeg_data_tensor,
-                   decoded_image_tensor, resized_image_tensor,
+    run_final_eval(sess, module_spec, class_count, image_lists,
+                   jpeg_data_tensor, decoded_image_tensor, resized_image_tensor,
                    bottleneck_tensor)
 
     # Write out the trained graph and labels with the weights stored as
@@ -1134,7 +1143,8 @@ def main(_):
     with tf.gfile.FastGFile(FLAGS.output_labels, 'w') as f:
       f.write('\n'.join(image_lists.keys()) + '\n')
 
-    export_model(module_spec, class_count, FLAGS.saved_model_dir)
+    if FLAGS.saved_model_dir:
+      export_model(module_spec, class_count, FLAGS.saved_model_dir)
 
 
 if __name__ == '__main__':
@@ -1298,15 +1308,17 @@ if __name__ == '__main__':
   parser.add_argument(
       '--tfhub_module',
       type=str,
-      default='https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/inception_v3/feature_vector/1.tar.gz',
+      default=('https://storage.googleapis.com/tfhub-test-modules/'
+               'google/image/imagenet/nasnet_large/feature_vector/1.tar.gz'),
       help="""\
-      Which TF-Hub module to use. See TODO(b/74054371) for a list of available
-      ones.\
+      Which TensorFlow Hub module to use.
+      See https://github.com/tensorflow/hub/blob/master/docs/modules/image.md
+      for some publicly available ones.\
       """)
   parser.add_argument(
       '--saved_model_dir',
       type=str,
-      default='/tmp/saved_models/1/',
+      default='',
       help='Where to save the exported graph.')
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
