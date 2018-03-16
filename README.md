@@ -35,7 +35,7 @@ import tensorflow_hub as hub
 
 with tf.Graph().as_default():
   # Download a 128-dimension English embedding.
-  embed = hub.Module("https://storage.googleapis.com/tensorflow-hub/google/text/nnlm-en-dim128-normalized/1.tar.gz")
+  embed = hub.Module("https://storage.googleapis.com/tfhub-test-modules/google/text/nnlm-en-dim128-with-normalization/1.tar.gz")
 
   # Use the module to map an array of strings to their embeddings.
   embeddings = embed([
@@ -118,7 +118,7 @@ export TFHUB_CACHE_DIR=/my_module_cache
 and then creating a module from a URL:
 
 ```python
-m = hub.Module("https://storage.googleapis.com/tensorflow-hub/google/test/half-plus-two/1.tar.gz")
+m = hub.Module("https://storage.googleapis.com/tfhub-test-modules/google/test/half-plus-two/1.tar.gz")
 ```
 
 results in downloading the unpacked version of the module in
