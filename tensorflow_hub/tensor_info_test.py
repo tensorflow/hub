@@ -61,6 +61,23 @@ class TensorInfoTest(tf.test.TestCase):
     self.assertEquals(outputs["z"].dtype, tf.float32)
     self.assertTrue(outputs["z"].is_sparse)
 
+  def testRepr(self):
+    sig = _make_signature({
+        "x": tf.placeholder(tf.string, [2]),
+    }, {
+        "y": tf.placeholder(tf.int32, [2]),
+        "z": tf.sparse_placeholder(tf.float32, [2, 10]),
+    })
+
+    outputs = tensor_info.parse_tensor_info_map(sig.outputs)
+    self.assertEquals(
+        repr(outputs["y"]),
+        "<hub.ParsedTensorInfo shape=(2,) dtype=int32 is_sparse=False>")
+    self.assertEquals(
+        repr(outputs["z"]),
+        "<hub.ParsedTensorInfo shape=(2, 10) dtype=float32 is_sparse=True>")
+
+
   def testMatchingTensorInfoProtoMaps(self):
     sig1 = _make_signature({
         "x": tf.placeholder(tf.int32, [2]),

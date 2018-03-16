@@ -53,6 +53,12 @@ class ParsedTensorInfo(object):
     # tf.SparseTensor instances.
     return self._is_sparse
 
+  def __repr__(self):
+    return "<hub.ParsedTensorInfo shape=%s dtype=%s is_sparse=%s>" % (
+        self.get_shape(),
+        self.dtype.name,
+        self.is_sparse)
+
 
 def _parse_tensor_info_proto(tensor_info):
   """Returns a ParsedTensorInfo instance from a TensorInfo proto."""
