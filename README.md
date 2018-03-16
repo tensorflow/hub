@@ -86,6 +86,13 @@ describes the security implications of referencing a module from an untrusted
 source.
 
 
+## Modules
+
+TensorFlow Hub modules, pre-trained on public datasets, are available for a
+variety of tasks. They are listed at
+[tensorflow.org/modules](https://tensorflow.org/modules).
+
+
 ## Key Concepts
 
 ### Instantiating a Module
