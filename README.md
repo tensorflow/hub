@@ -209,7 +209,7 @@ Additionally, for compatibility with TensorFlow Estimators, `hub` library
 provides a `LatestModuleExporter`.
 
 Module publishers should implement a [common
-signature](https://github.com/tensorflow/hub/blob/master/common_signatures/index.md)
+signature](docs/common_signatures/index.md)
 when possible, so that consumers can easily exchange modules and find the best
 one for their problem.
 
