@@ -274,7 +274,9 @@ def get_bottleneck_path(image_lists, label_name, index, bottleneck_dir,
   Returns:
     File system path string to an image that meets the requested parameters.
   """
-  module_name = module_name.lstrip('@/').replace('/', '~')
+  module_name = (module_name.replace('://', '~')  # URL scheme.
+                 .replace('/', '~')  # URL and Unix paths.
+                 .replace(':', '~').replace('\\', '~'))  # Windows paths.
   return get_image_path(image_lists, label_name, index, bottleneck_dir,
                         category) + '_' + module_name + '.txt'
 
