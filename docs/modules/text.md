@@ -84,7 +84,7 @@ The "module" links can be copy&pasted for use in Python code like
        [doc](google/text/Wiki-words-250/1.md),
        [module](https://storage.googleapis.com/tfhub-test-modules/google/text/Wiki-words-250/1.tar.gz).
    * **Wiki-words-250-with-normalization**:
-       [doc](google/text/nnlm-en/Wiki-words-250-with-normalization/1.md),
+       [doc](google/text/Wiki-words-250-with-normalization/1.md),
        [module](https://storage.googleapis.com/tfhub-test-modules/google/text/Wiki-words-250-with-normalization/1.tar.gz).
    * **Wiki-words-500**:
        [doc](google/text/Wiki-words-500/1.md),
