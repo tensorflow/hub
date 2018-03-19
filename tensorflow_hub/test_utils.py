@@ -26,6 +26,70 @@ import threading
 import tensorflow as tf
 
 
+_DOWNLOAD_HEADER = "TensorFlow-Hub-Compressed-Module-URL"
+
+def start_multi_server(download_url, redirect=None):
+  """Serve documentation and module requests at the same URL."""
+  # pylint:disable=g-import-not-at-top
+  if sys.version_info[0] == 2:
+    import BaseHTTPServer
+    import SimpleHTTPServer
+
+    class HTTPServerV6(BaseHTTPServer.HTTPServer):
+
+      address_family = socket.AF_INET6
+
+    class NormalHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+
+      def do_GET(self):
+        self.send_response(200)
+        self.send_header(_DOWNLOAD_HEADER, download_url)
+        self.end_headers()
+        self.wfile.write("Here is some documentation.")
+
+    class RedirectHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+
+      def do_GET(self):
+        self.send_response(301)
+        self.send_header("Location", redirect)
+        self.send_header(_DOWNLOAD_HEADER, download_url)
+        self.end_headers()
+
+    server = HTTPServerV6(("", 0), RedirectHandler if redirect else
+                          NormalHandler)
+    server_port = server.server_port
+  else:
+    import http.server
+    import socketserver
+
+    class NormalHandler(http.server.SimpleHTTPRequestHandler):
+
+      def do_GET(self):
+        self.send_response(200)
+        self.send_header(_DOWNLOAD_HEADER, download_url)
+        self.end_headers()
+        self.wfile.write("Here is some documentation.")
+
+    class RedirectHandler(http.server.SimpleHTTPRequestHandler):
+
+      def do_GET(self):
+        self.send_response(301)
+        self.send_header("Location", redirect)
+        self.send_header(_DOWNLOAD_HEADER, download_url)
+        self.end_headers()
+
+    server = socketserver.TCPServer(("", 0), RedirectHandler if redirect else
+                                    NormalHandler)
+    _, server_port = server.server_address
+    # pylint:disable=g-import-not-at-top
+
+  thread = threading.Thread(target=server.serve_forever)
+  thread.daemon = True
+  thread.start()
+
+  return server_port
+
+
 def start_http_server(redirect=None):
   """Returns the port of the newly started HTTP server."""
 

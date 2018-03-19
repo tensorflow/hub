@@ -32,6 +32,7 @@ from tensorflow_hub import resolver
 
 
 LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
+_DOWNLOAD_HEADER = "TensorFlow-Hub-Compressed-Module-URL"
 
 
 def _module_dir(cache_dir, handle):
@@ -59,26 +60,42 @@ class HttpCompressedFileResolver(resolver.Resolver):
     self._cache_dir = resolver.tfhub_cache_dir(cache_dir, use_temp=True)
 
   def is_supported(self, handle):
-    return ((handle.startswith("http://") or handle.startswith("https://")) and
-            _is_tarfile(handle))
+    # HTTP(S) handles are assumed to point to tarfiles.
+    return handle.startswith("http://") or handle.startswith("https://")
 
   def _get_module_path(self, handle):
     module_dir = _module_dir(self._cache_dir, handle)
 
     def download(handle, tmp_dir):
-      request = url.Request(handle)
-
+      """Fetch a module via HTTP(S), handling redirect and download headers."""
       cur_url = handle
+
+      # Look for and handle a special response header. If present, interpret it
+      # as a redirect to the module download location. This allows publishers
+      # (if they choose) to provide the same URL for both a module download and
+      # its documentation.
+
       class LoggingHTTPRedirectHandler(url.HTTPRedirectHandler):
+
         def redirect_request(self, req, fp, code, msg, headers, newurl):
+          if _DOWNLOAD_HEADER in headers:
+            newurl = headers[_DOWNLOAD_HEADER]
           cur_url = newurl
           return url.HTTPRedirectHandler.redirect_request(
               self, req, fp, code, msg, headers, newurl)
 
-      url_opener = url.build_opener(LoggingHTTPRedirectHandler)
-      remote_module_archive = url_opener.open(request)
-      return resolver.download_and_uncompress(
-          cur_url, remote_module_archive, tmp_dir)
+      # Be prepared to do additional request/response rounds if we get back a
+      # special download URL response header. (It works like a redirect.)
+      while True:
+        url_opener = url.build_opener(LoggingHTTPRedirectHandler)
+        request = url.Request(cur_url)
+        response = url_opener.open(request)
+        if _DOWNLOAD_HEADER in response.headers:
+          cur_url = response.headers[_DOWNLOAD_HEADER]
+        else:
+          break
+
+      return resolver.download_and_uncompress(cur_url, response, tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
                                     self._lock_file_timeout_sec())

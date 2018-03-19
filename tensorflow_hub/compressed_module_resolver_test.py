@@ -55,6 +55,10 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
       with tf.gfile.GFile(cur_file, mode="w") as f:
         f.write(cur_file)
 
+    # Write a dummy file so download server doesn't return 404.
+    with tf.gfile.GFile("mock_module", mode="w") as f:
+      f.write("module")
+
     # Create TAR files.
     tar = tarfile.open("mock_module.tar", "w")
     for name in self.files:
@@ -70,8 +74,19 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     self.server_port = test_utils.start_http_server()
     self.module_handle = (
         "http://localhost:%d/mock_module.tar.gz" % self.server_port)
+
     self.redirect_server_port = test_utils.start_http_server(
-        "http://localhost:%d" % self.server_port)
+        redirect="http://localhost:%d" % self.server_port)
+
+    self.multi_server_port = test_utils.start_multi_server(
+        self.module_handle)
+    self.multi_handle = (
+        "http://localhost:%d/mock_module" % self.multi_server_port)
+
+    self.multi_redirect_port = test_utils.start_multi_server(
+        self.module_handle, redirect="http://example.com")
+    self.multi_redirect_handle = (
+        "http://localhost:%d/mock_module" % self.multi_redirect_port)
 
   def testGetModulePathTar(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
@@ -86,6 +101,20 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
     path = http_resolver.get_module_path(self.module_handle)
+    files = os.listdir(path)
+    self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
+
+  def testGetModuleFromMultiLocation(self):
+    FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
+    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
+    path = http_resolver.get_module_path(self.multi_handle)
+    files = os.listdir(path)
+    self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
+
+  def testGetModuleFromMultiWithRedirect(self):
+    FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
+    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
+    path = http_resolver.get_module_path(self.multi_redirect_handle)
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
