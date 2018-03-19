@@ -42,16 +42,88 @@ m = hub.Module("https://storage.googleapis.com/...")`.
 
 ### MobileNet V1
 
-  * **mobilenet_v1_025_128**:
-      classification: [doc](google/image/imagenet/mobilenet_v1_025_128/classification/1.md),
-      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/classification/1.tar.gz);
-      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.md),
-      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.tar.gz).
+The standard size is mobilenet_v1_100_224 (listed on top).
+
   * **mobilenet_v1_100_224**:
       classification: [doc](google/image/imagenet/mobilenet_v1_100_224/classification/1.md),
       [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/classification/1.tar.gz);
       feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_224/feature_vector/1.md),
       [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/feature_vector/1.tar.gz).
+  * **mobilenet_v1_100_192**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_192/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_192/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_192/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_192/feature_vector/1.tar.gz).
+  * **mobilenet_v1_100_160**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_160/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_160/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_160/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_160/feature_vector/1.tar.gz).
+  * **mobilenet_v1_100_128**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_128/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_128/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_128/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_128/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_224**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_224/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_224/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_224/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_224/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_192**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_192/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_192/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_192/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_192/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_160**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_160/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_160/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_160/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_160/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_128**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_128/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_128/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_128/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_128/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_224**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_224/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_224/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_224/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_224/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_192**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_192/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_192/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_192/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_192/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_160**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_160/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_160/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_160/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_160/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_128**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_128/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_128/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_128/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_128/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_224**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_224/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_224/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_224/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_224/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_192**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_192/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_192/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_192/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_192/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_160**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_160/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_160/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_160/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_160/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_128**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_128/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.tar.gz).
 
 
 ### NASNet
