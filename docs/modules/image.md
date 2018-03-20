@@ -10,7 +10,7 @@ The "doc" links can be clicked to see documentation.
 The "module" links can be copy&pasted for use in Python code like
 
 ```python
-m = hub.Module("https://storage.googleapis.com/...")`.
+m = hub.Module("https://storage.googleapis.com/...")
 ```
 
 

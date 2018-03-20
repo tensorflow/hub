@@ -64,8 +64,8 @@ stable TensorFlow release. For now, please
 TensorFlow package past 1.7.0rc0. For instance:
 
 ```bash
-pip install --upgrade "tensorflow>=1.7.0rc0"
-pip install --upgrade tensorflow-hub
+$ pip install --upgrade "tensorflow>=1.7.0rc0"
+$ pip install --upgrade tensorflow-hub
 ```
 
 This section will be updated to include a specific TensorFlow version
@@ -119,7 +119,7 @@ variable.
 For example, setting `TFHUB_CACHE_DIR` to `/my_module_cache`:
 
 ```shell
-export TFHUB_CACHE_DIR=/my_module_cache
+$ export TFHUB_CACHE_DIR=/my_module_cache
 ```
 
 and then creating a module from a URL:

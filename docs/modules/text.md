@@ -4,8 +4,11 @@ These are [TensorFlow Hub modules](../../README.md) pre-trained to embed
 words, phrases, and sentences as many-dimensional vectors.
 
 The "doc" links can be clicked to see documentation.
-The "module" links can be copy&pasted for use in Python code like
-`m = hub.Module("https://storage.googleapis.com/...")`.
+The "module" links can be copy&pasted for use in Python code like:
+
+```python
+m = hub.Module("https://storage.googleapis.com/...")
+```
 
 ## Sequential
 ### Sequential 1
