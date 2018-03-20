@@ -384,18 +384,31 @@ class Resolver(object):
     if self.is_supported(handle):
       return self._get_module_path(handle)
     else:
-      raise UnsupportedHandleError("unsupported handle format '%s'." % handle)
+      raise UnsupportedHandleError(
+          self._create_unsupported_handle_error_msg(handle))
 
   @abc.abstractmethod
   def _get_module_path(self, handle):
     pass
+
+  def _create_unsupported_handle_error_msg(self, handle):
+    """Creating a UnsupportedHandleError with 'handle'-specify error message."""
+    msg = ("unsupported handle format '%s'. No resolvers found that can "
+           "successfully resolve it. If the handle points to the local "
+           "filesystem, the error indicates that the module directory does not "
+           "exist." % handle)
+    return msg
+
 
 
 class PathResolver(Resolver):
   """Resolves handles which are absolute paths."""
 
   def is_supported(self, handle):
-    return tf.gfile.Exists(handle)
+    try:
+      return tf.gfile.Exists(handle)
+    except tf.OpError:
+      return False
 
   def _get_module_path(self, handle):
     return handle
@@ -404,13 +417,15 @@ class PathResolver(Resolver):
 class UseFirstSupportingResolver(Resolver):
   """Composes Resolvers by delegating to the first one to support a handle."""
 
-  def __init__(self, resolvers):
+  def __init__(self, resolvers, descriptive_err_msgs = True):
     """Creates a composite Resolver from a list of Resolvers.
 
     Args:
       resolvers: (list of Resolver)
+      descriptive_err_msgs: Enables descriptive error messages.
     """
     self._resolvers = tuple(resolvers)
+    self._descriptive_err_msgs = descriptive_err_msgs
 
   def _first_supported(self, handle):
     """Returns the first Resolver to support a handle.
@@ -447,5 +462,19 @@ class UseFirstSupportingResolver(Resolver):
     """
     resolver = self._first_supported(handle)
     if not resolver:
-      raise UnsupportedHandleError("unsupported handle format '%s'." % handle)
+      raise UnsupportedHandleError(
+          self._create_unsupported_handle_error_msg(handle))
     return resolver.get_module_path(handle)
+
+  def _create_unsupported_handle_error_msg(self, handle):
+    """Creating a UnsupportedHandleError with 'handle'-specify error message."""
+    msg = super(UseFirstSupportingResolver,
+                self)._create_unsupported_handle_error_msg(handle)
+    if self._descriptive_err_msgs:
+      return "{} {}".format(
+          msg,
+          "Currently supported handle formats: URLs pointing to a TGZ file "
+          "(e.g. http://address/module.tgz), or Local File System directory "
+          "(e.g. /tmp/my_local_module).")
+    else:
+      return msg

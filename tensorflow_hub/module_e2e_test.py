@@ -24,6 +24,7 @@ import tarfile
 import tensorflow as tf
 import tensorflow_hub as hub
 
+from tensorflow_hub import resolver
 from tensorflow_hub import test_utils
 
 
@@ -75,6 +76,25 @@ class ModuleEnd2EndTest(tf.test.TestCase):
     out = m(11)
     with tf.Session() as sess:
       self.assertAllClose(sess.run(out), 121)
+
+  def testUnknownHandleFormat(self):
+    try:
+      hub.Module("s3://my_module.zip")
+    except resolver.UnsupportedHandleError as e:
+      self.assertStartsWith(
+          str(e), "unsupported handle format 's3://my_module.zip'. No "
+          "resolvers found that can successfully resolve it.")
+      self.assertNotEquals(-1, str(e).find("Currently supported handle"))
+
+    try:
+      non_existant_module = os.path.join(self.get_temp_dir(), "missing_module")
+      hub.Module(non_existant_module)
+    except resolver.UnsupportedHandleError as e:
+      self.assertStartsWith(
+          str(e), "unsupported handle format '%s'. No "
+          "resolvers found that can successfully resolve it." %
+          non_existant_module)
+      self.assertNotEquals(-1, str(e).find("Currently supported handle"))
 
 
 if __name__ == "__main__":
