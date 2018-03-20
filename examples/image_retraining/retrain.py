@@ -20,14 +20,14 @@ r"""Simple transfer learning with image modules from TensorFlow Hub.
 
 This example shows how to train an image classifier based on any
 TensorFlow Hub module that computes image feature vectors. By default,
-it uses the feature vectors computed by NASNet Large trained on ImageNet.
+it uses the feature vectors computed by Inception V3 trained on ImageNet.
 See https://github.com/tensorflow/hub/blob/master/docs/modules/image.md
 for more options.
 
-The top layer receives as input a 4032-dimensional vector (assuming
-NASNet Large) for each image. We train a softmax layer on top of this
+The top layer receives as input a 2048-dimensional vector (assuming
+Inception V3) for each image. We train a softmax layer on top of this
 representation. If the softmax layer contains N labels, this corresponds
-to learning N + 4032*N model parameters for the biases and weights.
+to learning N + 2048*N model parameters for the biases and weights.
 
 Here's an example, which assumes you have a folder containing class-named
 subfolders, each full of images for each label. The example folder flower_photos
@@ -57,7 +57,7 @@ This produces a new model file that can be loaded and run by any TensorFlow
 program, for example the tensorflow/examples/label_image sample code.
 
 By default this script will use the highly accurate, but comparatively large and
-slow NASNet Large model architecture. It's recommended that you start with this
+slow Inception V3 model architecture. It's recommended that you start with this
 to validate that you have gathered good training data, but if you want to deploy
 on resource-limited platforms, you can try the `--tfhub_module` flag with a
 Mobilenet model. For more information on Mobilenet, see
@@ -1311,7 +1311,7 @@ if __name__ == '__main__':
       '--tfhub_module',
       type=str,
       default=('https://storage.googleapis.com/tfhub-test-modules/'
-               'google/image/imagenet/nasnet_large/feature_vector/1.tar.gz'),
+               'google/image/imagenet/inception_v3/feature_vector/1.tar.gz'),
       help="""\
       Which TensorFlow Hub module to use.
       See https://github.com/tensorflow/hub/blob/master/docs/modules/image.md
