@@ -1,7 +1,6 @@
 # Other Modules
 
-These are [TensorFlow Hub modules](../../README.md) trained for a variety of
-non-image or text tasks.
+Modules trained for a variety of tasks.
 
 The "doc" links can be clicked to see documentation.
 The "module" links can be copy&pasted for use in Python code like

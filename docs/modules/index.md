@@ -1,15 +1,5 @@
 # Modules
 
-**TensorFlow Hub** is a new library for creating reusable pieces of machine
-learning models, known as *modules*. A module is a self-contained piece of a
-TensorFlow graph, along with its weights and assets, that can be transferred
-from one task to another.
-
-Learn how to use TensorFlow Hub by following the [image
-retraining](https://www.tensorflow.org/tutorials/image_retraining) tutorial,
-trying our [text classification](TODO) Colab, or browsing our [source
-code](https://github.com/tensorflow/hub).
-
 Pre-trained TensorFlow Hub modules are already available for a variety of
 tasks. They are described in the following documents:
 

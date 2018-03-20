@@ -1,7 +1,7 @@
 # Common Signatures for Images
 
-This page describes common signatures for [TensorFlow Hub
-Modules](../../README.md) for tasks that involve images.
+This page describes common signatures that should be implemented by modules
+for image-related tasks.
 
 Some modules can be used for more than one task (e.g., image classification
 modules tend do to some feature extraction on the way). Therefore, each module

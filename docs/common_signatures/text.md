@@ -1,7 +1,7 @@
 # Common Signatures for Text
 
-This page describes common signatures for [TensorFlow Hub
-Modules](../../README.md) for tasks that accept text inputs.
+This page describes common signatures that should be implemented by modules
+for tasks that accept text inputs.
 
 ## Text feature vector
 

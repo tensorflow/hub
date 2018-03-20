@@ -1,10 +1,10 @@
 # Image Modules
 
-These are [TensorFlow Hub modules](../../README.md) to extract
-[image feature vectors](../common_signatures/images.md#image-feature-vector)
-for use in custom image classifiers, and to do
-[image classification](../common_signatures/images.md#image-classification)
-with the original classes from the training dataset.
+Modules to extract [image feature
+vectors](../common_signatures/images.md#image-feature-vector) for use in custom
+image classifiers, and to do [image
+classification](../common_signatures/images.md#image-classification) with the
+original classes from the training dataset.
 
 The "doc" links can be clicked to see documentation.
 The "module" links can be copy&pasted for use in Python code like

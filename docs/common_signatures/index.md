@@ -1,8 +1,9 @@
-# Common Signatures for TensorFlow Hub Modules
+# Common Signatures for Modules
 
-[TensorFlow Hub Modules](../../README.md) for the same task should implement a
-common signature, so that module consumers can easily exchange them and find the
-best one for their problem.
+## Introduction
+
+Modules for the same task should implement a common signature, so that module
+consumers can easily exchange them and find the best one for their problem.
 
 This directory collects specifications of common signatures. We expect it
 to grow over time, as modules are created for a wider variety of tasks.
@@ -15,3 +16,9 @@ document them along the signature.
 
 In any case, the goal is to make exchanging different modules for the same task
 as simple as switching a string-valued hyperparameter.
+
+
+## Signatures
+
+*   [Image Signatures](images.md)
+*   [Text Signatures](text.md)
