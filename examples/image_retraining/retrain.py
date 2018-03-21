@@ -41,9 +41,13 @@ should have a structure like this:
 ~/flower_photos/sunflower/somepicture.jpg
 
 The subfolder names are important, since they define what label is applied to
-each image, but the filenames themselves don't matter. Once your images are
-prepared, and you have pip-installed tensorflow-hub and a sufficiently recent
-version of tensorflow, you can run the training with a command like this:
+each image, but the filenames themselves don't matter. (For a working example,
+download http://download.tensorflow.org/example_images/flower_photos.tgz
+and run  tar xzf flower_photos.tgz  to unpack it.)
+
+Once your images are prepared, and you have pip-installed tensorflow-hub and
+a sufficiently recent version of tensorflow, you can run the training with a
+command like this:
 
 ```bash
 python retrain.py --image_dir ~/flower_photos
