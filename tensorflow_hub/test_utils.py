@@ -26,62 +26,60 @@ import threading
 import tensorflow as tf
 
 
-_DOWNLOAD_HEADER = "TensorFlow-Hub-Compressed-Module-URL"
+def _do_redirect(handler, location):
+  handler.send_response(301)
+  handler.send_header("Location", location)
+  handler.end_headers()
 
-def start_multi_server(download_url, redirect=None):
+
+def _do_documentation(handler):
+  handler.send_response(200)
+  handler.end_headers()
+  handler.wfile.write(b"Here is some documentation.")
+
+
+def start_smart_module_server(download_url):
   """Serve documentation and module requests at the same URL."""
   # pylint:disable=g-import-not-at-top
   if sys.version_info[0] == 2:
     import BaseHTTPServer
     import SimpleHTTPServer
+    import urlparse
 
     class HTTPServerV6(BaseHTTPServer.HTTPServer):
 
       address_family = socket.AF_INET6
 
-    class NormalHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
       def do_GET(self):
-        self.send_response(200)
-        self.send_header(_DOWNLOAD_HEADER, download_url)
-        self.end_headers()
-        self.wfile.write("Here is some documentation.")
+        parsed_url = urlparse.urlparse(self.path)
+        qs = urlparse.parse_qs(parsed_url.query)
+        if qs["tf-hub-format"][0] == "compressed":
+          _do_redirect(self, download_url)
+        else:
+          _do_documentation(self)
 
-    class RedirectHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-
-      def do_GET(self):
-        self.send_response(301)
-        self.send_header("Location", redirect)
-        self.send_header(_DOWNLOAD_HEADER, download_url)
-        self.end_headers()
-
-    server = HTTPServerV6(("", 0), RedirectHandler if redirect else
-                          NormalHandler)
+    server = HTTPServerV6(("", 0), RequestHandler)
     server_port = server.server_port
   else:
     import http.server
     import socketserver
+    import urllib
 
-    class NormalHandler(http.server.SimpleHTTPRequestHandler):
-
-      def do_GET(self):
-        self.send_response(200)
-        self.send_header(_DOWNLOAD_HEADER, download_url)
-        self.end_headers()
-        self.wfile.write("Here is some documentation.")
-
-    class RedirectHandler(http.server.SimpleHTTPRequestHandler):
+    class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
       def do_GET(self):
-        self.send_response(301)
-        self.send_header("Location", redirect)
-        self.send_header(_DOWNLOAD_HEADER, download_url)
-        self.end_headers()
+        parsed_url = urllib.parse.urlparse(self.path)
+        qs = urllib.parse.parse_qs(parsed_url.query)
+        if qs["tf-hub-format"][0] == "compressed":
+          _do_redirect(self, download_url)
+        else:
+          _do_documentation(self)
 
-    server = socketserver.TCPServer(("", 0), RedirectHandler if redirect else
-                                    NormalHandler)
+    server = socketserver.TCPServer(("", 0), RequestHandler)
     _, server_port = server.server_address
-    # pylint:disable=g-import-not-at-top
+  # pylint:disable=g-import-not-at-top
 
   thread = threading.Thread(target=server.serve_forever)
   thread.daemon = True
@@ -104,10 +102,9 @@ def start_http_server(redirect=None):
       address_family = socket.AF_INET6
 
     class RedirectHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+
       def do_GET(self):
-        self.send_response(301)
-        self.send_header('Location', redirect)
-        self.end_headers()
+        _do_redirect(self, redirect)
 
     server = HTTPServerV6(("", 0), RedirectHandler if redirect else
                           SimpleHTTPServer.SimpleHTTPRequestHandler)
@@ -117,11 +114,9 @@ def start_http_server(redirect=None):
     import socketserver
 
     class RedirectHandler(http.server.SimpleHTTPRequestHandler):
-      def do_GET(self):
-        self.send_response(301)
-        self.send_header('Location', redirect)
-        self.end_headers()
 
+      def do_GET(self):
+        _do_redirect(self, redirect)
 
     server = socketserver.TCPServer(("", 0), RedirectHandler if redirect else
                                     http.server.SimpleHTTPRequestHandler)

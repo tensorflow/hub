@@ -78,15 +78,10 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     self.redirect_server_port = test_utils.start_http_server(
         redirect="http://localhost:%d" % self.server_port)
 
-    self.multi_server_port = test_utils.start_multi_server(
+    self.smart_server_port = test_utils.start_smart_module_server(
         self.module_handle)
-    self.multi_handle = (
-        "http://localhost:%d/mock_module" % self.multi_server_port)
-
-    self.multi_redirect_port = test_utils.start_multi_server(
-        self.module_handle, redirect="http://example.com")
-    self.multi_redirect_handle = (
-        "http://localhost:%d/mock_module" % self.multi_redirect_port)
+    self.smart_handle = (
+        "http://localhost:%d/mock_module" % self.smart_server_port)
 
   def testGetModulePathTar(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
@@ -104,17 +99,10 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
-  def testGetModuleFromMultiLocation(self):
+  def testGetModuleFromSmartLocation(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver.get_module_path(self.multi_handle)
-    files = os.listdir(path)
-    self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
-
-  def testGetModuleFromMultiWithRedirect(self):
-    FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
-    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver.get_module_path(self.multi_redirect_handle)
+    path = http_resolver.get_module_path(self.smart_handle)
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
@@ -144,6 +132,29 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     self.assertTrue(compressed_module_resolver._is_tarfile("foo.tgz"))
     self.assertFalse(compressed_module_resolver._is_tarfile("foo"))
     self.assertFalse(compressed_module_resolver._is_tarfile("footar"))
+
+  def testAppendFormatQuery(self):
+    tests = [(
+        "https://example.com/module.tar.gz",
+        "https://example.com/module.tar.gz?tf-hub-format=compressed",
+    ), (
+        "https://example.com/module",
+        "https://example.com/module?tf-hub-format=compressed",
+    ), (
+        "https://example.com/module?extra=abc",
+        "https://example.com/module?extra=abc&tf-hub-format=compressed",
+    ), (
+        "https://example.com/module?extra=abc",
+        "https://example.com/module?extra=abc&tf-hub-format=compressed",
+    ), (
+        "https://example.com/module?extra=abc&tf-hub-format=test",
+        ("https://example.com/module?extra=abc&"
+         "tf-hub-format=test&tf-hub-format=compressed"),
+    )]
+    for handle, expected in tests:
+      self.assertTrue(
+          compressed_module_resolver._append_compressed_format_query(handle),
+          expected)
 
   def testAbandondedLockFile(self):
     # Tests that the caching procedure is resilient to an abandonded lock
@@ -200,7 +211,8 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
       self.fail("Corrupted archive should have failed to resolve.")
     except IOError as e:
       self.assertEqual(
-          "http://localhost:%d/bad_archive.tar.gz is not a valid tar archive." %
+          "http://localhost:%d/bad_archive.tar.gz does not appear "
+          "to be a valid module." %
           self.server_port, str(e))
     try:
       http_resolver.get_module_path(
@@ -209,7 +221,8 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     except IOError as e:
       # Check that the error message contain the ultimate (redirected to) URL.
       self.assertEqual(
-          "http://localhost:%d/bad_archive.tar.gz is not a valid tar archive." %
+          "http://localhost:%d/bad_archive.tar.gz does not appear "
+          "to be a valid module." %
           self.redirect_server_port, str(e))
 
 

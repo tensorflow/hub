@@ -123,7 +123,7 @@ def download_and_uncompress(filename, fileobj, dst_path):
           raise ValueError(
               "Unexpected object type in tar archive: %s" % tarinfo.type)
   except tarfile.ReadError:
-    raise IOError("%s is not a valid tar archive." % filename)
+    raise IOError("%s does not appear to be a valid module." % filename)
 
 def _module_descriptor_file(module_dir):
   """Returns the name of the file containing descriptor for the 'module_dir'."""

@@ -22,8 +22,12 @@ import hashlib
 # pylint:disable=g-import-not-at-top
 try:
   import urllib.request as url
+  import urllib.parse as urlparse
+  from urllib.parse import urlencode
 except ImportError:
   import urllib2 as url
+  from urllib import urlencode
+  import urlparse
 # pylint:disable=g-import-not-at-top
 
 import tensorflow as tf
@@ -32,7 +36,8 @@ from tensorflow_hub import resolver
 
 
 LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
-_DOWNLOAD_HEADER = "TensorFlow-Hub-Compressed-Module-URL"
+
+_COMPRESSED_FORMAT_QUERY = ("tf-hub-format", "compressed")
 
 
 def _module_dir(cache_dir, handle):
@@ -46,6 +51,15 @@ def _is_tarfile(filename):
   """Returns true if 'filename' is TAR file."""
   return (filename.endswith(".tar") or filename.endswith(".tar.gz") or
           filename.endswith(".tgz"))
+
+
+def _append_compressed_format_query(handle):
+  # Convert the tuple from urlparse into list so it can be updated in place.
+  parsed = list(urlparse.urlparse(handle))
+  qsl = urlparse.parse_qsl(parsed[4])
+  qsl.append(_COMPRESSED_FORMAT_QUERY)
+  parsed[4] = urlencode(qsl)
+  return urlparse.urlunparse(parsed)
 
 
 class HttpCompressedFileResolver(resolver.Resolver):
@@ -69,6 +83,7 @@ class HttpCompressedFileResolver(resolver.Resolver):
     def download(handle, tmp_dir):
       """Fetch a module via HTTP(S), handling redirect and download headers."""
       cur_url = handle
+      request = url.Request(_append_compressed_format_query(handle))
 
       # Look for and handle a special response header. If present, interpret it
       # as a redirect to the module download location. This allows publishers
@@ -78,23 +93,12 @@ class HttpCompressedFileResolver(resolver.Resolver):
       class LoggingHTTPRedirectHandler(url.HTTPRedirectHandler):
 
         def redirect_request(self, req, fp, code, msg, headers, newurl):
-          if _DOWNLOAD_HEADER in headers:
-            newurl = headers[_DOWNLOAD_HEADER]
-          cur_url = newurl
+          cur_url = newurl  # pylint:disable=unused-variable
           return url.HTTPRedirectHandler.redirect_request(
               self, req, fp, code, msg, headers, newurl)
 
-      # Be prepared to do additional request/response rounds if we get back a
-      # special download URL response header. (It works like a redirect.)
-      while True:
-        url_opener = url.build_opener(LoggingHTTPRedirectHandler)
-        request = url.Request(cur_url)
-        response = url_opener.open(request)
-        if _DOWNLOAD_HEADER in response.headers:
-          cur_url = response.headers[_DOWNLOAD_HEADER]
-        else:
-          break
-
+      url_opener = url.build_opener(LoggingHTTPRedirectHandler)
+      response = url_opener.open(request)
       return resolver.download_and_uncompress(cur_url, response, tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
