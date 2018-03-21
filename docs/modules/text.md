@@ -3,12 +3,16 @@
 Modules pre-trained to embed words, phrases, and sentences as many-dimensional
 vectors.
 
-The "doc" links can be clicked to see documentation.
-The "module" links can be copy&pasted for use in Python code like:
+The "module" links from the list below can be copy&pasted for use in
+Python code like:
 
 ```python
-m = hub.Module("https://storage.googleapis.com/...")
+m = hub.Module("https://...")
 ```
+
+The "doc" links provide documentation, including an explanation of
+module names and more detailed usage instructions.
+
 
 ## Sequential
 ### Sequential 1
