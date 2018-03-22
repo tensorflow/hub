@@ -27,7 +27,7 @@ module names and more detailed usage instructions.
 
 
 ## Word based
-### NNLM trained on GNews
+### Neural network language model trained on Google News dataset
 #### English
    * **nnlm-en-dim50**:
        [doc](google/text/nnlm-en-dim50/1.md),
