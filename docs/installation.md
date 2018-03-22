@@ -6,8 +6,8 @@ upgrade](https://www.tensorflow.org/install/) your TensorFlow package past
 1.7.0rc0. For instance:
 
 ```bash
-$ pip install --upgrade "tensorflow>=1.7.0rc0"
-$ pip install --upgrade tensorflow-hub
+$ pip install "tensorflow>=1.7.0rc0"
+$ pip install tensorflow-hub
 ```
 
 This section will be updated to include a specific TensorFlow version
