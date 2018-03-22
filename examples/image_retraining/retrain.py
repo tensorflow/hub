@@ -73,14 +73,14 @@ Run floating-point version of Mobilenet:
 
 ```bash
 python retrain.py --image_dir ~/flower_photos \
-    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/feature_vector/1.tar.gz
+    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/imagenet/mobilenet_v1_100_224/feature_vector/1.tar.gz
 ```
 
 Run Mobilenet, instrumented for quantization:
 
 ```bash
 python retrain.py --image_dir ~/flower_photos/ \
-    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/quantops/feature_vector/1.tar.gz
+    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/imagenet/mobilenet_v1_100_224/quantops/feature_vector/1.tar.gz
 ```
 
 These instrumented models can be converted to fully quantized mobile models via
@@ -1315,7 +1315,7 @@ if __name__ == '__main__':
       '--tfhub_module',
       type=str,
       default=('https://storage.googleapis.com/tfhub-test-modules/'
-               'google/image/imagenet/inception_v3/feature_vector/1.tar.gz'),
+               'google/imagenet/inception_v3/feature_vector/1.tar.gz'),
       help="""\
       Which TensorFlow Hub module to use.
       See https://github.com/tensorflow/hub/blob/master/docs/modules/image.md
