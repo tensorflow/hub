@@ -6,11 +6,11 @@ For image classification, two kinds of modules are available:
     classification](../common_signatures/images.md#image-classification)
     with the particular classes that the module has been trained for.
   * Modules to extract [image feature
-    vectors](../common_signatures/images.md#image-feature-vector), 
+    vectors](../common_signatures/images.md#image-feature-vector),
     (a.k.a. "bottleneck values") for use in custom image classifiers.
     (This is elaborated in the [image retraining
     tutorial](../tutorials/image_retraining.md).)
-        
+
 The "module" links from the list below can be copy&pasted for use in
 Python code like:
 
@@ -132,6 +132,89 @@ The full size is listed on top. See module docs for an explanation of the sizes.
       [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/classification/1.tar.gz);
       feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.md),
       [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/feature_vector/1.tar.gz).
+
+#### Instrumented for quantization with TF-Lite
+
+  * **mobilenet_v1_100_224/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_224/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_224/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_100_192/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_192/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_192/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_192/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_192/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_100_160/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_160/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_160/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_160/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_160/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_100_128/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_100_128/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_128/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_100_128/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_128/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_224/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_224/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_224/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_224/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_224/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_192/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_192/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_192/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_192/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_192/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_160/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_160/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_160/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_160/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_160/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_075_128/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_075_128/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_128/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_075_128/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_075_128/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_224/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_224/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_224/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_224/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_224/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_192/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_192/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_192/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_192/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_192/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_160/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_160/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_160/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_160/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_160/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_050_128/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_050_128/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_128/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_050_128/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_050_128/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_224/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_224/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_224/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_224/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_224/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_192/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_192/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_192/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_192/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_192/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_160/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_160/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_160/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_160/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_160/quantops/feature_vector/1.tar.gz).
+  * **mobilenet_v1_025_128/quantops**:
+      classification: [doc](google/image/imagenet/mobilenet_v1_025_128/quantops/classification/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/quantops/classification/1.tar.gz);
+      feature_vector: [doc](google/image/imagenet/mobilenet_v1_025_128/quantops/feature_vector/1.md),
+      [module](https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_025_128/quantops/feature_vector/1.tar.gz).
 
 
 ### NASNet
