@@ -14,16 +14,10 @@ The "doc" links provide documentation, including an explanation of
 module names and more detailed usage instructions.
 
 
-## Sequential
-### Sequential 1
-  * **Sequential 1**:
-       [doc](google/sequential1/1.md),
-       [module](https://storage.googleapis.com/tfhub-test-modules/google/sequential1/1.tar.gz).
-
-### Sequential 2
-  * **Sequential 2**:
-       [doc](google/sequential2/1.md),
-       [module](https://storage.googleapis.com/tfhub-test-modules/google/sequential2/1.tar.gz).
+## Universal Sentence Encoder
+  * **universal-sentence-encoder**:
+       [doc](google/universal-sentence-encoder/1.md),
+       [module](https://storage.googleapis.com/tfhub-test-modules/google/universal-sentence-encoder/1.tar.gz).
 
 
 ## Word based
