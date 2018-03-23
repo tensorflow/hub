@@ -49,7 +49,9 @@ conduct](https://github.com/tensorflow/tensorflow/blob/master/CODE_OF_CONDUCT.md
 participating, you are expected to uphold this code.
 
 We use [GitHub issues](https://github.com/tensorflow/hub/issues) for tracking
-requests and bugs.
+requests and bugs. Please see the [TensorFlow Hub mailing
+list](https://groups.google.com/a/tensorflow.org/forum/#!forum/hub) for general
+questions and discussion.
 
 
 ## License
