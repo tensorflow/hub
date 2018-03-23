@@ -23,7 +23,7 @@ Note: A version of this tutorial is also available
 This tutorial uses [TensorFlow Hub](../index.md) to ingest
 pre-trained pieces of models, or *modules* as they are called. For starters,
 we will use the [image feature extraction
-module](../modules/google/image/imagenet/inception_v3/feature_vector/1.md)
+module](../modules/google/imagenet/inception_v3/feature_vector/1.md)
 with the Inception V3 architecture trained on ImageNet,
 and [come back later](#other_architectures) to further options, including
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)
@@ -369,7 +369,7 @@ TensorFlow Hub module](../modules/image.md).
 On the one hand, that list shows more recent, powerful architectures, such as
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)
 (notably
-[`nasnet_large`](../modules/google/image/imagenet/nasnet_large/feature_vector/1.md)),
+[`nasnet_large`](../modules/google/imagenet/nasnet_large/feature_vector/1.md)),
 which could give you some extra precision.
 
 On the other hand, if you intend to deploy your model on mobile devices or other
@@ -380,7 +380,7 @@ the different
 implementing the [MobileNet V1
 architecture](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html),
 or also
-[`nasnet_mobile`](../modules/google/image/imagenet/nasnet_mobile/feature_vector/1.md).
+[`nasnet_mobile`](../modules/google/imagenet/nasnet_mobile/feature_vector/1.md).
 
 Training with a different module is easy: Just pass the `--tfhub_module`
 flag with the download URL for a module, for example:
@@ -388,7 +388,7 @@ flag with the download URL for a module, for example:
 ```sh
 python retrain.py \
     --image_dir ~/flower_photos \
-    --tfhub_module https://storage.googleapis.com/tfhub-test-modules/google/image/imagenet/mobilenet_v1_100_224/feature_vector/1.tar.gz
+    --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v1_100_224/feature_vector/1
 ```
 
 This will create a 13MB model file in `/tmp/output_graph.pb` with a model that
