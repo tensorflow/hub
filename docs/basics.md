@@ -51,9 +51,11 @@ Each such call adds operations to the current TensorFlow graph to compute
 shared between all applications.
 
 Modules can define multiple named *signatures* in order to allow being applied
-in more than one way. A module's documentation should describe the available
-signatures. The call above applies the signature named `"default"`. Other
-signature names can be specified with the optional `signature=` argument.
+in more than one way (similar to how Python objects have *methods*).
+A module's documentation should describe the available
+signatures. The call above applies the signature named `"default"`. Any
+signature can be selected by passing its name to the optional `signature=`
+argument.
 
 If a signature has multiple inputs, they must be passed as a dict,
 with the keys defined by the signature. Likewise, if a signature has
@@ -63,7 +65,7 @@ single output returned if `as_dict=False`.)
 So the most general form of applying a Module looks like:
 
 ```python
-outputs = m(dict(apples=x1, oranges=x2), signature="my_method", as_dict=True)
+outputs = m(dict(apples=x1, oranges=x2), signature="fruit_to_pet", as_dict=True)
 y1 = outputs["cats"]
 y2 = outputs["dogs"]
 ```
