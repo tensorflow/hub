@@ -253,7 +253,7 @@ class _ModuleSpec(module_spec.ModuleSpec):
 
   def get_signature_names(self, tags=None):
     meta_graph = self._saved_model_handler.get_meta_graph(tags=tags)
-    return meta_graph.signature_def.keys()
+    return list(meta_graph.signature_def.keys())
 
   def get_input_info_dict(self, signature=None, tags=None):
     signature_def = self._get_signature_def(signature, tags)
