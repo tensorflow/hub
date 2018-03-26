@@ -40,7 +40,7 @@ with tf.Graph().as_default():
 *   Tutorials:
     *   [Image Retraining](tutorials/image_retraining.md)
     *   [Text Classification](tutorials/text_classification.md)
-    *   [All Tutorials](tutorials/index.md)
+    *   [Additional Colabs](https://github.com/tensorflow/hub/tree/master/examples/colab)
 *   Key Concepts:
     *   [Using a Module](basics.md)
     *   [Creating a New Module](creating.md)

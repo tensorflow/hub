@@ -4,7 +4,6 @@ installation.md
 ### Tutorials
 tutorials/image_retraining.md: Image Retraining
 tutorials/text_classification.md: Text Classification
-tutorials/index.md: All Tutorials
 
 ### Key Concepts
 basics.md

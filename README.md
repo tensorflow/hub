@@ -28,7 +28,7 @@ that can be reused on new tasks.
 *   Tutorials:
     *   [Image Retraining](docs/tutorials/image_retraining.md)
     *   [Text Classification](docs/tutorials/text_classification.md)
-    *   [All Tutorials](docs/tutorials/index.md)
+    *   [Additional Colabs](examples/colab/README.md)
 *   Key Concepts:
     *   [Using a Module](docs/basics.md)
     *   [Creating a New Module](docs/creating.md)
