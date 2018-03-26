@@ -23,7 +23,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 with tf.Graph().as_default():
-  embed = hub.Module("https://storage.googleapis.com/tfhub-test-modules/google/nnlm-en-dim128-with-normalization/1.tar.gz")
+  embed = hub.Module("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
   embeddings = embed(["A long sentence.", "single-word", "http://example.com"])
 
   with tf.Session() as sess:

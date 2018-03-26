@@ -6,7 +6,7 @@ The "module" links from the list below can be copy&pasted for use in
 Python code like:
 
 ```python
-m = hub.Module("https://...")
+m = hub.Module("https://tfhub.dev/...")
 ```
 
 The "doc" links provide documentation, including an explanation of
@@ -16,4 +16,4 @@ module names and more detailed usage instructions.
 
 * **progan-128**:
        [doc](google/progan-128/1.md),
-       [module](https://storage.googleapis.com/tfhub-test-modules/google/progan-128/1.tar.gz).
+       [module](https://tfhub.dev/google/progan-128/1).

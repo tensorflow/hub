@@ -30,7 +30,7 @@ $ export TFHUB_CACHE_DIR=/my_module_cache
 and then creating a module from a URL:
 
 ```python
-m = hub.Module("https://storage.googleapis.com/tfhub-test-modules/google/half-plus-two/1.tar.gz")
+m = hub.Module("https://tfhub.dev/google/half-plus-two/1")
 ```
 
 results in downloading the unpacked version of the module in
