@@ -14,5 +14,5 @@ m = hub.Module("https://tfhub.dev/...")
 https://tfhub.dev/google/progan-128/1
 
 
-## Deep Local Features (DELF)
+## DEep Local Features (DELF)
 https://tfhub.dev/google/delf/1
