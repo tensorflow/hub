@@ -1,4 +1,5 @@
 # Creating a New Module
+## General approach
 
 To define a new module, a publisher calls `hub.create_module_spec()` with a
 function `module_fn`. This function constructs a graph representing the module's
@@ -39,3 +40,8 @@ exports the entire model from the latest checkpoint.
 Module publishers should implement a [common
 signature](common_signatures/index.md) when possible, so that consumers can
 easily exchange modules and find the best one for their problem.
+
+## Real example
+Take a look at our [text embedding module exporter](https://github.com/tensorflow/hub/blob/master/examples/text_embeddings/export.py)
+for a real-world example of how to create a module from a common text embedding
+format.
