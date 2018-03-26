@@ -27,3 +27,8 @@ NOTE: This must be called within a `module_fn` that is defining a Module.
 * <b>`outputs`</b>: A dict from output name to Tensor or SparseTensor to return from
     applying the signature. If a single tensor is passed, it is interpreted
     as a dict with a single 'default' entry.
+
+
+#### Raises:
+
+* <b>`ValueError`</b>: if the arguments are invalid.

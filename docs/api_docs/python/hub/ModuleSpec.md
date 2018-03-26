@@ -20,8 +20,8 @@ of a specific module in one or more graphs. The details on how to construct
 the Module are internal to the library implementation but methods to inspect
 a Module interface are public.
 
-Note: Do not instantiate this class directly. Use `hub.load_module_spec` or
-`hub.create_module_spec`.
+Note: Do not instantiate this class directly. Use <a href="../hub/load_module_spec.md"><code>hub.load_module_spec</code></a> or
+<a href="../hub/create_module_spec.md"><code>hub.create_module_spec</code></a>.
 
 ## Methods
 

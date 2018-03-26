@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub" />
+<meta itemprop="property" content="__version__"/>
 </div>
 
 # Module: hub
@@ -31,4 +32,8 @@ TensorFlow Hub Library.
 [`register_module_for_export(...)`](./hub/register_module_for_export.md): Register a Module to be exported under `export_name`.
 
 [`text_embedding_column(...)`](./hub/text_embedding_column.md): Uses a Module to construct a dense representation from a text feature.
+
+## Other Members
+
+`__version__`
 
