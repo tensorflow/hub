@@ -28,7 +28,7 @@ with the Inception V3 architecture trained on ImageNet,
 and [come back later](#other_architectures) to further options, including
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)
 and
-[MobileNet](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html).
+[MobileNet V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html) and V2.
 
 Before you start, you need to install the PIP package `tensorflow-hub`,
 along with a sufficiently recent version of TensorFlow. See
@@ -377,37 +377,43 @@ resource-constrained environments, you may want to trade a little accuracy
 for much smaller file sizes or faster speeds (also in training). For that, try
 the different
 [modules](../modules/image.md#mobilenet-v1)
-implementing the [MobileNet V1
-architecture](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html),
-or also
+implementing the [MobileNet
+V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html)
+or V2 architectures, or also
 [`nasnet_mobile`](../modules/google/imagenet/nasnet_mobile/feature_vector/1.md).
 
 Training with a different module is easy: Just pass the `--tfhub_module`
-flag with the download URL for a module, for example:
+flag with the module URL, for example:
 
 ```sh
 python retrain.py \
     --image_dir ~/flower_photos \
-    --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v1_100_224/feature_vector/1
+    --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/1
 ```
 
-This will create a 13MB model file in `/tmp/output_graph.pb` with a model that
-uses the baseline version of MobileNet V1.
+This will create a 9 MB model file in `/tmp/output_graph.pb` with a model that
+uses the baseline version of MobileNet V2. Opening the module URL in a browser
+will take you to the module documentation.
 
 If you just want to make it a little faster, you can reduce the size of input
 images (the second number) from '224' down to '192', '160', or '128' pixels
-squared. For more aggressive savings, you can choose percentages '100', '075',
-'050', or '025' (the first number) to control the "feature depth" or number of
-neurons per position; the number weights (and hence the file size and speed)
-shrinks with the square of that fraction. The
-[MobileNet V1 blogpost](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html)
-reports on the resulting tradeoffs for Imagenet.
+squared, or even '96' (for V2 only). For more aggressive savings, you can choose
+percentages (the first number) '100', '075', '050', or '035' (that's '025' for
+V1) to control the "feature depth" or number of neurons per position.
+The number of weights (and hence the file size and speed) shrinks with the
+square of that fraction. The [MobileNet V1
+blogpost](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html)
+and [MobileNet V2 page on
+GitHub](https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet)
+report on the respective tradeoffs for Imagenet classification.
 
-A small feature depth at the bottleneck (256 for `mobilenet_v1_025`, compared
-to 2048 for Inception V3) makes the job of the classification layer harder.
-Would it help to use the score for the original 1001 ImageNet classes instead
-of the very tight bottleneck? You can just try by replacing `feature_vector`
-with `classification` in the module name.
+Mobilenet V2 does not apply the feature depth percentage to the bottleneck
+layer. Mobilenet V1 did, which made the job of the classification layer harder
+for small depths.
+Would it help to cheat and use the scores for the original 1001 ImageNet classes
+instead of tight bottleneck? You can simply try by replacing
+`mobilenet_v1.../feature_vector` with `mobilenet_v1.../classification`
+in the module name.
 
 As before, you can use all of the retrained models with `label_image.py`.
 You will need to specify the image size that your model expects, for example:
@@ -415,7 +421,7 @@ You will need to specify the image size that your model expects, for example:
 ```sh
 python tensorflow/examples/label_image/label_image.py \
 --graph=/tmp/output_graph.pb --labels=/tmp/output_labels.txt \
---input_layer=input \
+--input_layer=Placeholder \
 --output_layer=final_result \
 --input_height=224 --input_width=224 \
 --image=$HOME/flower_photos/daisy/21652746_cc379e0eea_m.jpg
