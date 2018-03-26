@@ -15,6 +15,9 @@ tasks. They are described in the following documents:
     such as mapping from latent space to images or extracting deep local
     features.
 
-Please see Google's new website on [ML Fairness](http://ml-fairness.com),
-describing potential fairness-related issues in pre-trained modules, including
-unintended biases.
+As in all of machine learning, [fairness](http://ml-fairness.com) is an
+[important](https://research.googleblog.com/2016/10/equality-of-opportunity-in-machine.html)
+consideration. Modules typically leverage large pretrained datasets. When
+reusing such a dataset, it’s important to be mindful of what data it contains
+(and whether there are any existing biases there), and how these might impact
+your downstream experiments.
