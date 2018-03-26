@@ -26,8 +26,7 @@ we will use the [image feature extraction
 module](../modules/google/imagenet/inception_v3/feature_vector/1.md)
 with the Inception V3 architecture trained on ImageNet,
 and [come back later](#other_architectures) to further options, including
-[NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)
-and
+[NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)/PNASNet, as well as
 [MobileNet V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html) and V2.
 
 Before you start, you need to install the PIP package `tensorflow-hub`,

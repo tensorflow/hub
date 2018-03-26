@@ -157,12 +157,14 @@ https://tfhub.dev/google/imagenet/mobilenet_v2_035_96/classification/1 \
 https://tfhub.dev/google/imagenet/mobilenet_v2_035_96/feature_vector/1
 
 
-### NASNet
+### NASNet and PNASNet
 
 https://tfhub.dev/google/imagenet/nasnet_large/classification/1 \
 https://tfhub.dev/google/imagenet/nasnet_large/feature_vector/1 \
 https://tfhub.dev/google/imagenet/nasnet_mobile/classification/1 \
-https://tfhub.dev/google/imagenet/nasnet_mobile/feature_vector/1
+https://tfhub.dev/google/imagenet/nasnet_mobile/feature_vector/1 \
+https://tfhub.dev/google/imagenet/pnasnet_large/classification/1 \
+https://tfhub.dev/google/imagenet/pnasnet_large/feature_vector/1
 
 
 ### ResNet
