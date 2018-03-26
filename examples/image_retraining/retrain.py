@@ -120,6 +120,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import collections
 from datetime import datetime
 import hashlib
 import os.path
@@ -157,14 +158,15 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     validation_percentage: Integer percentage of images reserved for validation.
 
   Returns:
-    A dictionary containing an entry for each label subfolder, with images split
-    into training, testing, and validation sets within each label.
+    An OrderedDict containing an entry for each label subfolder, with images
+    split into training, testing, and validation sets within each label.
+    The order of items defines the class indices.
   """
   if not tf.gfile.Exists(image_dir):
     tf.logging.error("Image directory '" + image_dir + "' not found.")
     return None
-  result = {}
-  sub_dirs = [x[0] for x in tf.gfile.Walk(image_dir)]
+  result = collections.OrderedDict()
+  sub_dirs = sorted(x[0] for x in tf.gfile.Walk(image_dir))
   # The root directory comes first, so skip it.
   is_root_dir = True
   for sub_dir in sub_dirs:
@@ -232,7 +234,7 @@ def get_image_path(image_lists, label_name, index, image_dir, category):
   """Returns a path to an image for a label at the given index.
 
   Args:
-    image_lists: Dictionary of training images for each label.
+    image_lists: OrderedDict of training images for each label.
     label_name: Label string we want to get an image for.
     index: Int offset of the image we want. This will be moduloed by the
     available number of images for the label, so it can be arbitrarily large.
@@ -266,7 +268,7 @@ def get_bottleneck_path(image_lists, label_name, index, bottleneck_dir,
   """Returns a path to a bottleneck file for a label at the given index.
 
   Args:
-    image_lists: Dictionary of training images for each label.
+    image_lists: OrderedDict of training images for each label.
     label_name: Label string we want to get an image for.
     index: Integer offset of the image we want. This will be moduloed by the
     available number of images for the label, so it can be arbitrarily large.
@@ -378,7 +380,7 @@ def get_or_create_bottleneck(sess, image_lists, label_name, index, image_dir,
 
   Args:
     sess: The current active TensorFlow Session.
-    image_lists: Dictionary of training images for each label.
+    image_lists: OrderedDict of training images for each label.
     label_name: Label string we want to get an image for.
     index: Integer offset of the image we want. This will be modulo-ed by the
     available number of images for the label, so it can be arbitrarily large.
@@ -442,7 +444,7 @@ def cache_bottlenecks(sess, image_lists, image_dir, bottleneck_dir,
 
   Args:
     sess: The current active TensorFlow Session.
-    image_lists: Dictionary of training images for each label.
+    image_lists: OrderedDict of training images for each label.
     image_dir: Root folder string of the subfolders containing the training
     images.
     bottleneck_dir: Folder string holding cached files of bottleneck values.
@@ -484,7 +486,7 @@ def get_random_cached_bottlenecks(sess, image_lists, how_many, category,
 
   Args:
     sess: Current TensorFlow Session.
-    image_lists: Dictionary of training images for each label.
+    image_lists: OrderedDict of training images for each label.
     how_many: If positive, a random sample of this size will be chosen.
     If negative, all bottlenecks will be retrieved.
     category: Name string of which set to pull from - training, testing, or
@@ -551,7 +553,7 @@ def get_random_distorted_bottlenecks(
 
   Args:
     sess: Current TensorFlow Session.
-    image_lists: Dictionary of training images for each label.
+    image_lists: OrderedDict of training images for each label.
     how_many: The integer number of bottleneck values to return.
     category: Name string of which set of images to fetch - training, testing,
     or validation.
@@ -828,7 +830,7 @@ def run_final_eval(sess, module_spec, class_count, image_lists,
     sess: Session for the train graph.
     module_spec: The hub.ModuleSpec for the image module being used.
     class_count: Number of classes
-    image_lists: Dictionary of training images for each label.
+    image_lists: OrderedDict of training images for each label.
     jpeg_data_tensor: The layer to feed jpeg image data into.
     decoded_image_tensor: The output of decoding and resizing the image.
     resized_image_tensor: The input node of the recognition graph.
