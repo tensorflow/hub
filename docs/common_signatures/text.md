@@ -18,7 +18,7 @@ a `float32` tensor of shape `[batch_size, N]`. This is often called
   representations = embed([
       "A long sentence.",
       "single-word",
-      "http://example-url.com"])
+      "http://example.com"])
 ```
 
 ### Feature column usage
