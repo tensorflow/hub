@@ -3,10 +3,10 @@
 For image classification, two kinds of modules are available:
 
   * Modules to do [image
-    classification](../common_signatures/images.md#image-classification)
+    classification](../common_signatures/images.md#classification)
     with the particular classes that the module has been trained for.
   * Modules to extract [image feature
-    vectors](../common_signatures/images.md#image-feature-vector),
+    vectors](../common_signatures/images.md#feature-vector),
     (a.k.a. "bottleneck values") for use in custom image classifiers.
     (This is elaborated in the [image retraining
     tutorial](../tutorials/image_retraining.md).)

@@ -368,14 +368,16 @@ TensorFlow Hub module](../modules/image.md).
 On the one hand, that list shows more recent, powerful architectures, such as
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)
 (notably
-[`nasnet_large`](../modules/google/imagenet/nasnet_large/feature_vector/1.md)),
+[`nasnet_large`](../modules/google/imagenet/nasnet_large/feature_vector/1.md)
+and
+[`pnasnet_large`](../modules/google/imagenet/pnasnet_large/feature_vector/1.md)),
 which could give you some extra precision.
 
 On the other hand, if you intend to deploy your model on mobile devices or other
 resource-constrained environments, you may want to trade a little accuracy
 for much smaller file sizes or faster speeds (also in training). For that, try
 the different
-[modules](../modules/image.md#mobilenet-v1)
+[modules](../modules/image.md#mobilenet)
 implementing the [MobileNet
 V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html)
 or V2 architectures, or also
