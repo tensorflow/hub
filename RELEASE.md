@@ -13,7 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version (0.1.0-dev)
+# Current version (0.2.0-dev)
+ * Under development.
+
+# Release 0.1.0
  * Initial TensorFlow Hub release.
 
 ## Requirements
