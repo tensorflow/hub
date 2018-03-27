@@ -76,3 +76,12 @@ Since they contain arbitrary TensorFlow graphs, modules can be thought of as
 programs. [Using TensorFlow Securely](https://github.com/tensorflow/tensorflow/blob/master/SECURITY.md)
 describes the security implications of referencing a module from an untrusted
 source.
+
+
+### Source-Code & Bug Reports
+
+The source code is available on [GitHub](https://github.com/tensorflow/hub).
+Use [GitHub issues](https://github.com/tensorflow/hub/issues) for feature requests
+and bugs. Please see the [TensorFlow Hub mailing
+list](https://groups.google.com/a/tensorflow.org/forum/#!forum/hub) for general
+questions and discussion.
