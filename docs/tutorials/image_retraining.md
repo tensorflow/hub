@@ -8,7 +8,7 @@ related task and reusing it in a new model. In this tutorial, we will reuse the
 feature extraction capabilities from powerful image classifiers trained on
 ImageNet and simply train a new classification layer on top.  For more
 information on the approach you can see [this paper on
-Decaf](https://arxiv.org/abs/1310.1531.pdf).
+Decaf](https://arxiv.org/abs/1310.1531).
 
 Though it's not as good as training the full model, this is surprisingly
 effective for many applications, works with moderate amounts of training data
