@@ -28,7 +28,7 @@ that can be reused on new tasks.
 *   Tutorials:
     *   [Image Retraining](https://www.tensorflow.org/tutorials/image_retraining)
     *   [Text Classification](https://www.tensorflow.org/tutorials/text_classification_with_tf_hub)
-    *   [Additional Colabs](examples/colab/README.md)
+    *   [Additional Examples](examples/README.md)
 *   Key Concepts:
     *   [Using a Module](docs/basics.md)
     *   [Creating a New Module](docs/creating.md)
