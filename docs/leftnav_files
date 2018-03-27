@@ -2,8 +2,8 @@ index.md: Introduction
 installation.md
 
 ### Tutorials
-tutorials/image_retraining.md: Image Retraining
-tutorials/text_classification.md: Text Classification
+../tutorials/image_retraining.md: Image Retraining
+../tutorials/text_classification_with_tf_hub.md: Text Classification
 
 ### Key Concepts
 basics.md
@@ -11,7 +11,11 @@ creating.md
 fine_tuning.md
 
 ### Modules
+modules/index.md: Overview
 modules/image.md
 modules/text.md
 modules/other.md
 common_signatures/index.md
+
+### API
+../api_docs/python/hub/index.md: API Docs
