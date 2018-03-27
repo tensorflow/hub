@@ -11,8 +11,8 @@ m = hub.Module("https://tfhub.dev/...")
 
 
 ## Generative Adversarial Networks
-https://tfhub.dev/google/progan-128/1
+* [progan-128](https://tfhub.dev/google/progan-128/1)
 
 
 ## DEep Local Features (DELF)
-https://tfhub.dev/google/delf/1
+* [delf](https://tfhub.dev/google/delf/1)
