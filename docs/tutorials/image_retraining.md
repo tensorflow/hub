@@ -58,7 +58,7 @@ Once you have the images, you can download the example code from GitHub
 ```sh
 mkdir ~/example_code
 cd ~/example_code
-curl -LO https://github.com/tensorflow/hub/raw/master/examples/image_retraining/retrain.py
+curl -LO https://github.com/tensorflow/hub/raw/r0.1/examples/image_retraining/retrain.py
 ```
 
 In the simplest cases the retrainer can then be run like this
