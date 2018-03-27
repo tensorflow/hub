@@ -21,7 +21,7 @@ r"""Simple transfer learning with image modules from TensorFlow Hub.
 This example shows how to train an image classifier based on any
 TensorFlow Hub module that computes image feature vectors. By default,
 it uses the feature vectors computed by Inception V3 trained on ImageNet.
-See https://github.com/tensorflow/hub/blob/master/docs/modules/image.md
+See https://github.com/tensorflow/hub/blob/r0.1/docs/modules/image.md
 for more options.
 
 The top layer receives as input a 2048-dimensional vector (assuming
@@ -1320,7 +1320,7 @@ if __name__ == '__main__':
           'https://tfhub.dev/google/imagenet/inception_v3/feature_vector/1'),
       help="""\
       Which TensorFlow Hub module to use.
-      See https://github.com/tensorflow/hub/blob/master/docs/modules/image.md
+      See https://github.com/tensorflow/hub/blob/r0.1/docs/modules/image.md
       for some publicly available ones.\
       """)
   parser.add_argument(

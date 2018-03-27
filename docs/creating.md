@@ -42,6 +42,6 @@ signature](common_signatures/index.md) when possible, so that consumers can
 easily exchange modules and find the best one for their problem.
 
 ## Real example
-Take a look at our [text embedding module exporter](https://github.com/tensorflow/hub/blob/master/examples/text_embeddings/export.py)
+Take a look at our [text embedding module exporter](https://github.com/tensorflow/hub/blob/r0.1/examples/text_embeddings/export.py)
 for a real-world example of how to create a module from a common text embedding
 format.
