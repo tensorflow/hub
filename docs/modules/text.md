@@ -10,12 +10,15 @@ TensorFlow Hub library like so:
 m = hub.Module("https://tfhub.dev/...")
 ```
 
-
 ### Universal Sentence Encoder
 Encoder of greater-than-word length text trained on a variety of data.
 
 * [universal-sentence-encoder](https://tfhub.dev/google/universal-sentence-encoder/1)
 
+### ELMo
+Deep Contextualized Word Representations trained on the 1 Billion Word Benchmark.
+
+* [elmo](https://tfhub.dev/google/elmo/1)
 
 ### NNLM embedding trained on Google News
 Embedding from a neural network language model trained on Google News dataset.
