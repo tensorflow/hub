@@ -420,7 +420,7 @@ As before, you can use all of the retrained models with `label_image.py`.
 You will need to specify the image size that your model expects, for example:
 
 ```sh
-python tensorflow/examples/label_image/label_image.py \
+python label_image.py \
 --graph=/tmp/output_graph.pb --labels=/tmp/output_labels.txt \
 --input_layer=Placeholder \
 --output_layer=final_result \
