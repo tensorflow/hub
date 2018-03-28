@@ -59,9 +59,11 @@ Applying dropout to the output features (or not) should be left to the module
 consumer. The module itself should not perform dropout on the actual outputs
 (even if it uses dropout internally in other places).
 
-The outputs dictionary may provide the activations of hidden layers inside the
-module. Their keys and values are module-dependent. It is recommended to prefix
-keys with an architecture name (e.g., `"InceptionV3/Mixed_5c"`).
+The outputs dictionary may provide further outputs, for example, the activations
+of hidden layers inside the module. Their keys and values are module-dependent.
+It is recommended to prefix architecture-dependent keys with an architecture
+name (e.g., to avoid confusing the intermediate layer `"InceptionV3/Mixed_5c"`
+with the topmost convolutional layer `"InceptionV2/Mixed_5c"`).
 
 <a name="classification"></a>
 ## Image Classification
@@ -133,11 +135,11 @@ what you get from `tf.images.decode_*()` followed by
 A module with exactly one (or one principal) input of images uses the name
 `"images"` for this input.
 
-The module accepts any `batch_size`, and correspondingly set the first dimension
-of TensorInfo.tensor_shape to "unknown". The last dimension is fixed to the
-number `3` of RGB channels. The `height` and `width` dimensions are fixed to
-the expected size of input images. (Future work may remove that restriction
-for fully convolutional modules.)
+The module accepts any `batch_size`, and correspondingly sets the first
+dimension of TensorInfo.tensor_shape to "unknown". The last dimension is fixed
+to the number `3` of RGB channels. The `height` and `width` dimensions are
+fixed to the expected size of input images. (Future work may remove that
+restriction for fully convolutional modules.)
 
 Consumers of the module should not inspect the shape directly, but obtain
 the size information by calling hub.get_expected_image_size()
@@ -146,5 +148,5 @@ accordingly (typically before/during batching).
 
 For simplicity, TF-Hub modules use the `channels_last`
 (or `NHWC`) layout of Tensors, and leave it to TensorFlow's graph optimizer
-to rewrite to `channels_first` (or `NCHW`) if needed. This was enabled by
-default *after* the github branch for TF 1.6.
+to rewrite to `channels_first` (or `NCHW`) if needed. It has been doing that
+by default since TensorFlow version 1.7.
