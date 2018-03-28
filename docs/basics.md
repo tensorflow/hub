@@ -33,8 +33,7 @@ and then creating a module from a URL:
 m = hub.Module("https://tfhub.dev/google/progan-128/1")
 ```
 
-results in downloading the unpacked version of the module in
-`/my_module_cache`.
+results in downloading and unpacking the module into `/my_module_cache`.
 
 
 ## Applying a Module
