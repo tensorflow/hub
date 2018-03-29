@@ -1,12 +1,12 @@
 # Installation
 
-Currently, TensorFlow Hub depends on bug fixes and enhancements not present in a
-stable TensorFlow release. For now, please [install or
-upgrade](https://www.tensorflow.org/install/) your TensorFlow package past
-1.7.0rc0. For instance:
+TensorFlow Hub depends on bug fixes and enhancements not present in TensorFlow
+releases prior to `1.7`. You must [install or
+upgrade](https://www.tensorflow.org/install/) your TensorFlow package to at
+least `1.7` to use TensorFlow Hub:
 
 ```bash
-$ pip install "tensorflow>=1.7.0rc0"
+$ pip install "tensorflow>=1.7.0"
 $ pip install tensorflow-hub
 ```
 
