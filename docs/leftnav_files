@@ -15,7 +15,11 @@ modules/index.md: Overview
 modules/image.md
 modules/text.md
 modules/other.md
-common_signatures/index.md
+
+### Common Signatures
+common_signatures/index.md: Overview
+common_signatures/images.md
+common_signatures/text.md
 
 ### API
 ../api_docs/python/hub/index.md: API Docs
