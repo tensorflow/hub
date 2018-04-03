@@ -31,13 +31,7 @@ function main() {
 
   DEST=$1
   TMPDIR=$(mktemp -d -t --suffix _tensorflow_hub_pip_pkg)
-  TMPVENVDIR="${TMPDIR}/venv"
   RUNFILES="bazel-bin/tensorflow_hub/pip_package/build_pip_package.runfiles/org_tensorflow_hub"
-
-  # Check that virtualenv is installed.
-  if [[ -z "$(which virtualenv)" ]]; then
-    die "ERROR: virtualenv is required, but does not appear to be installed."
-  fi
 
   echo $(date) : "=== Using tmpdir: ${TMPDIR}"
 
@@ -53,23 +47,18 @@ function main() {
   cp "LICENSE" "${TMPDIR}/LICENSE.txt"
   cp -R "${RUNFILES}/tensorflow_hub" "${TMPDIR}"
 
-  pushd ${TMPDIR} >/dev/null
+  pushd ${TMPDIR}
   rm -f MANIFEST
-
-  echo $(date) : "=== Activating virtualenv ==="
-  virtualenv "${TMPVENVDIR}"
-  source "${TMPVENVDIR}/bin/activate"
 
   # Require wheel for bdist_wheel command, and setuptools 36.2.0+ so that
   # env markers are handled (https://github.com/pypa/setuptools/pull/1081)
-  pip install wheel -U
-  pip install "setuptools>=36.2.0"
+  pip check "wheel" "setuptools>=36.2.0"
+
   echo $(date) : "=== Building universal python wheel in $PWD"
   python setup.py bdist_wheel --universal >/dev/null
   mkdir -p ${DEST}
   cp dist/* ${DEST}
-  popd >/dev/null
-  deactivate  # de-activate virtualenv
+  popd
   rm -rf ${TMPDIR}
   echo $(date) : "=== Output wheel files are in: ${DEST}"
 }
