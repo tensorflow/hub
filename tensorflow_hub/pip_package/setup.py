@@ -22,7 +22,8 @@ from setuptools import setup
 
 # Can't import the module during setup.py.
 # Use execfile to find __version__.
-execfile("tensorflow_hub/version.py")
+with open("tensorflow_hub/version.py") as in_file:
+    exec(in_file.read())
 
 REQUIRED_PACKAGES = [
     'numpy >= 1.12.0',
