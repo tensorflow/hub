@@ -51,6 +51,7 @@ with tf.Graph().as_default():
         [image](modules/image.md), [text](modules/text.md),
         [other](modules/other.md)
     *   [Common Signatures for Modules](common_signatures/index.md)
+    *   [Hosting a Module](hosting.md)
 
 
 ## Additional Information
