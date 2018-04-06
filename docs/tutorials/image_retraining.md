@@ -27,7 +27,8 @@ module](../modules/google/imagenet/inception_v3/feature_vector/1.md)
 with the Inception V3 architecture trained on ImageNet,
 and [come back later](#other_architectures) to further options, including
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)/PNASNet, as well as
-[MobileNet V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html) and V2.
+[MobileNet V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html) and
+[V2](https://research.googleblog.com/2018/04/mobilenetv2-next-generation-of-on.html).
 
 Before you start, you need to install the PIP package `tensorflow-hub`,
 along with a sufficiently recent version of TensorFlow. See
@@ -380,7 +381,9 @@ the different
 [modules](../modules/image.md#mobilenet)
 implementing the [MobileNet
 V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html)
-or V2 architectures, or also
+or
+[V2](https://research.googleblog.com/2018/04/mobilenetv2-next-generation-of-on.html)
+architectures, or also
 [`nasnet_mobile`](../modules/google/imagenet/nasnet_mobile/feature_vector/1.md).
 
 Training with a different module is easy: Just pass the `--tfhub_module`
