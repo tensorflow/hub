@@ -1039,6 +1039,10 @@ def main(_):
        distorted_image_tensor) = add_input_distortions(
            FLAGS.flip_left_right, FLAGS.random_crop, FLAGS.random_scale,
            FLAGS.random_brightness, module_spec)
+      cache_bottlenecks(sess, image_lists, FLAGS.image_dir,
+                        FLAGS.bottleneck_dir, distorted_jpeg_data_tensor,
+                        distorted_image_tensor, resized_image_tensor,
+                        bottleneck_tensor, FLAGS.tfhub_module)
     else:
       # We'll make sure we've calculated the 'bottleneck' image summaries and
       # cached them on disk.
