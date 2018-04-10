@@ -821,13 +821,13 @@ def add_evaluation_step(result_tensor, ground_truth_tensor):
   return evaluation_step, prediction
 
 
-def run_final_eval(sess, module_spec, class_count, image_lists,
+def run_final_eval(train_session, module_spec, class_count, image_lists,
                    jpeg_data_tensor, decoded_image_tensor,
                    resized_image_tensor, bottleneck_tensor):
   """Runs a final evaluation on an eval graph using the test data set.
 
   Args:
-    sess: Session for the train graph.
+    train_session: Session for the train graph with the tensors below.
     module_spec: The hub.ModuleSpec for the image module being used.
     class_count: Number of classes
     image_lists: OrderedDict of training images for each label.
@@ -836,16 +836,17 @@ def run_final_eval(sess, module_spec, class_count, image_lists,
     resized_image_tensor: The input node of the recognition graph.
     bottleneck_tensor: The bottleneck output layer of the CNN graph.
   """
-  (sess, _, bottleneck_input, ground_truth_input, evaluation_step,
-   prediction) = build_eval_session(module_spec, class_count)
-
   test_bottlenecks, test_ground_truth, test_filenames = (
-      get_random_cached_bottlenecks(sess, image_lists, FLAGS.test_batch_size,
+      get_random_cached_bottlenecks(train_session, image_lists,
+                                    FLAGS.test_batch_size,
                                     'testing', FLAGS.bottleneck_dir,
                                     FLAGS.image_dir, jpeg_data_tensor,
                                     decoded_image_tensor, resized_image_tensor,
                                     bottleneck_tensor, FLAGS.tfhub_module))
-  test_accuracy, predictions = sess.run(
+
+  (eval_session, _, bottleneck_input, ground_truth_input, evaluation_step,
+   prediction) = build_eval_session(module_spec, class_count)
+  test_accuracy, predictions = eval_session.run(
       [evaluation_step, prediction],
       feed_dict={
           bottleneck_input: test_bottlenecks,
