@@ -23,19 +23,6 @@ import sys
 
 import tensorflow as tf
 
-from tensorflow_hub.estimator import LatestModuleExporter
-from tensorflow_hub.estimator import register_module_for_export
-from tensorflow_hub.feature_column import image_embedding_column
-from tensorflow_hub.feature_column import text_embedding_column
-from tensorflow_hub.image_util import get_expected_image_size
-from tensorflow_hub.image_util import get_num_image_channels
-from tensorflow_hub.module import Module
-from tensorflow_hub.module_spec import ModuleSpec
-from tensorflow_hub.native_module import add_signature
-from tensorflow_hub.native_module import create_module_spec
-from tensorflow_hub.native_module import load_module_spec
-from tensorflow_hub.version import __version__
-
 
 # TensorFlow Hub depends on features not yet present in a stable TensorFlow
 # release. Until then, we will explicitly check tf.VERSION to make this clear.
@@ -63,6 +50,26 @@ def _check_tensorflow_version(version):
 
 # Comment/uncomment to skip checking the TensorFlow version.
 _check_tensorflow_version(tf.VERSION)
+
+
+# pylint: disable=g-import-not-at-top
+# Only do imports after check TensorFlow version so the useful
+# error message is thrown instead of an obscure error of missing
+# symbols at executing the imports.
+from tensorflow_hub.estimator import LatestModuleExporter
+from tensorflow_hub.estimator import register_module_for_export
+from tensorflow_hub.feature_column import image_embedding_column
+from tensorflow_hub.feature_column import text_embedding_column
+from tensorflow_hub.image_util import get_expected_image_size
+from tensorflow_hub.image_util import get_num_image_channels
+from tensorflow_hub.module import Module
+from tensorflow_hub.module_spec import ModuleSpec
+from tensorflow_hub.native_module import add_signature
+from tensorflow_hub.native_module import create_module_spec
+from tensorflow_hub.native_module import load_module_spec
+from tensorflow_hub.version import __version__
+# pylint: enable=g-import-not-at-top
+
 
 # Used by doc generation script.
 _allowed_symbols = [
