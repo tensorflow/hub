@@ -21,8 +21,8 @@ from __future__ import print_function
 import abc
 import datetime
 import os
-import shutil
 import socket
+import sys
 import tarfile
 import tempfile
 import time
@@ -40,6 +40,7 @@ tf.flags.DEFINE_string(
     "Otherwise it will attempt to find a network path.")
 
 _TFHUB_CACHE_DIR = "TFHUB_CACHE_DIR"
+_TFHUB_DOWNLOAD_PROGRESS = "TFHUB_DOWNLOAD_PROGRESS"
 
 
 def tfhub_cache_dir(default_cache_dir=None, use_temp=False):
@@ -81,49 +82,115 @@ def create_local_module_dir(cache_dir, module_name):
   return os.path.join(cache_dir, module_name)
 
 
-def extract_file(tgz, tarinfo, dst_path, buffer_size=10*1024*1024):
-  """Extracts 'tarinfo' from 'tgz' and writes to 'dst_path'."""
-  src = tgz.extractfile(tarinfo)
-  dst = tf.gfile.GFile(dst_path, "wb")
-  shutil.copyfileobj(src, dst, buffer_size)
-  dst.close()
-  src.close()
+class DownloadManager(object):
+  """Helper class responsible for TF-Hub module download and extraction."""
 
+  def __init__(self, url):
+    """Creates DownloadManager responsible for downloading a TF-Hub module.
 
-def download_and_uncompress(filename, fileobj, dst_path):
-  """Streams the content for the 'fileobj' and stores the result in dst_path.
+    Args:
+       url: URL pointing to the TF-Hub module to download and extract.
+    """
+    self._url = url
+    self._last_progress_msg_print_time = time.time()
+    self._total_bytes_downloaded = 0
+    self._max_prog_str = 0
 
-  Args:
-    filename: Name of the file (used for logging).
-    fileobj: File handle pointing to .tar/.tar.gz content.
-    dst_path: Absolute path where to store uncompressed data from 'fileobj'.
+  def _print_download_progress_msg(self, msg, flush=False):
+    """Prints a message about download progress either to the console or TF log.
 
-  Raises:
-    ValueError: Unknown object encountered inside the TAR file.
-  """
-  try:
-    with tarfile.open(mode="r|*", fileobj=fileobj) as tgz:
-      for tarinfo in tgz:
-        if tarinfo.name.startswith("/"):
-          tarinfo.name = tarinfo.name[1:]
+    Args:
+      msg: Message to print.
+      flush: Indicates whether to flush the output (only used in interactive
+             mode).
+    """
+    if self._interactive_mode():
+      # Print progress message to console overwriting previous progress
+      # message.
+      self._max_prog_str = max(self._max_prog_str, len(msg))
+      sys.stdout.write("\r%-{}s".format(self._max_prog_str) % msg)
+      sys.stdout.flush()
+      if flush:
+        print("\n")
+    else:
+      # Interactive progress tracking is disabled. Print progress to the
+      # standard TF log.
+      tf.logging.info(msg)
 
-        # Check that the absolute path of the object to extract is inside
-        # `path`.
-        abs_target_path = os.path.join(dst_path, tarinfo.name)
-        if not abs_target_path.startswith(dst_path):
-          raise ValueError(
-              "Module archive contains files outside its directory")
+  def _log_progress(self, bytes_downloaded):
+    """Logs progress information about ongoing module download.
 
-        if tarinfo.isfile():
-          extract_file(tgz, tarinfo, abs_target_path)
-        elif tarinfo.isdir():
-          tf.gfile.MakeDirs(abs_target_path)
-        else:
-          # We do not support symlinks and other uncommon objects.
-          raise ValueError(
-              "Unexpected object type in tar archive: %s" % tarinfo.type)
-  except tarfile.ReadError:
-    raise IOError("%s does not appear to be a valid module." % filename)
+    Args:
+      bytes_downloaded: Number of bytes downloaded.
+    """
+    self._total_bytes_downloaded += bytes_downloaded
+    now = time.time()
+    if (self._interactive_mode() or
+        now - self._last_progress_msg_print_time > 15):
+      # Print progress message every 15 secs or if interactive progress
+      # tracking is enabled.
+      self._print_download_progress_msg(
+          "Downloading %s: %s" % (self._url,
+                                  tf_utils.bytes_to_readable_str(
+                                      self._total_bytes_downloaded, True)))
+      self._last_progress_msg_print_time = now
+
+  def _interactive_mode(self):
+    """Returns true if interactive logging is enabled."""
+    return os.getenv(_TFHUB_DOWNLOAD_PROGRESS, "")
+
+  def _extract_file(self, tgz, tarinfo, dst_path, buffer_size=10<<20):
+    """Extracts 'tarinfo' from 'tgz' and writes to 'dst_path'."""
+    src = tgz.extractfile(tarinfo)
+    dst = tf.gfile.GFile(dst_path, "wb")
+    while 1:
+      buf = src.read(buffer_size)
+      if not buf:
+        break
+      dst.write(buf)
+      self._log_progress(len(buf))
+    dst.close()
+    src.close()
+
+  def download_and_uncompress(self, fileobj, dst_path):
+    """Streams the content for the 'fileobj' and stores the result in dst_path.
+
+    Args:
+      fileobj: File handle pointing to .tar/.tar.gz content.
+      dst_path: Absolute path where to store uncompressed data from 'fileobj'.
+
+    Raises:
+      ValueError: Unknown object encountered inside the TAR file.
+    """
+    try:
+      with tarfile.open(mode="r|*", fileobj=fileobj) as tgz:
+        for tarinfo in tgz:
+          if tarinfo.name.startswith("/"):
+            tarinfo.name = tarinfo.name[1:]
+
+          # Check that the absolute path of the object to extract is inside
+          # `path`.
+          abs_target_path = os.path.join(dst_path, tarinfo.name)
+          if not abs_target_path.startswith(dst_path):
+            raise ValueError(
+                "Module archive contains files outside its directory")
+
+          if tarinfo.isfile():
+            self._extract_file(tgz, tarinfo, abs_target_path)
+          elif tarinfo.isdir():
+            tf.gfile.MakeDirs(abs_target_path)
+          else:
+            # We do not support symlinks and other uncommon objects.
+            raise ValueError(
+                "Unexpected object type in tar archive: %s" % tarinfo.type)
+        self._print_download_progress_msg(
+            "Downloaded %s, Total size: %s" %
+            (self._url,
+             tf_utils.bytes_to_readable_str(self._total_bytes_downloaded, True)),
+            flush=True)
+    except tarfile.ReadError:
+      raise IOError("%s does not appear to be a valid module." % self._url)
+
 
 def _module_descriptor_file(module_dir):
   """Returns the name of the file containing descriptor for the 'module_dir'."""

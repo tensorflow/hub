@@ -99,7 +99,8 @@ class HttpCompressedFileResolver(resolver.Resolver):
 
       url_opener = url.build_opener(LoggingHTTPRedirectHandler)
       response = url_opener.open(request)
-      return resolver.download_and_uncompress(cur_url, response, tmp_dir)
+      return resolver.DownloadManager(cur_url).download_and_uncompress(
+          response, tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
                                     self._lock_file_timeout_sec())
@@ -127,8 +128,8 @@ class GcsCompressedFileResolver(resolver.Resolver):
     module_dir = _module_dir(self._cache_dir, handle)
 
     def download(handle, tmp_dir):
-      return resolver.download_and_uncompress(
-          handle, tf.gfile.GFile(handle, "r"), tmp_dir)
+      return resolver.DownloadManager(handle).download_and_uncompress(
+          tf.gfile.GFile(handle, "r"), tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
                                     LOCK_FILE_TIMEOUT_SEC)

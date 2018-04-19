@@ -910,7 +910,7 @@ def save_graph_to_file(graph, graph_file_name, module_spec, class_count):
 
 
 def prepare_file_system():
-  # Set up the directory we'll write summaries to for TensorBoard
+  # Setup the directory we'll write summaries to for TensorBoard
   if tf.gfile.Exists(FLAGS.summaries_dir):
     tf.gfile.DeleteRecursively(FLAGS.summaries_dir)
   tf.gfile.MakeDirs(FLAGS.summaries_dir)
@@ -1035,7 +1035,7 @@ def main(_):
     jpeg_data_tensor, decoded_image_tensor = add_jpeg_decoding(module_spec)
 
     if do_distort_images:
-      # We will be applying distortions, so set up the operations we'll need.
+      # We will be applying distortions, so setup the operations we'll need.
       (distorted_jpeg_data_tensor,
        distorted_image_tensor) = add_input_distortions(
            FLAGS.flip_left_right, FLAGS.random_crop, FLAGS.random_scale,
