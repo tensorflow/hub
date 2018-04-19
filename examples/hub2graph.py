@@ -24,6 +24,9 @@ Usage:
 ```
 python3 /path/to/hub2graph.py -m <TF Hub path or URL> -o output_graph_def.pb
 ```
+
+This script is not intended to digest large (over 1GB) graphs.
+The hard limit is 2 GB - the maximum size of Protocol Buffers.
 """
 
 import argparse
@@ -99,6 +102,11 @@ def main():
         # everything happens inside the single default graph
         log.info("Importing %s", args.hub)
         module = tfhub.Module(args.hub)
+        # protected members are used here
+        # `outputs = module(inputs)` has several problems:
+        # 1. slow
+        # 2. creates a new subgraph which is hard to rename and unwrap
+        # 3. creates redundant placeholders for our goal
         signature_def = module._impl._meta_graph.signature_def.get(
             module._impl.get_signature_name(None))
         print_signature(signature_def.inputs, "Inputs")
