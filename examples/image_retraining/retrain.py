@@ -685,7 +685,7 @@ def add_input_distortions(flip_left_right, random_crop, random_scale,
   precrop_shape_as_int = tf.cast(precrop_shape, dtype=tf.int32)
   precropped_image = tf.image.resize_bilinear(decoded_image_4d,
                                               precrop_shape_as_int)
-  precropped_image_3d = tf.squeeze(precropped_image, squeeze_dims=[0])
+  precropped_image_3d = tf.squeeze(precropped_image, axis=[0])
   cropped_image = tf.random_crop(precropped_image_3d,
                                  [input_height, input_width, input_depth])
   if flip_left_right:
