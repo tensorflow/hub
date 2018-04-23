@@ -419,7 +419,7 @@ class _ModuleImpl(module_impl.ModuleImpl):
     # applied inside a control flow structure such as a while_loop.
     control_flow = self._graph._get_control_flow_context()  # pylint: disable=protected-access
     if control_flow:
-      for key, value in feed_map.items():
+      for key, value in sorted(feed_map.items()):
         feed_map[key] = control_flow.AddValue(value)
 
     # Don't mark the name as used at this point - import_scoped_meta_graph will
