@@ -12,8 +12,8 @@ For example:
 ```python
 def module_fn():
   inputs = tf.placeholder(dtype=tf.float32, shape=[None, 50])
-  layer1 = tf.layers.fully_connected(inputs, 200)
-  layer2 = tf.layers.fully_connected(layer1, 100)
+  layer1 = tf.layers.dense(inputs, 200)
+  layer2 = tf.layers.dense(layer1, 100)
   outputs = dict(default=layer2, hidden_activations=layer1)
   # Add default signature.
   hub.add_signature(inputs=inputs, outputs=outputs)
