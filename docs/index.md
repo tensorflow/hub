@@ -45,15 +45,24 @@ with tf.Graph().as_default():
     *   [Using a Module](basics.md)
     *   [Creating a New Module](creating.md)
     *   [Fine-Tuning a Module](fine_tuning.md)
+    *   [Hosting a Module](hosting.md)
 *   Modules:
     *   [Available Modules](modules/index.md) -- quick links:
         [image](modules/image.md), [text](modules/text.md),
         [other](modules/other.md)
     *   [Common Signatures for Modules](common_signatures/index.md)
-    *   [Hosting a Module](hosting.md)
 
 
 ## Additional Information
+
+### Publishing on tfhub.dev
+
+Are you interested in publishing your modules on tfhub.dev? Express your
+interest via our [Publisher
+Survey](https://services.google.com/fb/forms/tensorflowhubpublishersurvey/). We
+appreciate your valuable feedback, and will be providing more information about
+publishing modules in the coming months. For now, please read our documentation
+about [Hosting a Module](hosting.md).
 
 ### Fairness
 
