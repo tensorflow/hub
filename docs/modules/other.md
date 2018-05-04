@@ -16,3 +16,6 @@ m = hub.Module("https://tfhub.dev/...")
 
 ## DEep Local Features (DELF)
 * [delf](https://tfhub.dev/google/delf/1)
+
+## Inflated 3D Convnet (I3D)
+* [i3d-kinetics-400](https://tfhub.dev/deepmind/i3d-kinetics-400/1.md)
