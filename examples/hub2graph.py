@@ -111,8 +111,6 @@ def main():
             module._impl.get_signature_name(None))
         print_signature(signature_def.inputs, "Inputs")
         print_signature(signature_def.outputs, "Outputs")
-        input_names = [
-            tensor_name(v) for _, v in sorted(signature_def.inputs.items())]
         output_names = [
             tensor_name(v) for _, v in sorted(signature_def.outputs.items())]
         log.info("Launching the session")
@@ -120,21 +118,19 @@ def main():
             log.info("Initializing variables")
             session.run(tf.global_variables_initializer())
             graph_def = graph.as_graph_def()
-            if not args.disable_optimization:
-                nodes = len(graph_def.node)
-                graph_def = graph_util.extract_sub_graph(
-                    graph_def, input_names + output_names)
-                log.info("Optimized the graph: %d -> %d nodes", nodes,
-                         len(graph_def.node))
             log.info("Preparing the exported graph")
             # reset the devices
             for node in graph_def.node:
                 node.device = ""
-            # turn variables into constants
-            constant_graph = graph_util.convert_variables_to_constants(
-                session, graph_def, output_names)
+            if not args.disable_optimization:
+                nodes_number = len(graph_def.node)
+                # turn variables into constants and remove redundant nodes
+                graph_def = graph_util.convert_variables_to_constants(
+                    session, graph_def, output_names)
+                log.info("Optimized the graph: %d -> %d nodes", nodes_number,
+                         len(graph_def.node))
             log.info("Writing %s", args.output)
-            graph_io.write_graph(constant_graph, *os.path.split(args.output),
+            graph_io.write_graph(graph_def, *os.path.split(args.output),
                                  as_text=False)
             if args.tensorboard:
                 # Using the private API here because
@@ -142,8 +138,7 @@ def main():
                 # tf.import_graph_def() places the graph inside "import"
                 # and there is no way to avoid that, we would also have to
                 # destroy the current graph and initialize a new one.
-                summary.FileWriter(args.tensorboard)._add_graph_def(
-                    constant_graph)
+                summary.FileWriter(args.tensorboard)._add_graph_def(graph_def)
                 print("\nVisualize: tensorboard --logdir=" + args.tensorboard)
 
 
