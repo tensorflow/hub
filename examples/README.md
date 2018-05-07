@@ -22,6 +22,11 @@ Explores text semantic similarity with the [Universal Encoder Module](https://tf
 Explores a generative image module.
 
 
+#### [`colab/action_recognition_with_tf_hub.ipynb`](colab/action_recognition_with_tf_hub.ipynb)
+
+Explores action recognition from video.
+
+
 #### [`colab/tf_hub_delf_module.ipynb`](colab/tf_hub_delf_module.ipynb)
 
 Exemplifies use of the [DELF Module](https://tfhub.dev/google/delf/1) for landmark recognition and matching.
