@@ -43,3 +43,6 @@ class MultiImplRegister(object):
     raise RuntimeError(
         "Missing implementation that supports: %s(*%r, **%r)" % (
             self._name, args, kwargs))
+
+
+resolver = MultiImplRegister("resolver")

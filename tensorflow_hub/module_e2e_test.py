@@ -84,7 +84,6 @@ class ModuleEnd2EndTest(tf.test.TestCase):
       self.assertStartsWith(
           str(e), "unsupported handle format 's3://my_module.zip'. No "
           "resolvers found that can successfully resolve it.")
-      self.assertNotEquals(-1, str(e).find("Currently supported handle"))
 
     try:
       non_existant_module = os.path.join(self.get_temp_dir(), "missing_module")
@@ -94,7 +93,6 @@ class ModuleEnd2EndTest(tf.test.TestCase):
           str(e), "unsupported handle format '%s'. No "
           "resolvers found that can successfully resolve it." %
           non_existant_module)
-      self.assertNotEquals(-1, str(e).find("Currently supported handle"))
 
 
 if __name__ == "__main__":

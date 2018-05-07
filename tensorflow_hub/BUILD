@@ -34,6 +34,18 @@ py_library(
         ":feature_column",
         ":image_util",
         ":module",
+        "//tensorflow_hub:expect_tensorflow_installed",
+        ":config",
+    ],
+)
+
+py_library(
+    name = "config",
+    srcs = ["config.py"],
+    deps = [
+        ":compressed_module_resolver",
+        ":registry",
+        ":resolver",
     ],
 )
 
@@ -89,6 +101,20 @@ py_library(
     ],
 )
 
+py_test(
+    name = "compressed_module_resolver_test",
+    size = "medium",
+    srcs = ["compressed_module_resolver_test.py"],
+    srcs_version = "PY2AND3",
+    tags = ["nofixdeps"],
+    deps = [
+        ":compressed_module_resolver",
+        ":tensorflow_hub",
+        ":test_utils",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
 py_library(
     name = "image_util",
     srcs = ["image_util.py"],
@@ -118,7 +144,7 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":all_protos_py_pb2",
-        ":compressed_module_resolver",
+        ":registry",
         ":saved_model_lib",
         ":tensor_info",
         ":tf_utils",
@@ -193,26 +219,13 @@ py_library(
 )
 
 py_test(
-    name = "compressed_module_resolver_test",
-    size = "medium",
-    srcs = ["compressed_module_resolver_test.py"],
-    srcs_version = "PY2AND3",
-    tags = ["nofixdeps"],
-    deps = [
-        ":compressed_module_resolver",
-        ":tensorflow_hub",
-        ":test_utils",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_test(
     name = "resolver_test",
     size = "medium",
     srcs = ["resolver_test.py"],
     srcs_version = "PY2AND3",
     deps = [
         ":resolver",
+        ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )

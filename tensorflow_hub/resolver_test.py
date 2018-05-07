@@ -52,7 +52,7 @@ class PathResolverTest(tf.test.TestCase):
 
   def testGetModulePath(self):
     tf.gfile.MkDir("/tmp/1234")
-    path = self.resolver.get_module_path("/tmp/1234")
+    path = self.resolver("/tmp/1234")
     self.assertEqual(path, "/tmp/1234")
 
 
@@ -65,39 +65,10 @@ class FakeResolver(resolver.Resolver):
   def is_supported(self, handle):
     return handle.startswith(self.prefix)
 
-  def _get_module_path(self, handle):
+  def __call__(self, handle):
     if handle.endswith("error"):
       raise ValueError("error for: " + handle)
     return handle + "-resolved_by_" + self.prefix
-
-
-class UseFirstSupportingResolverTest(tf.test.TestCase):
-
-  def setUp(self):
-    super(UseFirstSupportingResolverTest, self).setUp()
-    self.resolver = resolver.UseFirstSupportingResolver(
-        [FakeResolver(prefix="b"), FakeResolver(prefix="a")])
-
-  def testHandleSupported(self):
-    self.assertTrue(self.resolver.is_supported("a/foo"))
-    self.assertTrue(self.resolver.is_supported("b/foo"))
-    self.assertFalse(self.resolver.is_supported("c/foo"))
-
-  def testGetModulePath(self):
-    path = self.resolver.get_module_path("a/foo")
-    self.assertEqual(path, "a/foo-resolved_by_a")
-    path = self.resolver.get_module_path("b/foo")
-    self.assertEqual(path, "b/foo-resolved_by_b")
-
-  def testGetModulePathUnsupported(self):
-    self.assertRaises(
-        resolver.UnsupportedHandleError,
-        lambda: self.resolver.get_module_path("#google/foo"))
-
-  def testGetModulePathRaisesError(self):
-    self.assertRaises(
-        ValueError,
-        lambda: self.resolver.get_module_path("a/error"))
 
 
 class ResolverTest(tf.test.TestCase):
@@ -313,7 +284,7 @@ class ResolverTest(tf.test.TestCase):
     try:
       resolver.atomic_download("module", kill_download, module_dir)
       self.fail("atomic_download() should have thrown an exception.")
-    except OSError as e:
+    except OSError as _:
       pass
     parent_dir = os.path.abspath(os.path.join(module_dir, ".."))
     # Test that all files got cleaned up.

@@ -86,30 +86,29 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
   def testGetModulePathTar(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver.get_module_path(
-        "http://localhost:%d/mock_module.tar" %
-        self.server_port)
+    path = http_resolver(
+        "http://localhost:%d/mock_module.tar" % self.server_port)
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
   def testGetModulePathTarGz(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver.get_module_path(self.module_handle)
+    path = http_resolver(self.module_handle)
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
   def testGetModuleFromSmartLocation(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver.get_module_path(self.smart_handle)
+    path = http_resolver(self.smart_handle)
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
   def testModuleDescriptor(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver.get_module_path(self.module_handle)
+    path = http_resolver(self.module_handle)
     desc = tf_utils.read_file_to_string(resolver._module_descriptor_file(path))
     self.assertRegexpMatches(desc, "Module: %s\n"
                              "Download Time: .*\n"
@@ -121,7 +120,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     FLAGS.tfhub_cache_dir = ""
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
     handle = "http://localhost:%d/mock_module.tar.gz" % self.server_port
-    path = http_resolver.get_module_path(handle)
+    path = http_resolver(handle)
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
     self.assertStartsWith(path, tempfile.gettempdir())
@@ -163,8 +162,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
 
     # Create an "abandoned" lock file, i.e. a lock file with no process actively
     # downloading anymore.
-    module_dir = compressed_module_resolver._module_dir(FLAGS.tfhub_cache_dir,
-                                                        self.module_handle)
+    module_dir = compressed_module_resolver._module_dir(self.module_handle)
     task_uid = uuid.uuid4().hex
     lock_filename = resolver._lock_filename(module_dir)
     tf_utils.atomic_write_string_to_file(lock_filename,
@@ -178,7 +176,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
       handle = "http://localhost:%d/mock_module.tar.gz" % self.server_port
       # After seeing the lock file is abandoned, this resolver will download the
       # module and return a path to the extracted contents.
-      path = http_resolver.get_module_path(handle)
+      path = http_resolver(handle)
     files = os.listdir(path)
     self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
     self.assertFalse(tf.gfile.Exists(lock_filename))
@@ -186,7 +184,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
   def testModuleAlreadyDownloaded(self):
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver.get_module_path(self.module_handle)
+    path = http_resolver(self.module_handle)
     files = sorted(os.listdir(path))
     self.assertListEqual(files, ["file1", "file2", "file3"])
     creation_times = [
@@ -194,7 +192,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     ]
     # Call resolver again and make sure that the module is not downloaded again
     # by checking the timestamps of the module files.
-    path = http_resolver.get_module_path(self.module_handle)
+    path = http_resolver(self.module_handle)
     files = sorted(os.listdir(path))
     self.assertListEqual(files, ["file1", "file2", "file3"])
     self.assertListEqual(
@@ -206,7 +204,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
       f.write("bad_archive")
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
     try:
-      http_resolver.get_module_path(
+      http_resolver(
           "http://localhost:%d/bad_archive.tar.gz" % self.server_port)
       self.fail("Corrupted archive should have failed to resolve.")
     except IOError as e:
@@ -215,7 +213,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
           "to be a valid module." %
           self.server_port, str(e))
     try:
-      http_resolver.get_module_path(
+      http_resolver(
           "http://localhost:%d/bad_archive.tar.gz" % self.redirect_server_port)
       self.fail("Corrupted archive should have failed to resolve.")
     except IOError as e:

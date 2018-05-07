@@ -70,6 +70,11 @@ from tensorflow_hub.native_module import load_module_spec
 from tensorflow_hub.version import __version__
 # pylint: enable=g-import-not-at-top
 
+# pylint: disable=g-bad-import-order
+from tensorflow_hub.config import _run
+_run()
+# pylint: enable=g-bad-import-order
+
 
 # Used by doc generation script.
 _allowed_symbols = [

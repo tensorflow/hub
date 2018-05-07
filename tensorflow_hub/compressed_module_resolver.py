@@ -40,8 +40,9 @@ LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
 _COMPRESSED_FORMAT_QUERY = ("tf-hub-format", "compressed")
 
 
-def _module_dir(cache_dir, handle):
+def _module_dir(handle):
   """Returns the directory where to cache the module."""
+  cache_dir = resolver.tfhub_cache_dir(use_temp=True)
   return resolver.create_local_module_dir(
       cache_dir,
       hashlib.sha1(handle.encode("utf8")).hexdigest())
@@ -65,20 +66,12 @@ def _append_compressed_format_query(handle):
 class HttpCompressedFileResolver(resolver.Resolver):
   """Resolves HTTP handles by downloading and decompressing them to local fs."""
 
-  def __init__(self, cache_dir=None):
-    """Creates a resolver that streams tar/gz file content over HTTP.
-
-    Args:
-      cache_dir: directory to download and cache modules to.
-    """
-    self._cache_dir = resolver.tfhub_cache_dir(cache_dir, use_temp=True)
-
   def is_supported(self, handle):
     # HTTP(S) handles are assumed to point to tarfiles.
     return handle.startswith("http://") or handle.startswith("https://")
 
-  def _get_module_path(self, handle):
-    module_dir = _module_dir(self._cache_dir, handle)
+  def __call__(self, handle):
+    module_dir = _module_dir(handle)
 
     def download(handle, tmp_dir):
       """Fetch a module via HTTP(S), handling redirect and download headers."""
@@ -113,19 +106,11 @@ class HttpCompressedFileResolver(resolver.Resolver):
 class GcsCompressedFileResolver(resolver.Resolver):
   """Resolves GCS handles by downloading and decompressing them to local fs."""
 
-  def __init__(self, cache_dir=None):
-    """Creates a resolver that streams tar/gz file content from GCS.
-
-    Args:
-      cache_dir: directory to download and cache modules to.
-    """
-    self._cache_dir = resolver.tfhub_cache_dir(cache_dir, use_temp=True)
-
   def is_supported(self, handle):
     return handle.startswith("gs://") and _is_tarfile(handle)
 
-  def _get_module_path(self, handle):
-    module_dir = _module_dir(self._cache_dir, handle)
+  def __call__(self, handle):
+    module_dir = _module_dir(handle)
 
     def download(handle, tmp_dir):
       return resolver.DownloadManager(handle).download_and_uncompress(
@@ -133,12 +118,3 @@ class GcsCompressedFileResolver(resolver.Resolver):
 
     return resolver.atomic_download(handle, download, module_dir,
                                     LOCK_FILE_TIMEOUT_SEC)
-
-
-def get_default():
-  """Returns the default compressed module-based handle resolver for TF-Hub."""
-  return resolver.UseFirstSupportingResolver(
-      resolvers=[
-          HttpCompressedFileResolver(),
-          GcsCompressedFileResolver(),
-          resolver.PathResolver()])

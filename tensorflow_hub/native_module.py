@@ -23,10 +23,10 @@ import re
 
 import tensorflow as tf
 
-from tensorflow_hub import compressed_module_resolver
 from tensorflow_hub import module_def_pb2
 from tensorflow_hub import module_impl
 from tensorflow_hub import module_spec
+from tensorflow_hub import registry
 from tensorflow_hub import saved_model_lib
 from tensorflow_hub import tensor_info
 from tensorflow_hub import tf_utils
@@ -96,7 +96,7 @@ def load_module_spec(path):
     ValueError: on unexpected values in the module spec.
     tf.OpError: on file handling exceptions.
   """
-  path = compressed_module_resolver.get_default().get_module_path(path)
+  path = registry.resolver(path)
   module_def_path = _get_module_proto_path(path)
   module_def_proto = module_def_pb2.ModuleDef()
   with tf.gfile.Open(module_def_path, "rb") as f:
