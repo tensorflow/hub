@@ -257,6 +257,22 @@ py_test(
     ],
 )
 
+py_library(
+    name = "registry",
+    srcs = ["registry.py"],
+    srcs_version = "PY2AND3",
+)
+
+py_test(
+    name = "registry_test",
+    srcs = ["registry_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":registry",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
 tf_hub_proto_library(
     name = "all_protos",
     srcs = [
