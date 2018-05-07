@@ -184,8 +184,8 @@ py_test(
 )
 
 py_test(
-    name = "module_e2e_test",
-    srcs = ["module_e2e_test.py"],
+    name = "e2e_test",
+    srcs = ["e2e_test.py"],
     srcs_version = "PY2AND3",
     deps = [
         ":tensorflow_hub",

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""End-to-end tests for tensorflow_hub.module."""
+"""End-to-end tests for tensorflow_hub."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -28,7 +28,7 @@ from tensorflow_hub import resolver
 from tensorflow_hub import test_utils
 
 
-class ModuleEnd2EndTest(tf.test.TestCase):
+class End2EndTest(tf.test.TestCase):
 
   def setUp(self):
     # Set current directory to test temp directory where we can create
