@@ -46,3 +46,4 @@ class MultiImplRegister(object):
 
 
 resolver = MultiImplRegister("resolver")
+loader = MultiImplRegister("loader")

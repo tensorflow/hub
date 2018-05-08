@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow_hub import compressed_module_resolver
+from tensorflow_hub import native_module
 from tensorflow_hub import registry
 from tensorflow_hub import resolver
 
@@ -31,6 +32,14 @@ def _get_default_resolvers():
   ]
 
 
+def _get_default_loaders():
+  return [
+      native_module.Loader(),
+  ]
+
+
 def _run():
   for impl in _get_default_resolvers():
     registry.resolver.add_implementation(impl)
+  for impl in _get_default_loaders():
+    registry.loader.add_implementation(impl)

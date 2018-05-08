@@ -28,6 +28,11 @@ from tensorflow_hub import module_def_pb2
 from tensorflow_hub import native_module
 
 
+def load_module_spec(spec):
+  """Force use of native_module implementation."""
+  return native_module.Loader()(spec)
+
+
 def multi_signature_module():
   x = tf.placeholder(tf.float32, shape=[None])
   native_module.add_signature("double", {"x": x}, {"y": 2*x})
@@ -65,7 +70,7 @@ class NativeModuleTest(tf.test.TestCase):
       module_def_proto.required_features.extend(["foo-test-missing"])
       f.write(module_def_proto.SerializeToString())
     with self.assertRaisesRegexp(ValueError, "foo-test-missing"):
-      native_module.load_module_spec(path)
+      load_module_spec(path)
 
   def testMultiSignatureSpec(self):
     spec = native_module.create_module_spec(multi_signature_module)
@@ -835,7 +840,7 @@ class TFHubBatchNormModuleTest(tf.test.TestCase):
         m.export(export_path, sess)
 
     # Test import and use.
-    spec = hub.load_module_spec(export_path)
+    spec = load_module_spec(export_path)
     with tf.Graph().as_default() as g:
       # The module gets run for inference on inputs with different mean and
       # variance. However, both mean and variance as well as offset and scale
@@ -931,7 +936,7 @@ class TFHubAssetsTest(tf.test.TestCase):
     tf.gfile.Remove(vocabulary_file)
 
     with tf.Graph().as_default():
-      spec = hub.load_module_spec(export_path)
+      spec = load_module_spec(export_path)
       embedding_module = hub.Module(spec)
       output = embedding_module(tf.constant([1, 2], dtype=tf.int64))
       with tf.Session() as sess:

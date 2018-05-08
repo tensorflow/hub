@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow_hub import module_spec
-from tensorflow_hub import native_module
+from tensorflow_hub import registry
 from tensorflow_hub import tensor_info
 
 
@@ -28,9 +28,32 @@ def as_module_spec(spec):
   if isinstance(spec, module_spec.ModuleSpec):
     return spec
   elif isinstance(spec, str):
-    return native_module.load_module_spec(spec)
+    return load_module_spec(spec)
   else:
     raise ValueError("Unknown module spec type: %r" % type(spec))
+
+
+def load_module_spec(path):
+  """Loads a ModuleSpec from the filesystem.
+
+  Args:
+    path: string describing the location of a module. There are several
+          supported path encoding schemes:
+          a) URL location specifying an archived module
+            (e.g. http://domain/module.tgz)
+          b) Any filesystem location of a module directory (e.g. /module_dir
+             for a local filesystem). All filesystems implementations provided
+             by Tensorflow are supported.
+
+  Returns:
+    A ModuleSpec.
+
+  Raises:
+    ValueError: on unexpected values in the module spec.
+    tf.OpError: on file handling exceptions.
+  """
+  path = registry.resolver(path)
+  return registry.loader(path)
 
 
 # Module class provides a unified access to all ModuleSpecs implementations and

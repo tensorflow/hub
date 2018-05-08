@@ -44,6 +44,7 @@ py_library(
     srcs = ["config.py"],
     deps = [
         ":compressed_module_resolver",
+        ":native_module",
         ":registry",
         ":resolver",
     ],
@@ -129,6 +130,7 @@ py_test(
     deps = [
         ":image_util",
         ":module",
+        ":native_module",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -139,15 +141,48 @@ py_library(
         "module.py",
         "module_impl.py",
         "module_spec.py",
-        "native_module.py",
     ],
     srcs_version = "PY2AND3",
     deps = [
-        ":all_protos_py_pb2",
         ":registry",
-        ":saved_model_lib",
         ":tensor_info",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_test(
+    name = "module_test",
+    srcs = ["module_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":module",
+        ":tensor_info",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "native_module",
+    srcs = ["native_module.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":all_protos_py_pb2",
+        ":module",
+        ":saved_model_lib",
         ":tf_utils",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_test(
+    name = "native_module_test",
+    srcs = ["native_module_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":all_protos_py_pb2",
+        ":native_module",
+        ":tensorflow_hub",
+        "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -157,6 +192,18 @@ py_library(
     srcs = ["resolver.py"],
     srcs_version = "PY2AND3",
     deps = [
+        ":tf_utils",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_test(
+    name = "resolver_test",
+    size = "medium",
+    srcs = ["resolver_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":resolver",
         ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
@@ -173,36 +220,12 @@ py_library(
 )
 
 py_test(
-    name = "module_test",
-    srcs = ["module_test.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        ":module",
-        ":tensor_info",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_test(
     name = "e2e_test",
     srcs = ["e2e_test.py"],
     srcs_version = "PY2AND3",
     deps = [
         ":tensorflow_hub",
         ":test_utils",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_test(
-    name = "native_module_test",
-    srcs = ["native_module_test.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        ":all_protos_py_pb2",
-        ":module",
-        ":tensorflow_hub",
-        "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -215,18 +238,6 @@ py_library(
         ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
         #  "tensorflow/core:protos_all_py_pb2",
-    ],
-)
-
-py_test(
-    name = "resolver_test",
-    size = "medium",
-    srcs = ["resolver_test.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        ":resolver",
-        ":tf_utils",
-        "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
 
@@ -250,15 +261,6 @@ py_library(
     ],
 )
 
-py_library(
-    name = "tf_utils",
-    srcs = ["tf_utils.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
 py_test(
     name = "tensor_info_test",
     size = "small",
@@ -266,6 +268,15 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":tensor_info",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "tf_utils",
+    srcs = ["tf_utils.py"],
+    srcs_version = "PY2AND3",
+    deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )

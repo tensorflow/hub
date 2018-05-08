@@ -26,7 +26,6 @@ import tensorflow as tf
 from tensorflow_hub import module_def_pb2
 from tensorflow_hub import module_impl
 from tensorflow_hub import module_spec
-from tensorflow_hub import registry
 from tensorflow_hub import saved_model_lib
 from tensorflow_hub import tensor_info
 from tensorflow_hub import tf_utils
@@ -77,44 +76,39 @@ def _get_module_proto_path(module_dir):
       tf.compat.as_bytes(_MODULE_PROTO_FILENAME_PB))
 
 
-def load_module_spec(path):
-  """Loads a ModuleSpec from the filesystem.
+class Loader(object):
+  """Loader for Hub modules in the native format."""
 
-  Args:
-    path: string describing the location of a module. There are several
-          supported path encoding schemes:
-          a) URL location specifying an archived module
-            (e.g. http://domain/module.tgz)
-          b) Any filesystem location of a module directory (e.g. /module_dir
-             for a local filesystem). All filesystems implementations provided
-             by Tensorflow are supported.
+  def is_supported(self, path):
+    module_def_path = _get_module_proto_path(path)
+    if not tf.gfile.Exists(module_def_path):
+      return False
 
-  Returns:
-    A ModuleSpec.
+    module_def_proto = module_def_pb2.ModuleDef()
+    with tf.gfile.Open(module_def_path, "rb") as f:
+      module_def_proto.ParseFromString(f.read())
 
-  Raises:
-    ValueError: on unexpected values in the module spec.
-    tf.OpError: on file handling exceptions.
-  """
-  path = registry.resolver(path)
-  module_def_path = _get_module_proto_path(path)
-  module_def_proto = module_def_pb2.ModuleDef()
-  with tf.gfile.Open(module_def_path, "rb") as f:
-    module_def_proto.ParseFromString(f.read())
+    return module_def_proto.format == module_def_pb2.ModuleDef.FORMAT_V3
 
-  if module_def_proto.format != module_def_pb2.ModuleDef.FORMAT_V3:
-    raise ValueError("Unsupported module def format: %r" %
-                     module_def_proto.format)
+  def __call__(self, path):
+    module_def_path = _get_module_proto_path(path)
+    module_def_proto = module_def_pb2.ModuleDef()
+    with tf.gfile.Open(module_def_path, "rb") as f:
+      module_def_proto.ParseFromString(f.read())
 
-  required_features = set(module_def_proto.required_features)
-  unsupported_features = (required_features - _MODULE_V3_SUPPORTED_FEATURES)
+    if module_def_proto.format != module_def_pb2.ModuleDef.FORMAT_V3:
+      raise ValueError("Unsupported module def format: %r" %
+                       module_def_proto.format)
 
-  if unsupported_features:
-    raise ValueError("Unsupported features: %r" % list(unsupported_features))
+    required_features = set(module_def_proto.required_features)
+    unsupported_features = (required_features - _MODULE_V3_SUPPORTED_FEATURES)
 
-  saved_model_handler = saved_model_lib.load(path)
-  checkpoint_filename = saved_model_lib.get_variables_path(path)
-  return _ModuleSpec(saved_model_handler, checkpoint_filename)
+    if unsupported_features:
+      raise ValueError("Unsupported features: %r" % list(unsupported_features))
+
+    saved_model_handler = saved_model_lib.load(path)
+    checkpoint_filename = saved_model_lib.get_variables_path(path)
+    return _ModuleSpec(saved_model_handler, checkpoint_filename)
 
 
 def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
@@ -323,7 +317,9 @@ class _ModuleImpl(module_impl.ModuleImpl):
 
     register_ops_if_needed({
         op.name for op in self._meta_graph.meta_info_def.stripped_op_list.op})
+    self._init_state(name)
 
+  def _init_state(self, name):
     # Clear dependencies so Modules can be constructed from deep inside
     # functions that have dependencies active. Note that the dependencies
     # would be active when applying the Module signature, just not active

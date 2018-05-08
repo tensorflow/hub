@@ -62,11 +62,11 @@ from tensorflow_hub.feature_column import image_embedding_column
 from tensorflow_hub.feature_column import text_embedding_column
 from tensorflow_hub.image_util import get_expected_image_size
 from tensorflow_hub.image_util import get_num_image_channels
+from tensorflow_hub.module import load_module_spec
 from tensorflow_hub.module import Module
 from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.native_module import add_signature
 from tensorflow_hub.native_module import create_module_spec
-from tensorflow_hub.native_module import load_module_spec
 from tensorflow_hub.version import __version__
 # pylint: enable=g-import-not-at-top
 
