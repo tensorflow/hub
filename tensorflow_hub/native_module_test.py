@@ -64,7 +64,8 @@ class NativeModuleTest(tf.test.TestCase):
   def testModuleWithMissingRequiredFeature(self):
     path = os.path.join(self.get_temp_dir(), "required-feature")
     tf.gfile.MakeDirs(path)
-    with tf.gfile.Open(os.path.join(path, "tfhub_module.pb"), mode="wb") as f:
+    proto_path = native_module.get_module_proto_path(path)
+    with tf.gfile.Open(proto_path, mode="wb") as f:
       module_def_proto = module_def_pb2.ModuleDef()
       module_def_proto.format = module_def_pb2.ModuleDef.FORMAT_V3
       module_def_proto.required_features.extend(["foo-test-missing"])

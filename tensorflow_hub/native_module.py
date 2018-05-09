@@ -70,7 +70,7 @@ _SUPPORTED_COLLECTIONS = set([
 ])
 
 
-def _get_module_proto_path(module_dir):
+def get_module_proto_path(module_dir):
   return os.path.join(
       tf.compat.as_bytes(module_dir),
       tf.compat.as_bytes(_MODULE_PROTO_FILENAME_PB))
@@ -80,7 +80,7 @@ class Loader(object):
   """Loader for Hub modules in the native format."""
 
   def is_supported(self, path):
-    module_def_path = _get_module_proto_path(path)
+    module_def_path = get_module_proto_path(path)
     if not tf.gfile.Exists(module_def_path):
       return False
 
@@ -91,7 +91,7 @@ class Loader(object):
     return module_def_proto.format == module_def_pb2.ModuleDef.FORMAT_V3
 
   def __call__(self, path):
-    module_def_path = _get_module_proto_path(path)
+    module_def_path = get_module_proto_path(path)
     module_def_proto = module_def_pb2.ModuleDef()
     with tf.gfile.Open(module_def_path, "rb") as f:
       module_def_proto.ParseFromString(f.read())
@@ -287,7 +287,7 @@ class _ModuleSpec(module_spec.ModuleSpec):
 
     module_def_proto = module_def_pb2.ModuleDef()
     module_def_proto.format = module_def_pb2.ModuleDef.FORMAT_V3
-    module_def_filename = _get_module_proto_path(path)
+    module_def_filename = get_module_proto_path(path)
     tf_utils.atomic_write_string_to_file(
         module_def_filename,
         module_def_proto.SerializeToString(),
