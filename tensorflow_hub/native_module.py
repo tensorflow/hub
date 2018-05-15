@@ -225,7 +225,8 @@ def add_signature(name=None, inputs=None, outputs=None):
 class _ModuleSpec(module_spec.ModuleSpec):
   """ModuleSpec for Hub's native Module format (backed by SavedModel)."""
 
-  def __init__(self, saved_model_handler, checkpoint_variables_path):
+  def __init__(self, saved_model_handler, checkpoint_variables_path,
+               check_collections=True):
     """Private constructor.
 
     Args:
@@ -233,12 +234,15 @@ class _ModuleSpec(module_spec.ModuleSpec):
       checkpoint_variables_path: An optional string to the checkpoint where this
         Module variables are checkpointed. If given the variables initializers
         are overridden to load from it.
+      check_collections: Whether to check collections are supported.
 
     Raises:
       ValueError: if SavedModel contains any unexpected value.
     """
     check_unique_tags(saved_model_handler.get_tags())
-    check_collections_are_supported(saved_model_handler, _SUPPORTED_COLLECTIONS)
+    if check_collections:
+      check_collections_are_supported(
+          saved_model_handler, _SUPPORTED_COLLECTIONS)
     self._saved_model_handler = saved_model_handler
     self._checkpoint_variables_path = checkpoint_variables_path
 
