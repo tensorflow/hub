@@ -120,7 +120,9 @@ py_library(
     name = "image_util",
     srcs = ["image_util.py"],
     srcs_version = "PY2AND3",
-    deps = [],
+    deps = [
+        ":module",
+    ],
 )
 
 py_test(

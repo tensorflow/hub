@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow_hub import module
+
 
 def get_expected_image_size(module_or_spec, signature=None, input_name=None):
   """Returns expected [height, width] dimensions of an image input.
@@ -35,18 +37,22 @@ def get_expected_image_size(module_or_spec, signature=None, input_name=None):
   Raises:
     ValueError: If the size information is missing or malformed.
   """
-  # First try to use a module or spec specific implementation.
+  # First try to use a spec specific implementation.
   #
   # Note: this call into _get_expected_image_size is an implementation
   # detail to make experimentation easier and suitable to change without
   # notice.
-  if hasattr(module_or_spec, "_get_expected_image_size"):
-    # pylint: disable=protected-access
-    image_size = module_or_spec._get_expected_image_size(
+  # pylint: disable=protected-access
+  if isinstance(module_or_spec, module.Module):
+    spec = module_or_spec._spec
+  else:
+    spec = module_or_spec
+  if hasattr(spec, "_get_expected_image_size"):
+    image_size = spec._get_expected_image_size(
         signature=signature, input_name=input_name)
     if image_size is not None:
       return image_size
-    # pylint: enable=protected-access
+  # pylint: enable=protected-access
 
   # Fallback to inspect the input shape in the module signature.
   if input_name is None:
