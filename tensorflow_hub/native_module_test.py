@@ -57,6 +57,7 @@ def module_with_variables():
       shape=[4],
       initializer=tf.zeros_initializer(),
       partitioner=tf.fixed_size_partitioner(3))
+  hub.add_signature(outputs=tf.constant(1.0))
 
 
 class NativeModuleTest(tf.test.TestCase):
@@ -117,6 +118,16 @@ class NativeModuleTest(tf.test.TestCase):
       ]
       for a, b in zip(session.run(tf.global_variables()), expected_values):
         self.assertAllEqual(a, b)
+
+  def testNoSignaturesPresent(self):
+
+    def wrong_module_fn():
+      x = tf.placeholder(tf.float32, shape=[None, 3])
+      return tf.identity(x)
+
+    with self.assertRaises(ValueError) as cm:
+      spec = native_module.create_module_spec(wrong_module_fn)
+    self.assertIn("No signatures present", str(cm.exception))
 
 
 class RecoverPartitionedVariableMapTest(tf.test.TestCase):

@@ -51,6 +51,7 @@ class SavedModelLibTest(tf.test.TestCase):
     with tf.Graph().as_default() as graph:
       asset_tensor = tf.constant(original_asset_file, name="file")
       graph.add_to_collection(tf.GraphKeys.ASSET_FILEPATHS, asset_tensor)
+      saved_model_lib.add_signature("default", {}, {"default": asset_tensor})
 
     handler = saved_model_lib.SavedModelHandler()
     handler.add_graph_copy(graph)
@@ -81,6 +82,7 @@ class SavedModelLibTest(tf.test.TestCase):
       asset_b = tf.constant(file_b, name="file_b")
       graph.add_to_collection(tf.GraphKeys.ASSET_FILEPATHS, asset_a)
       graph.add_to_collection(tf.GraphKeys.ASSET_FILEPATHS, asset_b)
+      saved_model_lib.add_signature("default", {}, {"default": asset_a})
 
     export_dir = os.path.join(self.get_temp_dir(), "exported")
     handler = saved_model_lib.SavedModelHandler()
@@ -124,7 +126,8 @@ class SavedModelLibTest(tf.test.TestCase):
     self.assertEqual(len(meta_graph.signature_def), 1)
 
   def testTags(self):
-    graph = tf.Graph()
+    with tf.Graph().as_default() as graph:
+      saved_model_lib.add_signature("default", {}, {"default": tf.constant(1)})
     handler = saved_model_lib.SavedModelHandler()
     handler.add_graph_copy(graph, ["tag1"])
     handler.add_graph_copy(graph, ["tag1", "tag2"])
@@ -141,6 +144,7 @@ class SavedModelLibTest(tf.test.TestCase):
       self.assertEqual(len(graph.get_all_collection_keys()), 2)
       for collection_key in graph.get_all_collection_keys():
         del graph.get_collection_ref(collection_key)[:]
+      saved_model_lib.add_signature("default", {}, {"default": tf.constant(1)})
 
     handler = saved_model_lib.SavedModelHandler()
     handler.add_graph_copy(graph)

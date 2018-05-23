@@ -123,7 +123,11 @@ def _import_signatures(meta_graph):
 
 def _export_signatures(meta_graph):
   """Exports signatures from current graph into a MetaGraphDef."""
-  for key, signature in tf.get_collection(_SIGNATURE_COLLECTION):
+  named_signatures = tf.get_collection(_SIGNATURE_COLLECTION)
+  if not named_signatures:
+    raise ValueError("No signatures present. Please call hub.add_signature(...)"
+                     "at least once in the module_fn.")
+  for key, signature in named_signatures:
     meta_graph.signature_def[key].CopyFrom(signature)
 
 
