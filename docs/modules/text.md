@@ -20,7 +20,7 @@ Encoder of greater-than-word length text trained on a variety of data.
 ### ELMo
 Deep Contextualized Word Representations trained on the 1 Billion Word Benchmark.
 
-* [elmo](https://tfhub.dev/google/elmo/1)
+* [elmo/2](https://tfhub.dev/google/elmo/2)
 
 ### NNLM embedding trained on Google News
 Embedding from a neural network language model trained on Google News dataset.
