@@ -13,14 +13,14 @@ m = hub.Module("https://tfhub.dev/...")
 ### Universal Sentence Encoder
 Encoder of greater-than-word length text trained on a variety of data.
 
-* [universal-sentence-encoder](https://tfhub.dev/google/universal-sentence-encoder/1)
-* [universal-sentence-encoder-large](https://tfhub.dev/google/universal-sentence-encoder-large/1)
-* [universal-sentence-encoder-lite](https://tfhub.dev/google/universal-sentence-encoder-lite/1) (\*Text preprocessing required)
+* [universal-sentence-encoder](https://tfhub.dev/google/universal-sentence-encoder/2)
+* [universal-sentence-encoder-large](https://tfhub.dev/google/universal-sentence-encoder-large/2)
+* [universal-sentence-encoder-lite](https://tfhub.dev/google/universal-sentence-encoder-lite/2) (\*Text preprocessing required)
 
 ### ELMo
 Deep Contextualized Word Representations trained on the 1 Billion Word Benchmark.
 
-* [elmo/2](https://tfhub.dev/google/elmo/2)
+* [elmo](https://tfhub.dev/google/elmo/2)
 
 ### NNLM embedding trained on Google News
 Embedding from a neural network language model trained on Google News dataset.
