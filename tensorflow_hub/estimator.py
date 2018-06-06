@@ -112,7 +112,7 @@ class LatestModuleExporter(tf.estimator.Exporter):
   def name(self):
     return self._name
 
-  def export(self, estimator, export_path, checkpoint_path,
+  def export(self, estimator, export_path, checkpoint_path=None,
              eval_result=None, is_the_final_export=None):
     """Actually performs the export of registered Modules.
 
@@ -132,7 +132,8 @@ class LatestModuleExporter(tf.estimator.Exporter):
       estimator: the `Estimator` from which to export modules.
       export_path: A string containing a directory where to write the export
         timestamped directories.
-      checkpoint_path: The checkpoint path to export.
+      checkpoint_path: The checkpoint path to export. If `None`,
+        `estimator.latest_checkpoint()` is used.
       eval_result: Unused.
       is_the_final_export: Unused.
 
@@ -140,6 +141,9 @@ class LatestModuleExporter(tf.estimator.Exporter):
       The path to the created timestamped directory containing the exported
       modules.
     """
+    if checkpoint_path is None:
+      checkpoint_path = estimator.latest_checkpoint()
+
     export_dir = tf_utils.get_timestamped_export_dir(export_path)
     temp_export_dir = tf_utils.get_temp_export_dir(export_dir)
 

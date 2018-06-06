@@ -94,7 +94,6 @@ class EstimatorTest(tf.test.TestCase):
     exporter = hub.LatestModuleExporter("exporter_name", _serving_input_fn)
     export_dir = exporter.export(estimator=estimator,
                                  export_path=export_base_dir,
-                                 checkpoint_path=estimator.latest_checkpoint(),
                                  eval_result=None,
                                  is_the_final_export=None)
 
@@ -124,7 +123,6 @@ class EstimatorTest(tf.test.TestCase):
     exporter = hub.LatestModuleExporter("exporter_name", _serving_input_fn)
     export_dir = exporter.export(estimator=estimator,
                                  export_path=export_base_dir,
-                                 checkpoint_path=estimator.latest_checkpoint(),
                                  eval_result=None,
                                  is_the_final_export=None)
 
