@@ -57,8 +57,8 @@ def _get_asset_filename(export_dir, asset_filename):
   filename = os.path.join(
       tf.compat.as_bytes(assets_dir),
       tf.compat.as_bytes(asset_filename))
-  if not os.path.abspath(filename).startswith(
-      os.path.abspath(assets_dir)):
+  if not tf_utils.absolute_path(filename).startswith(
+      tf_utils.absolute_path(assets_dir)):
     raise ValueError(
         "Asset filename (%s) points outside assets_dir" % asset_filename)
   return filename

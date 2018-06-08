@@ -187,3 +187,15 @@ def bytes_to_readable_str(num_bytes, include_b=False):
   if include_b:
     result += "B"
   return result
+
+
+def absolute_path(path):
+  """Returns absolute path.
+
+  Args:
+    path: Path to compute absolute path from.
+
+  This implementation avoids calling os.path.abspath(path) if 'path' already
+  represents an absolute Tensorflow filesystem location (e.g. <fs type>://).
+  """
+  return path if "://" in str(path) else os.path.abspath(path)

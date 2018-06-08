@@ -223,7 +223,7 @@ def _lock_file_contents(task_uid):
 
 def _lock_filename(module_dir):
   """Returns lock file name."""
-  return os.path.abspath(module_dir) + ".lock"
+  return tf_utils.absolute_path(module_dir) + ".lock"
 
 
 def _module_dir(lock_filename):
@@ -249,7 +249,7 @@ def _task_uid_from_lock_file(lock_filename):
 
 def _temp_download_dir(module_dir, task_uid):
   """Returns the name of a temporary directory to download module to."""
-  return "{}.{}.tmp".format(os.path.abspath(module_dir), task_uid)
+  return "{}.{}.tmp".format(tf_utils.absolute_path(module_dir), task_uid)
 
 
 def _dir_size(directory):
