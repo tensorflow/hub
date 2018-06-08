@@ -2,11 +2,6 @@
 
 ## Notebooks
 
-#### [`colab/text_classification_with_tf_hub.ipynb`](colab/text_classification_with_tf_hub.ipynb)
-
-Uses a TensorFlow Hub text embedding module to train a sentiment classifier with TF-Estimators.
-
-
 #### [`colab/text_classification_with_tf_hub_on_kaggle.ipynb`](colab/text_classification_with_tf_hub_on_kaggle.ipynb)
 
 Shows how to solve a problem on Kaggle with TF-Hub.
