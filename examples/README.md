@@ -9,12 +9,17 @@ Shows how to solve a problem on Kaggle with TF-Hub.
 
 #### [`colab/semantic_similarity_with_tf_hub_universal_encoder.ipynb`](colab/semantic_similarity_with_tf_hub_universal_encoder.ipynb)
 
-Explores text semantic similarity with the [Universal Encoder Module](https://tfhub.dev/google/universal-sentence-encoder/1).
+Explores text semantic similarity with the [Universal Encoder Module](https://tfhub.dev/google/universal-sentence-encoder/2).
 
 
 #### [`colab/tf_hub_generative_image_module.ipynb`](colab/tf_hub_generative_image_module.ipynb)
 
 Explores a generative image module.
+
+
+#### [`colab/action_recognition_with_tf_hub.ipynb`](colab/action_recognition_with_tf_hub.ipynb)
+
+Explores action recognition from video.
 
 
 #### [`colab/tf_hub_delf_module.ipynb`](colab/tf_hub_delf_module.ipynb)
