@@ -3,7 +3,7 @@
 Modern image recognition models have millions of parameters. Training them from
 scratch requires a lot of labeled training data and a lot of computing power
 (hundreds of GPU-hours or more). Transfer learning is a technique that shortcuts
-much of this by taking a piece of a model that has alreay been trained on a
+much of this by taking a piece of a model that has already been trained on a
 related task and reusing it in a new model. In this tutorial, we will reuse the
 feature extraction capabilities from powerful image classifiers trained on
 ImageNet and simply train a new classification layer on top.  For more
