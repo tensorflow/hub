@@ -136,23 +136,12 @@ class EstimatorTest(tf.test.TestCase):
     model_dir = tempfile.mkdtemp(dir=self.get_temp_dir())
     estimator = tf.estimator.Estimator(_get_model_fn(register_module=True),
                                        model_dir=model_dir)
-
-    train_spec = tf.estimator.TrainSpec(
-        input_fn=_input_fn,
-        max_steps=1)
-
-    eval_spec = tf.estimator.EvalSpec(
-        input_fn=_input_fn,
-        exporters=[
-            hub.LatestModuleExporter(
-                "tf_hub",
-                _serving_input_fn,
-                exports_to_keep=2),
-        ])
-
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
-
+    exporter = hub.LatestModuleExporter(
+        "tf_hub", _serving_input_fn, exports_to_keep=2)
+    estimator.train(_input_fn, max_steps=1)
     export_base_dir = os.path.join(model_dir, "export", "tf_hub")
+
+    exporter.export(estimator, export_base_dir)
     timestamp_dirs = tf.gfile.ListDirectory(export_base_dir)
     self.assertEquals(1, len(timestamp_dirs))
     oldest_timestamp = timestamp_dirs[0]
@@ -162,14 +151,12 @@ class EstimatorTest(tf.test.TestCase):
                                        _EXPORT_MODULE_NAME)
     self.assertTrue(tf.gfile.IsDirectory(expected_module_dir))
 
-    # Triggering a new train and evaluate should create a new timestamped
-    # exported directory inside tf_hub exporter.
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    exporter.export(estimator, export_base_dir)
     timestamp_dirs = tf.gfile.ListDirectory(export_base_dir)
     self.assertEquals(2, len(timestamp_dirs))
 
     # Triggering yet another export should clean the oldest export.
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    exporter.export(estimator, export_base_dir)
     timestamp_dirs = tf.gfile.ListDirectory(export_base_dir)
     self.assertEquals(2, len(timestamp_dirs))
     self.assertFalse(oldest_timestamp in timestamp_dirs)
