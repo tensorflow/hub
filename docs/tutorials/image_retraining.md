@@ -371,7 +371,7 @@ On the one hand, that list shows more recent, powerful architectures, such as
 (notably
 [`nasnet_large`](../modules/google/imagenet/nasnet_large/feature_vector/1.md)
 and
-[`pnasnet_large`](../modules/google/imagenet/pnasnet_large/feature_vector/1.md)),
+[`pnasnet_large`](../modules/google/imagenet/pnasnet_large/feature_vector/2.md)),
 which could give you some extra precision.
 
 On the other hand, if you intend to deploy your model on mobile devices or other
@@ -392,7 +392,7 @@ flag with the module URL, for example:
 ```sh
 python retrain.py \
     --image_dir ~/flower_photos \
-    --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/1
+    --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/2
 ```
 
 This will create a 9 MB model file in `/tmp/output_graph.pb` with a model that
