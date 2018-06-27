@@ -19,3 +19,4 @@ m = hub.Module("https://tfhub.dev/...")
 
 ## Inflated 3D Convnet (I3D)
 * [i3d-kinetics-400](https://tfhub.dev/deepmind/i3d-kinetics-400/1)
+* [i3d-kinetics-600](https://tfhub.dev/deepmind/i3d-kinetics-600/1)
