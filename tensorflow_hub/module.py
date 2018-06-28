@@ -130,7 +130,8 @@ class Module(object):
 
     self._tags = set(tags or [])
     if self._tags not in self._spec.get_tags():
-      raise ValueError("No such graph variant: tags=%r" % sorted(list(tags)))
+      tags = sorted(list(tags)) if tags else tags
+      raise ValueError("No such graph variant: tags=%r" % tags)
 
     abs_state_scope = _try_get_state_scope(name, mark_name_scope_used=False)
     self._name = abs_state_scope.split("/")[-2]
