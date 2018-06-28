@@ -307,6 +307,9 @@ class SavedModelHandler(object):
       _export_tags(meta_graph, tags)
     self._proto.meta_graphs.extend([meta_graph])
 
+  def add_meta_graph_copy(self, meta_graph):
+    self._proto.meta_graphs.extend([meta_graph])
+
   def get_meta_graph_copy(self, tags=None):
     """Returns a copy of a MetaGraph with the identical set of tags."""
     meta_graph = self.get_meta_graph(tags)
