@@ -1,0 +1,59 @@
+book_path: /hub/_book.yaml
+project_path: /hub/_project.yaml
+description: <!--no description-->
+landing_page:
+  custom_css_path: /site-assets/style.css
+  rows:
+  - heading: >
+      TensorFlow Hub is a library for reusable machine learning modules.
+    items:
+    - description: >
+        TensorFlow Hub is a library for the publication, discovery, and
+        consumption of reusable parts of machine learning models. A
+        <em>module</em> is a self-contained piece of a TensorFlow graph, along
+        with its weights and assets, that can be reused across different tasks in
+        a process known as transfer learning. Transfer learning can:
+        <ul style="padding-left: 20px;">
+          <li>Train a model with a smaller dataset,</li>
+          <li>Improve generalization, and</li>
+          <li>Speed up training.</li>
+        </ul>
+
+    - classname: tfo-landing-row-item-code-block
+      code_block: |
+        <pre class = "prettyprint">
+        import tensorflow as tf
+        import tensorflow_hub as hub
+
+        with tf.Graph().as_default():
+          module_url = "https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1"
+          embed = hub.Module(module_url)
+          embeddings = embed(["A long sentence.", "single-word",
+                              "http://example.com"])
+
+          with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(tf.tables_initializer())
+
+            print(sess.run(embeddings))
+        </pre>
+
+  - classname: devsite-landing-row-cards
+    items:
+    - heading: Introducing TensorFlow Hub
+      image_path: /ecosystem/images/tf-logo-card-16x9.png
+      path: https://medium.com/tensorflow/introducing-tensorflow-hub-a-library-for-reusable-machine-learning-modules-in-tensorflow-cdee41fa18f9
+      buttons:
+      - label: Read on TensorFlow blog
+        path: https://medium.com/tensorflow/introducing-tensorflow-hub-a-library-for-reusable-machine-learning-modules-in-tensorflow-cdee41fa18f9
+    - heading: TensorFlow Hub at the Dev Summit
+      youtube_id: rirzJ-e68cw
+      buttons:
+      - label: Watch the video
+        path: https://www.youtube.com/watch?v=rirzJ-e68cw
+    - heading: TensorFlow Hub on GitHub
+      image_path: /ecosystem/images/github-card-16x9.png
+      path: https://github.com/tensorflow/hub
+      buttons:
+      - label: View on GitHub
+        path: https://github.com/tensorflow/hub
