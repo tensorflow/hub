@@ -1,0 +1,11 @@
+name: TensorFlow Hub
+breadcrumb_name: Hub
+home_url: /hub/
+parent_project_metadata_path: /_project.yaml
+description: >
+  TensorFlow Hub is a library for the publication, discovery, and consumption of
+  reusable parts of machine learning models.
+use_site_branding: True
+hide_from_products_list: True
+content_license: cc3-apache2
+buganizer_id: 321153

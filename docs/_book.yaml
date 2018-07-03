@@ -1,0 +1,53 @@
+upper_tabs:
+# Tabs left of dropdown menu
+- include: /_upper_tabs_left.yaml
+# Dropdown menu
+- name: Ecosystem
+  path: /ecosystem
+  is_default: True
+  menu:
+  - include: /ecosystem/_menu_toc.yaml
+  lower_tabs:
+    # Subsite tabs
+    other:
+    - name: Guide
+      contents:
+      - title: Overview
+        path: /hub/overview
+      - title: Installation
+        path: /hub/installation
+      - heading: Key Concepts
+      - title: Using a Module
+        path: /hub/basics
+      - title: Creating a New Module
+        path: /hub/creating
+      - title: Fine-Tuning
+        path: /hub/fine_tuning
+      - title: Hosting a Module
+        path: /hub/hosting
+      - heading: Tutorials
+      - title: Image Retraining
+        path: /hub/tutorials/image_retraining
+      - title: Text Classification
+        path: /hub/tutorials/text_classification_with_tf_hub
+      - heading: Common Signatures
+      - title: Overview
+        path: /hub/common_signatures/
+      - title: Common Signatures for Images
+        path: /hub/common_signatures/images
+      - title: Common Signatures for Text
+        path: /hub/common_signatures/text
+    - name: API
+      contents:
+      - include: /hub/api_docs/python/_toc.yaml
+    - name: Modules
+      contents:
+      - title: Overview
+        path: /hub/modules/
+      - title: Image Modules
+        path: /hub/modules/image
+      - title: Text Modules
+        path: /hub/modules/text
+      - title: Other Modules
+        path: /hub/modules/other
+      - include: /hub/modules/_toc.yaml
