@@ -14,7 +14,7 @@ m = hub.Module("https://tfhub.dev/...")
 Encoder of greater-than-word length text trained on a variety of data.
 
 * [universal-sentence-encoder](https://tfhub.dev/google/universal-sentence-encoder/2)
-* [universal-sentence-encoder-large](https://tfhub.dev/google/universal-sentence-encoder-large/2)
+* [universal-sentence-encoder-large](https://tfhub.dev/google/universal-sentence-encoder-large/3)
 * [universal-sentence-encoder-lite](https://tfhub.dev/google/universal-sentence-encoder-lite/2) (\*Text preprocessing required)
 
 ### ELMo
