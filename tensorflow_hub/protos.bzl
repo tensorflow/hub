@@ -15,11 +15,11 @@
 load("@protobuf_bzl//:protobuf.bzl", "py_proto_library")
 
 def tf_hub_proto_library(name = None, srcs = [], visibility = []):
-  py_proto_library(
-    name = name + "_py_pb2",
-    srcs = srcs,
-    srcs_version = "PY2AND3",
-    visibility = visibility,
-    default_runtime = "@com_google_protobuf//:protobuf_python",
-    protoc = "@com_google_protobuf//:protoc",
-  )
+    py_proto_library(
+        name = name + "_py_pb2",
+        srcs = srcs,
+        srcs_version = "PY2AND3",
+        visibility = visibility,
+        default_runtime = "@com_google_protobuf//:protobuf_python",
+        protoc = "@com_google_protobuf//:protoc",
+    )
