@@ -776,9 +776,12 @@ class TFHubUpdateOpsTest(tf.test.TestCase):
 
       sess.run(tf.global_variables_initializer())
       sess.run(train_op)
-      # Do not submit
-      # self.assertEqual(sess.run(trainable_module.variables[0]), 1)
-      # self.assertEqual(sess.run(fixed_module.variables[0]), 0)
+      trainable_module_vars = list(trainable_module.variable_map.values())
+      self.assertEqual(len(trainable_module_vars), 1)
+      self.assertEqual(sess.run(trainable_module_vars[0]), 1)
+      fixed_module_vars = list(fixed_module.variable_map.values())
+      self.assertEqual(len(fixed_module_vars), 1)
+      self.assertEqual(sess.run(fixed_module_vars[0]), 0)
 
 
 def batch_norm_module_fn(is_training):
