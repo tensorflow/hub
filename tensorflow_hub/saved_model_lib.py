@@ -250,7 +250,7 @@ def _make_assets_key_collection(saved_model_proto, export_path):
       assets_key_collection = meta_graph.collection_def[
           tf.saved_model.constants.ASSETS_KEY]
 
-      for tensor, filename in tensor_filename_map.items():
+      for tensor, filename in sorted(tensor_filename_map.items()):
         asset_proto = meta_graph_pb2.AssetFileDef()
         asset_proto.filename = _make_asset_filename(filename)
         asset_proto.tensor_info.name = tensor
