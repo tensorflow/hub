@@ -23,7 +23,7 @@ that can be reused on new tasks.
 
 ## Getting Started
 
-*   [Introduction](docs/index.md)
+*   [Introduction](https://www.tensorflow.org/hub/)
 *   [Installation](docs/installation.md)
 *   Tutorials:
     *   [Image Retraining](https://www.tensorflow.org/tutorials/image_retraining)
