@@ -720,7 +720,8 @@ def bad_state_colocation_module_fn():
 
 def good_colocation_module_fn():
   w = tf.Variable(42 + 69, name="w")
-  with tf.colocate_with(w):
+  # w.op has the same name on resource and non-resource variables
+  with tf.colocate_with(w.op):
     # Colocation references among state nodes is ok.
     v = tf.Variable(1.0, name="v")
     assert v.op.colocation_groups() == [tf.compat.as_bytes("loc:@w")]
