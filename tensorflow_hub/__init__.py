@@ -67,6 +67,7 @@ from tensorflow_hub.module import Module
 from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.native_module import add_signature
 from tensorflow_hub.native_module import create_module_spec
+from tensorflow_hub.saved_model_module import create_module_spec_from_saved_model
 from tensorflow_hub.version import __version__
 # pylint: enable=g-import-not-at-top
 
@@ -88,5 +89,6 @@ _allowed_symbols = [
     "ModuleSpec",
     "add_signature",
     "create_module_spec",
+    "create_module_spec_from_saved_model",
     "load_module_spec",
 ]

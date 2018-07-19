@@ -34,6 +34,7 @@ py_library(
         ":feature_column",
         ":image_util",
         ":module",
+        ":saved_model_module",
         "//tensorflow_hub:expect_tensorflow_installed",
         ":config",
     ],
@@ -159,6 +160,32 @@ py_test(
     deps = [
         ":module",
         ":tensor_info",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "saved_model_module",
+    srcs = ["saved_model_module.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":module",
+        ":native_module",
+        ":saved_model_lib",
+        ":tf_utils",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_test(
+    name = "saved_model_module_test",
+    srcs = ["saved_model_module_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":saved_model_lib",
+        ":saved_model_module",
+        ":tensorflow_hub",
+        ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
