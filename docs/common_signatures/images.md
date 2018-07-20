@@ -129,7 +129,7 @@ This is common to all types of image modules and image signatures.
 A signature that takes a batch of images as input accepts them as a dense 4-D
 tensor of dtype `float32` and shape `[batch_size, height, width, 3]` whose
 elements are RGB color values of pixels normalized to the range [0, 1]. This is
-what you get from `tf.images.decode_*()` followed by
+what you get from `tf.image.decode_*()` followed by
 `tf.image.convert_image_dtype(..., tf.float32)`.
 
 A module with exactly one (or one principal) input of images uses the name
