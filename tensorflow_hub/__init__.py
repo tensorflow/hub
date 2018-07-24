@@ -18,38 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import re
-import sys
-
 import tensorflow as tf
-
-
-# TensorFlow Hub depends on features not yet present in a stable TensorFlow
-# release. Until then, we will explicitly check tf.VERSION to make this clear.
-def _check_tensorflow_version(version):
-  # If this is a nightly version, check that it has the last needed bug fixes
-  # from TensorFlow.
-  _NIGHTLY_VERSION = "20180308"  # pylint: disable=invalid_name
-  match = re.search("dev(20[0-9]{6})", version)
-  if match:
-    if match.group(1) >= _NIGHTLY_VERSION:
-      return
-
-  # If this is not a nightly version assume it is a pre-release or stable
-  # version and check only major.minor.
-  _MAIN_VERSION = "1.7"  # pylint: disable=invalid_name
-  match = re.search("^([0-9]+.[0-9]+)", version)
-  if match:
-    if match.group(1) >= _MAIN_VERSION:
-      return
-
-  raise RuntimeError(
-      "TensorFlow Hub depends on 'tf-nightly' build after %s or "
-      "'tensorflow~=%s'. Found tf.VERSION = %s" % (
-          _NIGHTLY_VERSION, _MAIN_VERSION, version))
-
-# Comment/uncomment to skip checking the TensorFlow version.
-_check_tensorflow_version(tf.VERSION)
 
 
 # pylint: disable=g-import-not-at-top
