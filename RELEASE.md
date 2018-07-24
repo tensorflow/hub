@@ -17,6 +17,9 @@ limitations under the License.
  * Under development.
  * Add support for caching modules on GCS
 
+# Release 0.1.1
+ * Removed TensorFlow version checking.
+
 # Release 0.1.0
  * Initial TensorFlow Hub release.
 
