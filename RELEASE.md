@@ -13,6 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
+# Release 0.1.1
+ * Removed TensorFlow version checking.
+
 # Release 0.1.0
  * Initial TensorFlow Hub release.
 
