@@ -16,8 +16,8 @@ workspace(name = "org_tensorflow_hub")
 
 git_repository(
     name = "protobuf_bzl",
-    # v3.4.0
-    commit = "80a37e0782d2d702d52234b62dd4b9ec74fd2c95",
+    # v3.6.0
+    commit = "ab8edf1dbe2237b4717869eaab11a2998541ad8d",
     remote = "https://github.com/google/protobuf.git",
 )
 bind(
@@ -36,11 +36,11 @@ bind(
     name = "protoc",
     actual = "@protobuf_bzl//:protoc",
 )
-# Using protobuf version 3.4.1
+# Using protobuf version 3.6.0
 http_archive(
     name = "com_google_protobuf",
-    strip_prefix = "protobuf-3.4.1",
-    urls = ["https://github.com/google/protobuf/archive/v3.4.1.zip"],
+    strip_prefix = "protobuf-3.6.0",
+    urls = ["https://github.com/google/protobuf/archive/v3.6.0.zip"],
 )
 
 # required by protobuf_python
