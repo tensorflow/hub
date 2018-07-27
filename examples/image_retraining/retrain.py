@@ -954,34 +954,15 @@ def export_model(module_spec, class_count, saved_model_dir):
   """
   # The SavedModel should hold the eval graph.
   sess, in_image, _, _, _, _ = build_eval_session(module_spec, class_count)
-  graph = sess.graph
-  with graph.as_default():
-    inputs = {'image': tf.saved_model.utils.build_tensor_info(in_image)}
-
-    out_classes = sess.graph.get_tensor_by_name('final_result:0')
-    outputs = {
-        'prediction': tf.saved_model.utils.build_tensor_info(out_classes)
-    }
-
-    signature = tf.saved_model.signature_def_utils.build_signature_def(
-        inputs=inputs,
-        outputs=outputs,
-        method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME)
-
-    legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
-
-    # Save out the SavedModel.
-    builder = tf.saved_model.builder.SavedModelBuilder(saved_model_dir)
-    builder.add_meta_graph_and_variables(
-        sess, [tf.saved_model.tag_constants.SERVING],
-        signature_def_map={
-            tf.saved_model.signature_constants.
-            DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-                signature
-        },
-        legacy_init_op=legacy_init_op)
-    builder.save()
-
+  with sess.graph.as_default() as graph:
+    tf.saved_model.simple_save(
+        sess,
+        saved_model_dir,
+        inputs={'image': in_image},
+        outputs={'prediction': graph.get_tensor_by_name('final_result:0')},
+        legacy_init_op=tf.group(tf.tables_initializer(), name='legacy_init_op')
+    )
+    
 
 def main(_):
   # Needed to make sure the logging output is visible.
