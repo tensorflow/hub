@@ -16,6 +16,8 @@ upper_tabs:
         path: /hub/overview
       - title: Installation
         path: /hub/installation
+      - title: Common issues
+        path: /hub/common_issues
       - heading: Key Concepts
       - title: Using a Module
         path: /hub/basics
