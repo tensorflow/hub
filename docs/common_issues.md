@@ -26,7 +26,15 @@ If the above errors and fixes do not work, one can try to manually download a
 module by simulating the protocol of attaching `?tf-hub-format=compressed`
 to the URL to download a tar compressed file that has to be manually decompressed
 into a local file. The path to the local file can then be used instead of the
-URL.
+URL. Here is a quick example:
 
-
-
+```bash
+# Create a folder for the TF hub module.
+$ mkdir /tmp/moduleA
+# Download the module, and uncompress it to the destination folder. You might want to do this manually.
+$ curl -L "https://tfhub.dev/google/universal-sentence-encoder/2?tf-hub-format=compressed" | tar -zxvC /tmp/moduleA
+# Test to make sure it works.
+$ python
+> import tensorflow_hub as hub
+> hub.Module("/tmp/moduleA")
+```
