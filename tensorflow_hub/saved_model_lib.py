@@ -115,12 +115,6 @@ def _check_dict_maps_to_tensors_or_sparse_tensors(tensor_map):
           " %s." % (key, type(value)))
 
 
-def _import_signatures(meta_graph):
-  """Imports signatures from a MetaGraphDef into current graph."""
-  for key, signature in meta_graph.signature_def.items():
-    tf.add_to_collection(_SIGNATURE_COLLECTION, (key, signature))
-
-
 def _export_signatures(meta_graph):
   """Exports signatures from current graph into a MetaGraphDef."""
   named_signatures = tf.get_collection(_SIGNATURE_COLLECTION)
