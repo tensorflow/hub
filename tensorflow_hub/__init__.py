@@ -35,6 +35,7 @@ from tensorflow_hub.module import load_module_spec
 from tensorflow_hub.module import Module
 from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.native_module import add_signature
+from tensorflow_hub.native_module import attach_message
 from tensorflow_hub.native_module import create_module_spec
 from tensorflow_hub.saved_model_module import create_module_spec_from_saved_model
 from tensorflow_hub.version import __version__
@@ -57,6 +58,7 @@ _allowed_symbols = [
     "Module",
     "ModuleSpec",
     "add_signature",
+    "attach_message",
     "create_module_spec",
     "create_module_spec_from_saved_model",
     "load_module_spec",

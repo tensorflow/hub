@@ -192,6 +192,11 @@ class _ModuleSpec(module_spec.ModuleSpec):
   def _create_impl(self, name, trainable, tags):
     return _ModuleImpl(name, trainable)
 
+  # native_module_test.py covers setting and getting attached messages.
+  def _get_attached_bytes(self, key, tags):
+    del key, tags  # Unused.
+    return None
+
 
 class _ModuleImpl(module_impl.ModuleImpl):
 

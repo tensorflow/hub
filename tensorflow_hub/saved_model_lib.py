@@ -21,10 +21,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import os
 import re
 
 import tensorflow as tf
+from tensorflow_hub import module_attachment_pb2
 from tensorflow_hub import tf_utils
 
 from google.protobuf import message
@@ -36,6 +38,14 @@ from tensorflow.core.protobuf import saved_model_pb2
 # is a tuple (not a string) in order to make it invisible from user apis such
 # as `get_all_collection_keys()` and manual exporting to meta_graphs.
 _SIGNATURE_COLLECTION = ("__saved_model_lib_signatures",)
+
+# A collection of ModuleAttachment protos is used internally to collect
+# the (key, value) pairs passed to attach_message() calls from the module_fn.
+# As above, it gets a non-string name to make it invisible within module_fn.
+_ATTACHMENT_COLLECTION_INTERNAL = ("__hub_module_attachments",)
+# The ModuleAttachment protos are stored in SavedModel.meta_graphs (but never
+# in tf.Graphs) as CollectionDef.bytes_list under this key.
+ATTACHMENT_COLLECTION_SAVED = "hub_module_attachments"
 
 
 def get_variables_path(export_dir):
@@ -123,6 +133,59 @@ def _export_signatures(meta_graph):
                      "at least once in the module_fn.")
   for key, signature in named_signatures:
     meta_graph.signature_def[key].CopyFrom(signature)
+
+
+def attach_bytes(key, the_bytes):
+  """Adds a ModuleAttachment to the current graph.
+
+  Args:
+    key: A string with the unique key of the attachment.
+    the_bytes: A bytes object with the serialized attachment.
+  """
+  tf.add_to_collection(
+      _ATTACHMENT_COLLECTION_INTERNAL,
+      module_attachment_pb2.ModuleAttachment(key=key, value=the_bytes))
+
+
+def _export_module_attachments(meta_graph):
+  """Exports ModuleAttachments from the current tf.Graph into `meta_graph`."""
+  added_attachments = tf.get_collection(_ATTACHMENT_COLLECTION_INTERNAL)
+  if not added_attachments: return  # Don't touch `meta_graph`.
+  unique_attachments = collections.OrderedDict(  # Avoid indeterminism.
+      (attachment.key, attachment)
+      for attachment in added_attachments)
+  meta_graph.collection_def[ATTACHMENT_COLLECTION_SAVED].bytes_list.value[:] = [
+      attachment.SerializeToString()
+      for attachment in unique_attachments.values()]
+
+
+def get_attached_bytes_map(meta_graph):
+  """Returns the dict of ModuleAttachments stored in `meta_graph`.
+
+  Args:
+    meta_graph: A MetaGraphDef, as built by SavedModelHandler.add_graph_copy()
+      from some graph.
+
+  Returns:
+    A dict, containing the `(key, bytes)` items passed to `attach_bytes()`
+    when the graph had been built.
+
+  Raises:
+    ValueError: if `meta-graph` is malformed.
+  """
+  result = {}
+  if ATTACHMENT_COLLECTION_SAVED not in meta_graph.collection_def:
+    return result
+  collection_def = meta_graph.collection_def[ATTACHMENT_COLLECTION_SAVED]
+  if collection_def.WhichOneof("kind") != "bytes_list":
+    raise ValueError(
+        "Internal CollectionDef for attached messages has kind %s, "
+        "expected bytes_list" % collection_def.WhichOneof("kind"))
+  attachment = module_attachment_pb2.ModuleAttachment()
+  for value in collection_def.bytes_list.value:
+    attachment.ParseFromString(value)
+    result[attachment.key] = attachment.value  # Immutable; needs no copy.
+  return result
 
 
 def _export_tags(meta_graph, tags):
@@ -297,8 +360,9 @@ class SavedModelHandler(object):
       # with ops that have new attrs that are left to their default values can
       # still be loaded by older versions unware of those attributes.
       meta_graph = tf.train.export_meta_graph(strip_default_attrs=True)
-      _export_signatures(meta_graph)
       _export_tags(meta_graph, tags)
+      _export_signatures(meta_graph)
+      _export_module_attachments(meta_graph)
     self._proto.meta_graphs.extend([meta_graph])
 
   def add_meta_graph_copy(self, meta_graph):
@@ -317,9 +381,11 @@ class SavedModelHandler(object):
 
   def get_tags(self):
     """Returns a list of set of tags."""
-    return sorted(
-        [set(meta_graph.meta_info_def.tags)
-         for meta_graph in self.meta_graphs])
+    return sorted([frozenset(meta_graph.meta_info_def.tags)
+                   for meta_graph in self.meta_graphs])
+
+  def get_attached_bytes_map(self, tags=None):
+    return get_attached_bytes_map(self.get_meta_graph(tags))
 
   def export(self, path, variables_saver=None):
     """Exports to SavedModel directory.

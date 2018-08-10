@@ -263,6 +263,11 @@ class Module(object):
     """
     return self._spec.get_output_info_dict(signature=signature, tags=self._tags)
 
+  def get_attached_message(self, key, message_type, required=False):
+    """Calls ModuleSpec.get_attached_message(); see there for more."""
+    return self._spec.get_attached_message(key, message_type,
+                                           tags=self._tags, required=required)
+
   def export(self, path, session):
     """Exports the module with the variables from the session in `path`.
 

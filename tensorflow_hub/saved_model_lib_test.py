@@ -171,6 +171,29 @@ class SavedModelLibTest(tf.test.TestCase):
     with self.assertRaises(KeyError):
       handler.get_meta_graph_copy(["tag2"])
 
+  def testModuleAttachments(self):
+    meta_graph = meta_graph_pb2.MetaGraphDef()
+    with tf.Graph().as_default():
+      saved_model_lib.attach_bytes("key1", tf.compat.as_bytes("oops"))
+      saved_model_lib.attach_bytes("key2", tf.compat.as_bytes("value2"))
+      saved_model_lib.attach_bytes("key1", tf.compat.as_bytes("value1"))
+      saved_model_lib._export_module_attachments(meta_graph)
+    actual = saved_model_lib.get_attached_bytes_map(meta_graph)
+    expected = {"key1": tf.compat.as_bytes("value1"),
+                "key2": tf.compat.as_bytes("value2")}
+    self.assertDictEqual(expected, actual)
+
+  def testNoModuleAttachments(self):
+    meta_graph = meta_graph_pb2.MetaGraphDef()
+    with tf.Graph().as_default():
+      # No calls to attach_bytes.
+      saved_model_lib._export_module_attachments(meta_graph)
+    actual = saved_model_lib.get_attached_bytes_map(meta_graph)
+    self.assertDictEqual({}, actual)
+    # Check there were no unwarranted subscript operations.
+    self.assertFalse(saved_model_lib.ATTACHMENT_COLLECTION_SAVED
+                     in meta_graph.collection_def)
+
   def testEmptyCollectionsDoNotShowUpInMetaGraphDef(self):
     with tf.Graph().as_default() as graph:
       tf.Variable("name")

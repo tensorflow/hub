@@ -1086,7 +1086,7 @@ class TFHubApplyStatefulModuleMultipleTimesTest(tf.test.TestCase):
       self.assertAllClose(sess.run(times2), [6.0])
       self.assertAllClose(sess.run(times3), [9.0])
       self.assertEqual(len(stateful_module.variable_map), 1)
-      self.assertEquals(
+      self.assertEqual(
           stateful_module.variable_map["iamtheoneandonly"].name,
           "moduleA/iamtheoneandonly:0")
       stateful_module.export(export_path, sess)
@@ -1231,6 +1231,70 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
         grad = tf.gradients([out], [elems])
         self.assertAllClose(sess.run(grad, {a: 1, elems: [10, 0, 0.5, 1.2]}),
                             [[1.0, 0.0, 0.0, 1.0]])
+
+
+def attached_messages_module_fn(tagged=0):
+  x = tf.placeholder(tf.float32, shape=[None])
+  hub.add_signature(inputs={"x": x}, outputs={"y": 2*x})
+  # For brevity, this test borrows two well-known, stable message types
+  # from TensorFlow. They are not likely choices for actual uses.
+  hub.attach_message("numbers", tf.train.Int64List(value=[-3])) # Overwritten.
+  hub.attach_message("numbers", tf.train.Int64List(value=[42, 69]))
+  hub.attach_message("letters", tf.train.BytesList(value=[
+      tf.compat.as_bytes("abc"), tf.compat.as_bytes("xyz")]))
+  hub.attach_message("tagged", tf.train.Int64List(value=[tagged]))
+
+
+class TFHubModuleWithAttachedMessages(tf.test.TestCase):
+
+  def testModuleSpec(self):
+    """This is the general test for ModuleSpec and native_module._ModuleSpec."""
+    spec = hub.create_module_spec(attached_messages_module_fn)
+    attached_letters = spec.get_attached_message("letters", tf.train.BytesList)
+    self.assertSequenceEqual(
+        attached_letters.value,
+        [tf.compat.as_bytes("abc"), tf.compat.as_bytes("xyz")])
+    attached_numbers = spec.get_attached_message("numbers", tf.train.Int64List)
+    self.assertSequenceEqual(attached_numbers.value, [42, 69])
+    attached_train = spec.get_attached_message("tagged", tf.train.Int64List)
+    self.assertSequenceEqual(attached_train.value, [0])
+    self.assertIsNone(spec.get_attached_message("bad", tf.train.BytesList))
+    with self.assertRaises(KeyError):
+      spec.get_attached_message("bad", tf.train.BytesList, required=True)
+
+  def testModule(self):
+    """Tests forwarding from Module to ModuleSpec."""
+    spec = hub.create_module_spec(attached_messages_module_fn)
+    with tf.Graph().as_default():
+      module = hub.Module(spec)
+      attached = module.get_attached_message("numbers", tf.train.Int64List)
+      self.assertSequenceEqual(attached.value, [42, 69])
+
+  def testGraphVersions(self):
+    """Tests native_module._ModuleSpec for explicit tags arguments."""
+    tags_and_args = [(set(), {"tagged": 1}),
+                     ({"double", "the", "value"}, {"tagged": 2})]
+    spec = hub.create_module_spec(attached_messages_module_fn,
+                                  tags_and_args=tags_and_args)
+    for tags, args in tags_and_args:
+      attached_to_spec = spec.get_attached_message(
+          "tagged", tf.train.Int64List, tags=tags)
+      self.assertSequenceEqual(attached_to_spec.value, [args["tagged"]])
+      with tf.Graph().as_default():
+        module = hub.Module(spec, tags=tags)
+        attached_to_module = module.get_attached_message(
+            "tagged", tf.train.Int64List)
+        self.assertSequenceEqual(attached_to_module.value, [args["tagged"]])
+
+  def testSeparateCopies(self):
+    """Mutating returned objects does not affect future returned values."""
+    spec = hub.create_module_spec(attached_messages_module_fn)
+    attached_numbers = spec.get_attached_message("numbers", tf.train.Int64List)
+    self.assertSequenceEqual(attached_numbers.value, [42, 69])
+    attached_numbers.Clear()
+    self.assertSequenceEqual(attached_numbers.value, [])
+    attached_numbers = spec.get_attached_message("numbers", tf.train.Int64List)
+    self.assertSequenceEqual(attached_numbers.value, [42, 69])
 
 
 class TFHubOpsTest(tf.test.TestCase):

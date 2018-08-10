@@ -264,6 +264,7 @@ py_library(
     srcs = ["saved_model_lib.py"],
     srcs_version = "PY2AND3",
     deps = [
+        ":all_protos_py_pb2",
         ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
         #  "tensorflow/core:protos_all_py_pb2",
@@ -329,6 +330,7 @@ py_test(
 tf_hub_proto_library(
     name = "all_protos",
     srcs = [
+        "module_attachment.proto",
         "module_def.proto",
     ],
 )
