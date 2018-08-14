@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import os
 import re
 
@@ -219,8 +220,10 @@ def add_signature(name=None, inputs=None, outputs=None):
     inputs = {"default": inputs}
   if not isinstance(outputs, dict):
     outputs = {"default": outputs}
-  err = find_signature_input_colocation_error(name, inputs)
-  if err: raise ValueError(err)
+  message = find_signature_inputs_from_multivalued_ops(inputs)
+  if message: tf.logging.error(message)
+  message = find_signature_input_colocation_error(name, inputs)
+  if message: raise ValueError(message)
   saved_model_lib.add_signature(name, inputs, outputs)
 
 
@@ -585,7 +588,12 @@ def get_state_map(meta_graph, state_ops, unsupported_state_ops,
   for node in meta_graph.graph_def.node:
     if node.op in state_ops:
       tensor_name = node.name + ":0"
-      state_map[tensor_name] = get_tensor_by_name(tensor_name)
+      tensor = get_tensor_by_name(tensor_name)
+      num_outputs = len(tensor.op.outputs)
+      if num_outputs != 1:
+        raise ValueError("Stateful op %s has %d outputs, expected 1" %
+                         (node.op, num_outputs))
+      state_map[tensor_name] = tensor
     if node.op in unsupported_state_ops:
       raise ValueError("Unsupported stateful op: %s" % node.op)
   return state_map
@@ -601,19 +609,19 @@ def get_node_map_from_tensor_map(tensor_map):
     Map same as tensor_map, except keys have the output_number stripped.
   """
   return {
-      _get_node_name_from_tensor(key): value
+      _split_tensor_name(key)[0]: value
       for key, value in tensor_map.items()
   }
 
 
-def _get_node_name_from_tensor(tensor_name):
-  """Given a tensor name in format node_name:output_number returns node_name."""
-  result = re.match(r"(.*):\d+$", tensor_name)
+def _split_tensor_name(tensor_name):
+  """Given a tensor name as node_name:output_number, returns both parts."""
+  result = re.match(r"(.*):(\d+)$", tensor_name)
   if not result:
     raise ValueError(
         "Unexpected format for tensor name. Expected node_name:output_number. "
         "Got %r" % tensor_name)
-  return result.group(1)
+  return result.group(1), int(result.group(2))
 
 
 def _extract_variable_parts(variable_key, variable):
@@ -779,12 +787,32 @@ def fix_colocation_after_import(input_map, absolute_import_scope):
   replaced by the colocation attributes of z (that is, loc:@z, if no other
   constraints are in play).
 
-  This style of rewriting requires that the other nodes in the graph express
-  their colocation with state and input nodes solely in terms of the state
-  and input nodes themselves, which is what the `input_map` provides. The
-  reverse direction (e.g., a state node referencing a non-state node in a
-  colocation attribute) is prevented by `find_state_op_colocation_error()` and
-  `find_signature_input_colocation_error()`.
+  This style of rewriting imposes the following requirements:
+
+    * If an output of node y is an input tensor in a signature of the module,
+      y must not have any colocation attributes on it, such that colocations
+      with y are expressed by loc:@y and can be adjusted with a rewriting rule
+      for it. Function `find_signature_input_colocation_error()` checks this
+      during module creation.
+
+    * If y1 is a state node, its colocation constraints must only reference
+      other state nodes, say, y2. Since all outputs of state nodes are mapped
+      the same way, all their rewriting rules together will do the same thing.
+      Function `find_state_op_colocation_error()` checks this during module
+      creation.
+
+    * Other nodes may have arbitrary colocation attributes.
+
+  Mapping of inputs works with tensors, while colocation constraints work with
+  ops. Issues may arise when mapping tensors from ops with multiple outputs.
+  If the outputs of y are replaced by outputs of distinct ops z1, z2, ...,
+  rewriting of loc:@y becomes ambiguous unless z1, z2, ... have equal
+  colocation_groups) If some but not all outputs of y are replaced, it
+  becomes ambiguous whether to rewrite loc:@y at all. For now, this is
+  handled conservatively by raising an error (instead of rewriting to the
+  union of all applicable constraints). This should be very rare: all state
+  ops so far have single outputs (and even if not, the rewriting would be
+  consistent); input ops usually are placeholders, which have single outputs.
 
   Args:
     input_map: a dict mapping from tensor names in the imported graph to
@@ -794,12 +822,56 @@ def fix_colocation_after_import(input_map, absolute_import_scope):
       the import_scope passed to it.
 
   Raises:
-    ValueError: if one imported op has its multiple outputs replaced by
-      different existing ops. (This is unexpected, since placeholders and
-      the current state ops all have only one output.)
+    ValueError: if one imported op has its multiple outputs and they are
+      remapped in a way that causes conflicting colocation rewrites.
   """
   attr_map = _build_colocation_attr_map(input_map, absolute_import_scope)
   _apply_colocation_attr_map(attr_map, absolute_import_scope)
+
+
+class _ConsistentValue(object):
+  """Helper for deferred consistency checking for values from multiple sources.
+
+  Suppose you compute some value from multiple sources that should all be
+  consistent. This class helps you store the value (with context on sources)
+  and provides a getter method to either get the consistent value or raise
+  a exception with a meaningful custom error message.
+
+  Usage example:
+
+    remainder = _ConsistentValue()
+    for x in (105, 205, 305, 406):
+      remainder.Set(x % 100, {"x": x})
+      print(remainder.GetConsistentValueOrRaise(
+          "Got {old_value} at {old_x} but became {new_value} at {new_x}."))
+
+    will print "5" three times and then raise
+    ValueError("Got 5 at 105 but became 6 at 406.").
+  """
+  def __init__(self):
+    self.has_error = False
+    self.value = None
+    self._context = {}
+
+  def Set(self, value, context=None):
+    """Receives a value for the object and some context on its source."""
+    if self.has_error: return
+    if self.value is None:
+      self.value = value
+      self._context["old_value"] = value
+      self._context.update({"old_" + k: v for k, v in context.items()})
+    elif self.value != value:
+      self.has_error = True
+      self._context["new_value"] = value
+      self._context.update({"new_" + k: v for k, v in context.items()})
+
+  def GetConsistentValueOrRaise(self, error_format, context=None):
+    """Gets consistent value or raises ValueError with formatted contexts."""
+    if self.has_error:
+      full_context = dict(self._context)
+      if context: full_context.update(context)
+      raise ValueError(error_format.format(**full_context))
+    return self.value
 
 
 def _build_colocation_attr_map(input_map, absolute_import_scope):
@@ -811,27 +883,43 @@ def _build_colocation_attr_map(input_map, absolute_import_scope):
 
   Returns:
     A dict that maps bytes `"loc:@" + absolute_import_scope + "/foo"`
-    to lists of bytes `["loc:@...", ...]` that are the colocation_groups
-    of the op that replaces the outputs of `foo` according to the `import_map`.
-
-  Raises:
-    ValueError: if `input_map` has multiple outputs of one op, and they
-      get mapped to existing ops with different colocation groups.
+    to _ConsistentValues set to the lists of bytes `["loc:@...", ...]`
+    according to the rewriting scheme of fix_colocation_after_import.
+    In case of an inconsistent rewriting, _ConsistentValue.has_error is true.
   """
-  colocation_attr_map = {}
+  colocation_attr_map = collections.defaultdict(_ConsistentValue)
+  used_outputs_of_imported_ops = collections.defaultdict(set)
+  # Collect mappings from the input_map.
   for imported_tensor_name, mapped_tensor in input_map.items():
     imported_tensor_name = absolute_import_scope + "/" + imported_tensor_name
-    imported_op_name = _get_node_name_from_tensor(imported_tensor_name)
+    imported_op_name, imported_index = _split_tensor_name(imported_tensor_name)
     key = tf.compat.as_bytes("loc:@" + imported_op_name)
-    mapped_coloc_groups = mapped_tensor.op.colocation_groups()
-    previous_mapped_coloc_groups = colocation_attr_map.get(key)
-    if (previous_mapped_coloc_groups and
-        set(previous_mapped_coloc_groups) != set(mapped_coloc_groups)):
-      raise ValueError("Imported op %s has its outputs mapped to existing ops "
-                       "with different colocation_groups: %s vs %s" %
-                       (imported_op_name, previous_mapped_coloc_groups,
-                        mapped_coloc_groups))
-    colocation_attr_map[key] = mapped_coloc_groups
+    colocation_attr_map[key].Set(
+        mapped_tensor.op.colocation_groups(),
+        {"reason": "input '%s' is substituted by '%s'" % (
+            imported_tensor_name, mapped_tensor.name)})
+    used_outputs_of_imported_ops[imported_op_name].add(imported_index)
+  # Add unchanged mappings for additional, non-remapped outputs of ops touched
+  # by the input_map. For now, these just signal inconsistency when used.
+  for imported_op_name, used_outputs in used_outputs_of_imported_ops.items():
+    imported_op = tf.get_default_graph().get_operation_by_name(imported_op_name)
+    unused_outputs = set(range(len(imported_op.outputs))) - used_outputs
+    if not unused_outputs: continue
+    key = tf.compat.as_bytes("loc:@" + imported_op_name)
+    if imported_op.colocation_groups() != [key]:
+      # This should never happen: state nodes are remapped fully, input nodes
+      # are prevented from having colocation attributes.
+      raise ValueError(
+          "Internal error: tensors from op '%s' are partially remapped in "
+          "import but op.colocation_groups=%s cannot be captured in a "
+          "simple rewrite rule." %
+          (imported_op_name, imported_op.colocation_groups()))
+    colocation_attr_map[key].Set(
+        [key],
+        {"reason": "tensor '%s:%s' is not substituted by inputs" % (
+            imported_op_name,
+            ",".join(str(i) for i in sorted(unused_outputs)))})
+
   return colocation_attr_map
 
 
@@ -846,10 +934,17 @@ def _apply_colocation_attr_map(colocation_attr_map, absolute_import_scope):
   Args:
     colocation_attr_map: as returned by _build_colocation_attr_map.
     absolute_import_scope: as for fix_colocation_after_import.
+
+  Raises:
+    ValueError: if rewriting runs into an inconsistent value in
+      `colocation_attr_map`.
   """
   graph = tf.get_default_graph()
   for op in graph.get_operations():
     # Rewrite the values of the "_class" attr that store colocation constraints.
+    # NOTE: The colocation_group loc:@X of a node with itself is not stored
+    # explicitly as an attr, so rewrite errors for loc:@X are not triggered
+    # by the mere existence of X.
     if not op.name.startswith(absolute_import_scope + "/"): continue
     try:
       class_values = op.get_attr("_class")
@@ -859,10 +954,22 @@ def _apply_colocation_attr_map(colocation_attr_map, absolute_import_scope):
     new_coloc_groups = []
     for class_value in class_values:
       if class_value.startswith(tf.compat.as_bytes("loc:@")):
-        if class_value in colocation_attr_map:
-          new_coloc_groups.extend(colocation_attr_map[class_value])
+        if class_value not in colocation_attr_map:
+          rewritten_class_value = [class_value]
         else:
-          new_coloc_groups.append(class_value)
+          rewritten_class_value = (colocation_attr_map[
+              class_value].GetConsistentValueOrRaise(
+                  "Failed to rewrite colocation constraints while applying "
+                  "hub.Module:\n"
+                  "The module graph contains a node {op!r} "
+                  "that has a colocation constraint {class_value!r} "
+                  "with ambiguous rewriting {old_value!r} vs {new_value!r} "
+                  "because {old_reason} and {new_reason}, respectively.\n"
+                  "To fix, avoid publishing a module with inputs comprising "
+                  "multiple outputs of one op that is referenced in "
+                  "tf.colocate_with(...) constraints on other ops.",
+                  {"op": op.name, "class_value": class_value}))
+        new_coloc_groups.extend(rewritten_class_value)
       else:
         new_attr_value.list.s.append(class_value)
     new_coloc_groups = sorted(set(new_coloc_groups))
@@ -920,4 +1027,19 @@ def find_signature_input_colocation_error(signature_name, inputs):
           "Details: tensor '%s' appears as input '%s' of signature '%s' "
           "but has Tensor.op.colocation_groups() == %s" %
           (tensor, input_name, signature_name, tensor.op.colocation_groups()))
+  return None
+
+
+def find_signature_inputs_from_multivalued_ops(inputs):
+  """Returns error message for module inputs from ops with multiple outputs."""
+  inputs_for_warning = sorted((input_name, input_tensor.name)
+                              for input_name, input_tensor in inputs.items()
+                              if len(input_tensor.op.outputs) != 1)
+  if inputs_for_warning:
+    return (
+        "WARNING: The inputs declared in hub.add_signature() should be tensors "
+        "from ops with a single output, or else uses of tf.colocate_with() on "
+        "that op can trigger fatal errors when the module is applied and "
+        "colocation constraints have to be rewritten.\nAffected inputs: %s" %
+        ", ".join("%s='%s'" % pair for pair in inputs_for_warning))
   return None

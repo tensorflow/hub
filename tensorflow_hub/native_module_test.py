@@ -699,6 +699,24 @@ class TFHubLayersModuleTest(tf.test.TestCase):
             out, [[1.0, 1.0], [2.0, 2.0], [2.0, 2.0]], atol=0.001)
 
 
+def valid_colocation_module_fn():
+  w = tf.Variable(42 + 69, name="w")
+  # w.op has the same name on resource and non-resource variables
+  with tf.colocate_with(w.op):
+    # A colocation reference among state nodes is ok.
+    v = tf.Variable(1.0, name="v")
+    assert v.op.colocation_groups() == [tf.compat.as_bytes("loc:@w")]
+    # A colocation reference from other nodes to state nodes is ok.
+    y = tf.add(v, 1, name="y")
+    assert y.op.colocation_groups() == [tf.compat.as_bytes("loc:@w")]
+  x = tf.placeholder(dtype=tf.float32, name="x")
+  with tf.colocate_with(x):
+    # A colocation reference from other nodes to input nodes is ok.
+    z = tf.add(x, 1, name="z")
+    assert z.op.colocation_groups() == [tf.compat.as_bytes("loc:@x")]
+  hub.add_signature(inputs=dict(x=x), outputs=dict(y=y, z=z))
+
+
 def bad_input_colocation_module_fn():
   u = tf.add(42, 69, name="u")
   with tf.colocate_with(u):
@@ -718,33 +736,98 @@ def bad_state_colocation_module_fn():
   hub.add_signature(inputs=x, outputs=y)
 
 
-def good_colocation_module_fn():
-  w = tf.Variable(42 + 69, name="w")
-  # w.op has the same name on resource and non-resource variables
-  with tf.colocate_with(w.op):
-    # Colocation references among state nodes is ok.
-    v = tf.Variable(1.0, name="v")
-    assert v.op.colocation_groups() == [tf.compat.as_bytes("loc:@w")]
-  x = tf.placeholder(dtype=tf.float32, name="x")
-  with tf.colocate_with(x):
-    # Colocation references from other nodes to state nodes is ok.
-    y = x + v
-    assert sorted(y.op.colocation_groups()) == [tf.compat.as_bytes("loc:@x")]
-  hub.add_signature(inputs=x, outputs=y)
+def brittle_multivalued_colocation_module_fn():
+  x, y = tf.split([1, 2], 2, name="split")
+  with tf.colocate_with(x), tf.colocate_with(y):
+    z = tf.add(x, y, name="add")
+    assert z.op.colocation_groups() == [tf.compat.as_bytes("loc:@split")]
+  hub.add_signature(inputs=dict(x=x, y=y), outputs=z, name="both")
+  hub.add_signature(inputs=dict(x=x), outputs=z, name="partial")
 
 
-class ColocationErrorCheckingTest(tf.test.TestCase):
+class ColocationRewritingTest(tf.test.TestCase):
 
-  def testBaseline(self):
-    _ = hub.create_module_spec(good_colocation_module_fn)
+  def testValidCase(self):
+    """Tests a complex, valid case end-to-end."""
+    spec = hub.create_module_spec(valid_colocation_module_fn)
+    with tf.Graph().as_default():
+      u = tf.constant(7.0, name="u")
+      m = hub.Module(spec, name="m")
+      outputs = m(dict(x=u), as_dict=True)
+      self.assertItemsEqual(outputs["y"].op.colocation_groups(),
+                            [tf.compat.as_bytes("loc:@m/w")])
+      self.assertItemsEqual(outputs["z"].op.colocation_groups(),
+                            [tf.compat.as_bytes("loc:@u")])
 
   def testBadInputColocation(self):
+    """Tests catching bad colocation of inputs during create_module_spec."""
     with self.assertRaisesRegexp(ValueError, "(?s)input.*colocate.*loc:@u"):
       _ = hub.create_module_spec(bad_input_colocation_module_fn)
 
   def testBadStateColocation(self):
+    """Tests catching bad colocation of states during create_module_spec."""
     with self.assertRaisesRegexp(ValueError, "(?s)state.*colocate.*loc:@u"):
       _ = hub.create_module_spec(bad_state_colocation_module_fn)
+
+  def testInputsFromMultivaluedOp(self):
+    """Tests warning for inputs from multivalued ops in create_module_spec."""
+    # Ideally, one would be able to write
+    #    with self.assertLogs("blah"): hub.create_module_spec(module_fn)
+    # but in the absence of assertions on logs, we test the underlying helper
+    # in the environment seen from within a module_fn.
+    with tf.Graph().as_default():
+      first, _ = tf.split([[1, 2], [3, 4]], 2, name="split1")
+      _, second = tf.split([[5, 6], [7, 8]], 2, name="split2")
+      third = tf.constant(105, name="const")
+      message = native_module.find_signature_inputs_from_multivalued_ops(
+          dict(first=first, second=second, third=third))
+    self.assertRegexpMatches(
+        message,
+        ".*single output.*\n"
+        "Affected inputs: first='split1:0', second='split2:1'$")
+    # Also test the case of no errors.
+    with tf.Graph().as_default():
+      first = tf.constant(101)
+      second = tf.constant(102)
+      third = tf.constant(103)
+      message = native_module.find_signature_inputs_from_multivalued_ops(
+          dict(first=first, second=second, third=third))
+    self.assertIsNone(message)
+
+  def testBrittleColocationWithInputsFromMultivaluedOp(self):
+    """Tests handling of ambiguous rewrites during module.__call__."""
+    spec = hub.create_module_spec(brittle_multivalued_colocation_module_fn)
+    with tf.Graph().as_default():
+      u = tf.constant([1], name="u")
+      with tf.colocate_with(u):
+        v = tf.constant([2], name="v")
+      w = tf.constant([3], name="w")
+      m = hub.Module(spec, name="m")
+      # It works if both inputs are mapped to ops with equal colocation groups.
+      assert u.op.colocation_groups() == v.op.colocation_groups()
+      z = m(dict(x=u, y=v), signature="both")
+      self.assertItemsEqual(z.op.colocation_groups(),
+                            [tf.compat.as_bytes("loc:@u")])
+      # It crashes in the general case.
+      assert u.op.colocation_groups() != w.op.colocation_groups()
+      with self.assertRaisesRegexp(
+          ValueError,
+          # In Python 3 (but not 2), colocation groups are lists of bytes,
+          # which are formatted with a leading "b" just before the quotes.
+          r"(?s)Failed to rewrite .*b?'loc:@m_apply_both_1/split' .*"
+          "\[b?'loc:@[uw]'\] vs \[b?'loc:@[wu]'\]"):
+        z = m(dict(x=u, y=w), signature="both")
+
+  def testBadColocationWithPartialInputsFromMultivaluedOp(self):
+    spec = hub.create_module_spec(brittle_multivalued_colocation_module_fn)
+    with tf.Graph().as_default():
+      u = tf.constant([1], name="u")
+      m = hub.Module(spec, name="m")
+      with self.assertRaisesRegexp(
+          ValueError,
+          r"(?s)Failed to rewrite .*b?'loc:@m_apply_partial/split' .*"
+          "\[b?'loc:@u'\] vs \[b?'loc:@m_apply_partial/split'\]"):
+        z = m(dict(x=u), signature="partial")
 
 
 def update_ops_module_fn():
