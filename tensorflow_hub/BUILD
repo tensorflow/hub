@@ -122,7 +122,7 @@ py_library(
     srcs = ["image_util.py"],
     srcs_version = "PY2AND3",
     deps = [
-        ":module",
+        ":all_protos_py_pb2",
     ],
 )
 
@@ -330,6 +330,7 @@ py_test(
 tf_hub_proto_library(
     name = "all_protos",
     srcs = [
+        "image_module_info.proto",
         "module_attachment.proto",
         "module_def.proto",
     ],

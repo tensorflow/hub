@@ -1,0 +1,42 @@
+// Copyright 2018 The TensorFlow Hub Authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =============================================================================
+syntax = "proto3";
+
+package tensorflow_hub;
+
+// Internal representation of properties of image modules.
+//
+// A TensorFlow Hub module that operates on images can have an attached_message
+// "image_module_info" of this type to provide image-related information to the
+// the code in image_util.py. Module consumers should use those library
+// functions; the details of this protocol message are subject to change.
+message ImageModuleInfo {
+  // Size of input images.
+  //
+  // A module that accepts an image input (or multiple ones) can describe
+  // its expectations on the image size in this message
+  message InputSize {
+    // The expected input size (in pixels) that the module was trained for.
+    // This can be reported here without constraining the input's shape in
+    // the signature, in case the module can also handle other sizes.
+    int32 height = 1;
+    int32 width = 2;
+    // Previously used internally.
+    reserved 3;
+  }
+
+  // The size information for all image inputs in all signatures.
+  InputSize default_image_size = 1;
+}

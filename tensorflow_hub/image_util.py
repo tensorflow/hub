@@ -18,7 +18,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow_hub import module
+from tensorflow_hub import image_module_info_pb2
+
+
+# Image modules can provide further information for the utilities in this file
+# by attaching an ImageModuleInfo message under this key.
+IMAGE_MODULE_INFO_KEY = "image_module_info"
+
+
+def get_image_module_info(module_or_spec):
+  """Returns the module's attached ImageModuleInfo message, or None."""
+  return module_or_spec.get_attached_message(
+      IMAGE_MODULE_INFO_KEY, image_module_info_pb2.ImageModuleInfo)
 
 
 def get_expected_image_size(module_or_spec, signature=None, input_name=None):
@@ -37,24 +48,14 @@ def get_expected_image_size(module_or_spec, signature=None, input_name=None):
   Raises:
     ValueError: If the size information is missing or malformed.
   """
-  # First try to use a spec specific implementation.
-  #
-  # Note: this call into _get_expected_image_size is an implementation
-  # detail to make experimentation easier and suitable to change without
-  # notice.
-  # pylint: disable=protected-access
-  if isinstance(module_or_spec, module.Module):
-    spec = module_or_spec._spec
-  else:
-    spec = module_or_spec
-  if hasattr(spec, "_get_expected_image_size"):
-    image_size = spec._get_expected_image_size(
-        signature=signature, input_name=input_name)
-    if image_size is not None:
-      return image_size
-  # pylint: enable=protected-access
+  # First see if an attached ImageModuleInfo provides this information.
+  image_module_info = get_image_module_info(module_or_spec)
+  if image_module_info:
+    size = image_module_info.default_image_size
+    if size.height and size.width:
+      return [size.height, size.width]
 
-  # Fallback to inspect the input shape in the module signature.
+  # Else inspect the input shape in the module signature.
   if input_name is None:
     input_name = "images"
   input_info_dict = module_or_spec.get_input_info_dict(signature)
