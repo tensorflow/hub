@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import six
 import tensorflow as tf
 from tensorflow_hub import module_spec
 from tensorflow_hub import registry
@@ -27,7 +28,7 @@ from tensorflow_hub import tensor_info
 def as_module_spec(spec):
   if isinstance(spec, module_spec.ModuleSpec):
     return spec
-  elif isinstance(spec, str):
+  elif isinstance(spec, six.string_types):
     return load_module_spec(spec)
   else:
     raise ValueError("Unknown module spec type: %r" % type(spec))
