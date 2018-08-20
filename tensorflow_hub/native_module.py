@@ -1032,14 +1032,20 @@ def find_signature_input_colocation_error(signature_name, inputs):
 
 def find_signature_inputs_from_multivalued_ops(inputs):
   """Returns error message for module inputs from ops with multiple outputs."""
-  inputs_for_warning = sorted((input_name, input_tensor.name)
-                              for input_name, input_tensor in inputs.items()
-                              if len(input_tensor.op.outputs) != 1)
-  if inputs_for_warning:
+  dense_inputs = []  # List of (str, Tensor), with SparseTensors decomposed.
+  for name, tensor in sorted(inputs.items()):
+    if isinstance(tensor, tf.SparseTensor):
+      dense_inputs.extend(("%s.%s" % (name, attr), getattr(tensor, attr))
+                          for attr in ("indices", "values", "dense_shape"))
+    else:
+      dense_inputs.append((name, tensor))
+  warnings = [(name, tensor.name) for name, tensor in dense_inputs
+              if len(tensor.op.outputs) != 1]
+  if warnings:
     return (
         "WARNING: The inputs declared in hub.add_signature() should be tensors "
         "from ops with a single output, or else uses of tf.colocate_with() on "
         "that op can trigger fatal errors when the module is applied and "
         "colocation constraints have to be rewritten.\nAffected inputs: %s" %
-        ", ".join("%s='%s'" % pair for pair in inputs_for_warning))
+        ", ".join("%s='%s'" % pair for pair in warnings))
   return None

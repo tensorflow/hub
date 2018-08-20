@@ -794,6 +794,33 @@ class ColocationRewritingTest(tf.test.TestCase):
           dict(first=first, second=second, third=third))
     self.assertIsNone(message)
 
+  def testSparseInputsFromMultivaluedOp(self):
+    """Tests warning for SparseTensor inputs from multivalued ops."""
+    with tf.Graph().as_default():
+      one, _ = tf.sparse_split(
+          sp_input=tf.SparseTensor(indices=[[0, 1], [1, 2]], values=[1, 2],
+                                   dense_shape=[2, 3]),
+          num_split=2, axis=0, name="op1")
+      _, two = tf.sparse_split(
+          sp_input=tf.SparseTensor(indices=[[0, 0], [1, 1]], values=[3, 4],
+                                   dense_shape=[2, 3]),
+          num_split=2, axis=0, name="op2")
+      three = tf.SparseTensor(indices=[[0]], values=[5], dense_shape=[2])
+      message = native_module.find_signature_inputs_from_multivalued_ops(
+          dict(one=one, two=two, three=three))
+    self.assertRegexpMatches(
+        message,
+        ".*single output.*\nAffected inputs: "
+        "one.indices='op1:0', one.values='op1:2', one.dense_shape='op1:4', "
+        "two.indices='op2:1', two.values='op2:3', two.dense_shape='op2:5'$")
+    # Also test the case of no errors.
+    with tf.Graph().as_default():
+      one = tf.SparseTensor(indices=[[0]], values=[1], dense_shape=[2])
+      two = tf.SparseTensor(indices=[[1]], values=[2], dense_shape=[2])
+      message = native_module.find_signature_inputs_from_multivalued_ops(
+          dict(one=one, two=two, three=three))
+    self.assertIsNone(message)
+
   def testBrittleColocationWithInputsFromMultivaluedOp(self):
     """Tests handling of ambiguous rewrites during module.__call__."""
     spec = hub.create_module_spec(brittle_multivalued_colocation_module_fn)
