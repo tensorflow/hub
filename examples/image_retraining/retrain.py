@@ -897,7 +897,7 @@ def build_eval_session(module_spec, class_count):
           evaluation_step, prediction)
 
 
-def save_graph_to_file(graph, graph_file_name, module_spec, class_count):
+def save_graph_to_file(graph_file_name, module_spec, class_count):
   """Saves an graph to file, creating a valid quantized one if necessary."""
   sess, _, _, _, _, _ = build_eval_session(module_spec, class_count)
   graph = sess.graph
@@ -1112,7 +1112,7 @@ def main(_):
                                   'intermediate_' + str(i) + '.pb')
         tf.logging.info('Save intermediate result to : ' +
                         intermediate_file_name)
-        save_graph_to_file(graph, intermediate_file_name, module_spec,
+        save_graph_to_file(intermediate_file_name, module_spec,
                            class_count)
 
     # After training is complete, force one last save of the train checkpoint.
@@ -1129,7 +1129,7 @@ def main(_):
     tf.logging.info('Save final result to : ' + FLAGS.output_graph)
     if wants_quantization:
       tf.logging.info('The model is instrumented for quantization with TF-Lite')
-    save_graph_to_file(graph, FLAGS.output_graph, module_spec, class_count)
+    save_graph_to_file(FLAGS.output_graph, module_spec, class_count)
     with tf.gfile.FastGFile(FLAGS.output_labels, 'w') as f:
       f.write('\n'.join(image_lists.keys()) + '\n')
 
