@@ -556,7 +556,7 @@ def prepend_name_scope(name, import_scope):
     try:
       str_to_replace = r"([\^]|loc:@|^)(.*)"
       return re.sub(str_to_replace, r"\1" + import_scope + r"/\2",
-                    tf.compat.as_str(name))
+                    tf.compat.as_str_any(name))
     except TypeError as e:
       # If the name is not of a type we can process, simply return it.
       tf.logging.warning(e)
@@ -988,7 +988,7 @@ def _apply_colocation_attr_map(colocation_attr_map, absolute_import_scope):
       for new_coloc_group in new_coloc_groups:
         assert new_coloc_group.startswith(tf.compat.as_bytes("loc:@"))
         new_coloc_target_op = graph.get_operation_by_name(
-            tf.compat.as_str(new_coloc_group[5:]))
+            tf.compat.as_str_any(new_coloc_group[5:]))
         new_coloc_device = new_coloc_target_op.device
         if new_coloc_device: break
       # Set this, even if empty, to avoid retaining an outdated value.
@@ -1003,7 +1003,7 @@ def find_state_op_colocation_error(graph, reported_tags=None):
   for op in state_op_map.values():
     for colocation_group in op.colocation_groups():
       if not (colocation_group.startswith(tf.compat.as_bytes("loc:@")) and
-              tf.compat.as_str(colocation_group[5:]) in state_op_map):
+              tf.compat.as_str_any(colocation_group[5:]) in state_op_map):
         tags_prefix = ("" if reported_tags is None else
                        "in the graph for tags %s, " % reported_tags)
         return (
