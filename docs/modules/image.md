@@ -99,3 +99,15 @@ See the module documentation for details.
     | 50 layers | 101 layers | 152 layers |
     |-----------|------------|------------|
     | [classification](https://tfhub.dev/google/imagenet/resnet_v2_50/classification/1)<br/>[feature_vector](https://tfhub.dev/google/imagenet/resnet_v2_50/feature_vector/1) | [classification](https://tfhub.dev/google/imagenet/resnet_v2_101/classification/1)<br/>[feature_vector](https://tfhub.dev/google/imagenet/resnet_v2_101/feature_vector/1) | [classification](https://tfhub.dev/google/imagenet/resnet_v2_152/classification/1)<br/>[feature_vector](https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/1) |
+
+
+## Modules trained on domain-specific datasets
+
+### iNaturalist (iNat) 2017
+
+The iNat2017 dataset consists of 579,184 training images and 95,986 validation
+images from 5,089 species, taken from
+[www.inaturalist.org](http://www.inaturalist.org).
+
+  * Inception V3:
+    [feature_vector](https://tfhub.dev/google/inaturalist/inception_v3/feature_vector/1).
