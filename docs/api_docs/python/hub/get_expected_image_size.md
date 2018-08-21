@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.get_expected_image_size" />
+<meta itemprop="path" content="stable" />
 </div>
 
 # hub.get_expected_image_size

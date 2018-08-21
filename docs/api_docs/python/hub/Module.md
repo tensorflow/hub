@@ -1,9 +1,11 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.Module" />
+<meta itemprop="path" content="stable" />
 <meta itemprop="property" content="variable_map"/>
 <meta itemprop="property" content="__call__"/>
 <meta itemprop="property" content="__init__"/>
 <meta itemprop="property" content="export"/>
+<meta itemprop="property" content="get_attached_message"/>
 <meta itemprop="property" content="get_input_info_dict"/>
 <meta itemprop="property" content="get_output_info_dict"/>
 <meta itemprop="property" content="get_signature_names"/>
@@ -219,6 +221,18 @@ of variables.
 #### Raises:
 
 * <b>`RuntimeError`</b>: if there is an issue during the export.
+
+<h3 id="get_attached_message"><code>get_attached_message</code></h3>
+
+``` python
+get_attached_message(
+    key,
+    message_type,
+    required=False
+)
+```
+
+Calls ModuleSpec.get_attached_message(); see there for more.
 
 <h3 id="get_input_info_dict"><code>get_input_info_dict</code></h3>
 

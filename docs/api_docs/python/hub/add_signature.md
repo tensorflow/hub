@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.add_signature" />
+<meta itemprop="path" content="stable" />
 </div>
 
 # hub.add_signature

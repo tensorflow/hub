@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.LatestModuleExporter" />
+<meta itemprop="path" content="stable" />
 <meta itemprop="property" content="name"/>
 <meta itemprop="property" content="__init__"/>
 <meta itemprop="property" content="export"/>
@@ -79,7 +80,7 @@ Creates an `Exporter` to use with `tf.estimator.EvalSpec`.
 export(
     estimator,
     export_path,
-    checkpoint_path,
+    checkpoint_path=None,
     eval_result=None,
     is_the_final_export=None
 )
@@ -104,7 +105,8 @@ Example use:
 * <b>`estimator`</b>: the `Estimator` from which to export modules.
 * <b>`export_path`</b>: A string containing a directory where to write the export
     timestamped directories.
-* <b>`checkpoint_path`</b>: The checkpoint path to export.
+* <b>`checkpoint_path`</b>: The checkpoint path to export. If `None`,
+    `estimator.latest_checkpoint()` is used.
 * <b>`eval_result`</b>: Unused.
 * <b>`is_the_final_export`</b>: Unused.
 

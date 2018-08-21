@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.create_module_spec" />
+<meta itemprop="path" content="stable" />
 </div>
 
 # hub.create_module_spec

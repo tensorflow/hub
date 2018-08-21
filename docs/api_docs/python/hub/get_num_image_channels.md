@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.get_num_image_channels" />
+<meta itemprop="path" content="stable" />
 </div>
 
 # hub.get_num_image_channels

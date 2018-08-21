@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.text_embedding_column" />
+<meta itemprop="path" content="stable" />
 </div>
 
 # hub.text_embedding_column

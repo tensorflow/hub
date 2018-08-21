@@ -6,8 +6,12 @@ toc:
       path: /TARGET_DOC_ROOT/VERSION/api_docs/python/hub
     - title: add_signature
       path: /TARGET_DOC_ROOT/VERSION/api_docs/python/hub/add_signature
+    - title: attach_message
+      path: /TARGET_DOC_ROOT/VERSION/api_docs/python/hub/attach_message
     - title: create_module_spec
       path: /TARGET_DOC_ROOT/VERSION/api_docs/python/hub/create_module_spec
+    - title: create_module_spec_from_saved_model
+      path: /TARGET_DOC_ROOT/VERSION/api_docs/python/hub/create_module_spec_from_saved_model
     - title: get_expected_image_size
       path: /TARGET_DOC_ROOT/VERSION/api_docs/python/hub/get_expected_image_size
     - title: get_num_image_channels

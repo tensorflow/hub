@@ -1,6 +1,8 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.ModuleSpec" />
+<meta itemprop="path" content="stable" />
 <meta itemprop="property" content="__init__"/>
+<meta itemprop="property" content="get_attached_message"/>
 <meta itemprop="property" content="get_input_info_dict"/>
 <meta itemprop="property" content="get_output_info_dict"/>
 <meta itemprop="property" content="get_signature_names"/>
@@ -32,6 +34,52 @@ __init__()
 ```
 
 Do not instantiate directly.
+
+<h3 id="get_attached_message"><code>get_attached_message</code></h3>
+
+``` python
+get_attached_message(
+    key,
+    message_type,
+    tags=None,
+    required=False
+)
+```
+
+Returns the message attached to the module under the given key, or None.
+
+Module publishers can attach protocol messages to modules at creation time
+to provide module consumers with additional information, e.g., on module
+usage or provenance (see see hub.attach_message()). A typical use would be
+to store a small set of named values with modules of a certain type so
+that a support library for consumers of such modules can be parametric
+in those values.
+
+This method can also be called on a Module instantiated from a ModuleSpec,
+then `tags` are set to those used in module instatiation.
+
+#### Args:
+
+* <b>`key`</b>: A string with the key of an attached message.
+* <b>`message_type`</b>: A concrete protocol message class (*not* object) used
+    to parse the attached message from its serialized representation.
+    The message type for a particular key must be advertised with the key.
+* <b>`tags`</b>: Optional set of strings, specifying the graph variant from which
+    to read the attached message.
+* <b>`required`</b>: An optional boolean. Setting it true changes the effect of
+    an unknown `key` from returning None to raising a KeyError with text
+    about attached messages.
+
+
+#### Returns:
+
+An instance of `message_type` with the message contents attached to the
+module, or `None` if `key` is unknown and `required` is False.
+
+
+#### Raises:
+
+* <b>`KeyError`</b>: if `key` is unknown and `required` is True.
 
 <h3 id="get_input_info_dict"><code>get_input_info_dict</code></h3>
 

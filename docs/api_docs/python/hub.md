@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub" />
+<meta itemprop="path" content="stable" />
 <meta itemprop="property" content="__version__"/>
 </div>
 
@@ -19,7 +20,11 @@ TensorFlow Hub Library.
 
 [`add_signature(...)`](./hub/add_signature.md): Adds a signature to the module definition.
 
+[`attach_message(...)`](./hub/attach_message.md): Adds an attached message to the module definition.
+
 [`create_module_spec(...)`](./hub/create_module_spec.md): Creates a ModuleSpec from a function that builds the module's graph.
+
+[`create_module_spec_from_saved_model(...)`](./hub/create_module_spec_from_saved_model.md): Experimental: Create a ModuleSpec out of a SavedModel.
 
 [`get_expected_image_size(...)`](./hub/get_expected_image_size.md): Returns expected [height, width] dimensions of an image input.
 

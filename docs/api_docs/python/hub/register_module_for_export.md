@@ -1,5 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.register_module_for_export" />
+<meta itemprop="path" content="stable" />
 </div>
 
 # hub.register_module_for_export
