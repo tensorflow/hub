@@ -315,6 +315,17 @@ class Module(object):
     """
     return self._impl.variable_map
 
+  @property
+  def variables(self):
+    """Returns the list of all tf.Variables created by module instantiation."""
+    result = []
+    for _, value in sorted(self.variable_map.items()):
+      if isinstance(value, list):
+        result.extend(value)
+      else:
+        result.append(value)
+    return result
+
 
 def _try_get_state_scope(name, mark_name_scope_used=True):
   """Returns a fresh variable/name scope for a module's state.

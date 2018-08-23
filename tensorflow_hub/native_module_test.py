@@ -363,6 +363,7 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
     out = m()
     self.assertEqual(list(m.variable_map.keys()), ["var123"])
     self.assertEqual(m.variable_map["var123"].name, "test/var123:0")
+    self.assertEqual([v.name for v in m.variables], ["test/var123:0"])
     with tf.Session() as sess:
       sess.run(tf.global_variables_initializer())
       self.assertAllClose(sess.run(out), [1.0, 2.0, 3.0])
@@ -373,6 +374,7 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
     out = m()
     self.assertEqual(list(m.variable_map.keys()), ["rv_var123"])
     self.assertEqual(m.variable_map["rv_var123"].name, "test_rv/rv_var123:0")
+    self.assertEqual([v.name for v in m.variables], ["test_rv/rv_var123:0"])
 
     # Check that "shared_name" attributes are adapted correctly:
     for op_prefix in ["test_rv", "test_rv_apply_default"]:
@@ -440,6 +442,7 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
     out = m()
     self.assertEqual(list(m.variable_map.keys()), ["var123"])
     self.assertEqual(m.variable_map["var123"].name, "test_non_rv/var123:0")
+    self.assertEqual([v.name for v in m.variables], ["test_non_rv/var123:0"])
 
     export_path = os.path.join(self.get_temp_dir(), "non-resource-variables")
     with tf.Session() as sess:
@@ -537,6 +540,12 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
         ["test/partitioned_variable/part_0:0",
          "test/partitioned_variable/part_1:0",
          "test/partitioned_variable/part_2:0"])
+    self.assertAllEqual(  # Check deterministric order (by variable_map key).
+        [variable.name for variable in m.variables],
+        ["test/normal_variable:0",
+         "test/partitioned_variable/part_0:0",
+         "test/partitioned_variable/part_1:0",
+         "test/partitioned_variable/part_2:0"])
     with tf.Session() as sess:
       sess.run(tf.global_variables_initializer())
       self.assertAllClose(sess.run(out), 2 * np.ones([7, 3]))
@@ -548,6 +557,7 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
     out = m()
     self.assertEqual(len(m.variable_map), 2)
     self.assertEqual(len(m.variable_map["partitioned_variable"]), 25)
+    self.assertEqual(len(m.variables), 26)
     with tf.Session() as sess:
       sess.run(tf.global_variables_initializer())
       self.assertAllClose(sess.run(out), 2 * np.ones([600, 3]))
