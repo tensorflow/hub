@@ -81,6 +81,44 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
              [1.49, 3.22, 4.56], [0.0, 0.0, 0.0]],
             rtol=0.02)
 
+  def testEmptyInput(self):
+    export.export_module_from_file(
+        embedding_file=self._embedding_file_path,
+        export_path=self.get_temp_dir(),
+        parse_line_fn=export.parse_line,
+        num_oov_buckets=1,
+        preprocess_text=True)
+    with tf.Graph().as_default():
+      hub_module = hub.Module(self.get_temp_dir())
+      tokens = tf.constant(["", "", ""])
+      embeddings = hub_module(tokens)
+      with tf.Session() as session:
+        session.run(tf.tables_initializer())
+        session.run(tf.global_variables_initializer())
+        self.assertAllClose(
+            session.run(embeddings),
+            [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+            rtol=0.02)
+
+  def testEmptyLeading(self):
+    export.export_module_from_file(
+        embedding_file=self._embedding_file_path,
+        export_path=self.get_temp_dir(),
+        parse_line_fn=export.parse_line,
+        num_oov_buckets=1,
+        preprocess_text=True)
+    with tf.Graph().as_default():
+      hub_module = hub.Module(self.get_temp_dir())
+      tokens = tf.constant(["", "cat dog"])
+      embeddings = hub_module(tokens)
+      with tf.Session() as session:
+        session.run(tf.tables_initializer())
+        session.run(tf.global_variables_initializer())
+        self.assertAllClose(
+            session.run(embeddings),
+            [[0.0, 0.0, 0.0], [1.49, 3.22, 4.56]],
+            rtol=0.02)
+
 
 if __name__ == "__main__":
   tf.test.main()

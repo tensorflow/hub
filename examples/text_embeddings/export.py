@@ -136,17 +136,6 @@ def make_module_spec(vocabulary_file, vocab_size, embeddings_dim,
         input=sentences, pattern=r"\pP", rewrite="")
     tokens = tf.string_split(normalized_sentences, " ")
 
-    # In case some of the input sentences are empty before or after
-    # normalization, we will end up with empty rows. We do however want to
-    # return embedding for every row, so we have to fill in the empty rows with
-    # a default.
-    tokens, _ = tf.sparse_fill_empty_rows(tokens, "")
-    # In case all of the input sentences are empty before or after
-    # normalization, we will end up with a SparseTensor with shape [?, 0]. After
-    # filling in the empty rows we must ensure the shape is set properly to
-    # [?, 1].
-    tokens = tf.sparse_reset_shape(tokens)
-
     embeddings_var = tf.get_variable(
         initializer=tf.zeros([vocab_size + num_oov_buckets, embeddings_dim]),
         name=EMBEDDINGS_VAR_NAME,
@@ -159,6 +148,19 @@ def make_module_spec(vocabulary_file, vocab_size, embeddings_dim,
         indices=tokens.indices,
         values=lookup_table.lookup(tokens.values),
         dense_shape=tokens.dense_shape)
+
+    # In case some of the input sentences are empty before or after
+    # normalization, we will end up with empty rows. We do however want to
+    # return embedding for every row, so we have to fill in the empty rows with
+    # a default.
+    sparse_ids, _ = tf.sparse_fill_empty_rows(
+        sparse_ids, lookup_table.lookup(tf.constant("")))
+    # In case all of the input sentences are empty before or after
+    # normalization, we will end up with a SparseTensor with shape [?, 0]. After
+    # filling in the empty rows we must ensure the shape is set properly to
+    # [?, 1]. At this point, there are no empty rows, so the new shape will be
+    # [sparse_ids.dense_shape[0], max(1, sparse_ids.dense_shape[1])].
+    sparse_ids = tf.sparse_reset_shape(sparse_ids)
 
     combined_embedding = tf.nn.embedding_lookup_sparse(
         params=embeddings_var,
