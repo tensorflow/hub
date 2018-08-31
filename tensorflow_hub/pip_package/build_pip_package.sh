@@ -50,10 +50,6 @@ function main() {
   pushd ${TMPDIR}
   rm -f MANIFEST
 
-  # Require wheel for bdist_wheel command, and setuptools 36.2.0+ so that
-  # env markers are handled (https://github.com/pypa/setuptools/pull/1081)
-  pip check "wheel" "setuptools>=36.2.0"
-
   echo $(date) : "=== Building universal python wheel in $PWD"
   python setup.py bdist_wheel --universal >/dev/null
   mkdir -p ${DEST}
