@@ -9,10 +9,8 @@ TensorFlow Hub library like so:
 m = hub.Module("https://tfhub.dev/...")
 ```
 
-
 ## Generative Adversarial Networks
 * [progan-128](https://tfhub.dev/google/progan-128/1)
-
 
 ## DEep Local Features (DELF)
 * [delf](https://tfhub.dev/google/delf/1)
@@ -20,3 +18,6 @@ m = hub.Module("https://tfhub.dev/...")
 ## Inflated 3D Convnet (I3D)
 * [i3d-kinetics-400](https://tfhub.dev/deepmind/i3d-kinetics-400/1)
 * [i3d-kinetics-600](https://tfhub.dev/deepmind/i3d-kinetics-600/1)
+
+## Object Detection
+* [faster_rcnn/openimages_v4/inception_resnet_v2/1](https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1)
