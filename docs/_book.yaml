@@ -33,6 +33,24 @@ upper_tabs:
         path: /hub/tutorials/image_retraining
       - title: Text Classification
         path: /hub/tutorials/text_classification_with_tf_hub
+      - title: Action Recognition
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/action_recognition_with_tf_hub.ipynb
+        status: external
+      - title: Semantic Similarity
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_similarity_with_tf_hub_universal_encoder.ipynb
+        status: external
+      - title: Kaggle Text Classification
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb
+        status: external
+      - title: Image Feature Matching
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_delf_module.ipynb
+        status: external
+      - title: Generating Images
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_generative_image_module.ipynb
+        status: external
+      - title: Object Detection
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/object_detection.ipynb
+        status: external
       - heading: Common Signatures
       - title: Overview
         path: /hub/common_signatures/
