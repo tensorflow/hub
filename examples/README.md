@@ -27,6 +27,12 @@ Explores action recognition from video.
 Exemplifies use of the [DELF Module](https://tfhub.dev/google/delf/1) for landmark recognition and matching.
 
 
+#### [`colab/object_detection.ipynb`](colab/object_detection.ipynb)
+
+Explores object detection with the use of the
+[Faster R-CNN module trained on Open Images v4](https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1).
+
+
 ## Python scripts
 
 #### [`image_retraining`](image_retraining)
