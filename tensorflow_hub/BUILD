@@ -123,6 +123,7 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":all_protos_py_pb2",
+        ":native_module",
     ],
 )
 

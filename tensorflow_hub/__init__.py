@@ -29,8 +29,10 @@ from tensorflow_hub.estimator import LatestModuleExporter
 from tensorflow_hub.estimator import register_module_for_export
 from tensorflow_hub.feature_column import image_embedding_column
 from tensorflow_hub.feature_column import text_embedding_column
+from tensorflow_hub.image_util import attach_image_module_info
 from tensorflow_hub.image_util import get_expected_image_size
 from tensorflow_hub.image_util import get_num_image_channels
+from tensorflow_hub.image_util import ImageModuleInfo
 from tensorflow_hub.module import load_module_spec
 from tensorflow_hub.module import Module
 from tensorflow_hub.module_spec import ModuleSpec
@@ -53,8 +55,10 @@ _allowed_symbols = [
     "register_module_for_export",
     "image_embedding_column",
     "text_embedding_column",
+    "attach_image_module_info",
     "get_expected_image_size",
     "get_num_image_channels",
+    "ImageModuleInfo",
     "Module",
     "ModuleSpec",
     "add_signature",

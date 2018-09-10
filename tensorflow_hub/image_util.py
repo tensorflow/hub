@@ -19,17 +19,27 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow_hub import image_module_info_pb2
+from tensorflow_hub import native_module
 
 
-# Image modules can provide further information for the utilities in this file
-# by attaching an ImageModuleInfo message under this key.
+# hub.Modules for images can provide further information for the utilities
+# in this file by attaching an ImageModuleInfo message under this key.
 IMAGE_MODULE_INFO_KEY = "image_module_info"
 
 
-def get_image_module_info(module_or_spec):
+# The externally visible name of the message is hub.ImageModuleInfo
+ImageModuleInfo = image_module_info_pb2.ImageModuleInfo  # pylint: disable=invalid-name
+
+
+def attach_image_module_info(image_module_info):
+  """Attaches an ImageModuleInfo message from within a module_fn."""
+  native_module.attach_message(IMAGE_MODULE_INFO_KEY, image_module_info)
+
+
+def get_image_module_info(module_or_spec, required=False):
   """Returns the module's attached ImageModuleInfo message, or None."""
   return module_or_spec.get_attached_message(
-      IMAGE_MODULE_INFO_KEY, image_module_info_pb2.ImageModuleInfo)
+      IMAGE_MODULE_INFO_KEY, ImageModuleInfo, required=required)
 
 
 def get_expected_image_size(module_or_spec, signature=None, input_name=None):

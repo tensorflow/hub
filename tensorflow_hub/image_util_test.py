@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow_hub import image_module_info_pb2
 from tensorflow_hub import image_util
 from tensorflow_hub import module
 from tensorflow_hub import native_module
@@ -39,11 +38,10 @@ def image_module_fn_with_info():
   sum_all = tf.reduce_sum(images, [1, 2, 3])
   native_module.add_signature(inputs=dict(images=images),
                               outputs=dict(default=sum_all))
-  image_module_info = image_module_info_pb2.ImageModuleInfo()
+  image_module_info = image_util.ImageModuleInfo()
   size = image_module_info.default_image_size
   size.height, size.width = 2, 4
-  native_module.attach_message(image_util.IMAGE_MODULE_INFO_KEY,
-                               image_module_info)
+  image_util.attach_image_module_info(image_module_info)
 
 
 class ImageModuleTest(tf.test.TestCase):
