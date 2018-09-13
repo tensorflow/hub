@@ -7,7 +7,10 @@ landing_page:
   - heading: >
       TensorFlow Hub is a library for reusable machine learning modules.
     items:
-    - description: >
+    - classname:
+        tfo-landing-row-item-code-block
+        devsite-landing-row-50
+      description: >
         TensorFlow Hub is a library for the publication, discovery, and
         consumption of reusable parts of machine learning models. A
         <em>module</em> is a self-contained piece of a TensorFlow graph, along
@@ -18,8 +21,6 @@ landing_page:
           <li>Improve generalization, and</li>
           <li>Speed up training.</li>
         </ul>
-
-    - classname: tfo-landing-row-item-code-block
       code_block: |
         <pre class = "prettyprint">
         import tensorflow as tf
