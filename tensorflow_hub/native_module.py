@@ -24,6 +24,7 @@ import re
 
 import tensorflow as tf
 
+from tensorflow_hub import meta_graph_lib
 from tensorflow_hub import module_def_pb2
 from tensorflow_hub import module_impl
 from tensorflow_hub import module_spec
@@ -433,10 +434,17 @@ class _ModuleImpl(module_impl.ModuleImpl):
     relative_scope_name = absolute_scope_name.split("/")[-1]
     assert relative_scope_name == name  # verify name scope was indeed unused.
 
+    meta_graph = meta_graph_pb2.MetaGraphDef()
+    meta_graph.CopyFrom(self._meta_graph)
+
+    meta_graph_lib.filter_collections(meta_graph, import_collections)
+    meta_graph_lib.prefix_shared_name_attributes(meta_graph,
+                                                 absolute_scope_name)
+
     tf.train.import_meta_graph(
-        adapted_meta_graph_for_import(self._meta_graph, absolute_scope_name),
-        import_scope=relative_scope_name,
-        restore_collections_predicate=(lambda key: key in import_collections))
+        meta_graph,
+        input_map={},
+        import_scope=relative_scope_name)
 
     # Build a list from the variable name in the module definition to the actual
     # instantiated variables.
@@ -449,7 +457,8 @@ class _ModuleImpl(module_impl.ModuleImpl):
     # apply-graphs.
     def _get_tensor(tensor_name):
       return self._graph.get_tensor_by_name(
-          prepend_name_scope(tensor_name, import_scope=absolute_scope_name))
+          meta_graph_lib.prepend_name_scope(tensor_name,
+                                            import_scope=absolute_scope_name))
 
     state_op_names = list_registered_stateful_ops_without_inputs()
     state_map = get_state_map(self._meta_graph, state_op_names, set(),
@@ -496,11 +505,17 @@ class _ModuleImpl(module_impl.ModuleImpl):
     if self._trainable:
       import_collections.extend([tf.GraphKeys.UPDATE_OPS])
 
+    meta_graph = meta_graph_pb2.MetaGraphDef()
+    meta_graph.CopyFrom(self._meta_graph)
+
+    meta_graph_lib.filter_collections(meta_graph, import_collections)
+    meta_graph_lib.prefix_shared_name_attributes(meta_graph,
+                                                 absolute_scope_name)
+
     tf.train.import_meta_graph(
-        adapted_meta_graph_for_import(self._meta_graph, absolute_scope_name),
+        meta_graph,
         input_map=feed_map,
-        import_scope=relative_scope_name,
-        restore_collections_predicate=(lambda key: key in import_collections))
+        import_scope=relative_scope_name)
     fix_colocation_after_import(input_map=feed_map,
                                 absolute_import_scope=absolute_scope_name)
 
@@ -511,7 +526,8 @@ class _ModuleImpl(module_impl.ModuleImpl):
         return feed_map[name]
       except KeyError:
         return self._graph.get_tensor_by_name(
-            prepend_name_scope(name, import_scope=absolute_scope_name))
+            meta_graph_lib.prepend_name_scope(name,
+                                              import_scope=absolute_scope_name))
 
     return tensor_info.build_output_map(signature_def.outputs, get_tensor)
 
@@ -530,39 +546,6 @@ class _ModuleImpl(module_impl.ModuleImpl):
   def variable_map(self):
     """See `Module.variable_map`."""
     return self._variable_map
-
-
-def adapted_meta_graph_for_import(meta_graph, absolute_import_scope):
-  """Prefixes the shared_name attributes of nodes with the import scope."""
-  # The MetaGraphDef is copied (and not modified in-place) so that future
-  # imports won't see these modifications.
-  copy = meta_graph_pb2.MetaGraphDef()
-  copy.CopyFrom(meta_graph)
-  shared_name_attr = "shared_name"
-  for node in copy.graph_def.node:
-    shared_name_value = node.attr.get(shared_name_attr, None)
-    if shared_name_value and shared_name_value.HasField("s"):
-      if shared_name_value.s:
-        node.attr[shared_name_attr].s = tf.compat.as_bytes(
-            prepend_name_scope(
-                shared_name_value.s, import_scope=absolute_import_scope))
-  return copy
-
-
-def prepend_name_scope(name, import_scope):
-  """Prepends name scope to a name."""
-  # Based on tensorflow/python/framework/ops.py implementation.
-  if import_scope:
-    try:
-      str_to_replace = r"([\^]|loc:@|^)(.*)"
-      return re.sub(str_to_replace, r"\1" + import_scope + r"/\2",
-                    tf.compat.as_str_any(name))
-    except TypeError as e:
-      # If the name is not of a type we can process, simply return it.
-      tf.logging.warning(e)
-      return name
-  else:
-    return name
 
 
 def list_registered_stateful_ops_without_inputs():

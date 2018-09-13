@@ -197,6 +197,7 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":all_protos_py_pb2",
+        ":meta_graph_lib",
         ":module",
         ":saved_model_lib",
         ":tf_utils",
@@ -280,6 +281,16 @@ py_test(
     deps = [
         ":saved_model_lib",
         "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "meta_graph_lib",
+    srcs = ["meta_graph_lib.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        "//tensorflow_hub:expect_tensorflow_installed",
+        #  "tensorflow/core:protos_all_py_pb2",
     ],
 )
 
