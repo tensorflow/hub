@@ -346,6 +346,7 @@ tf_hub_proto_library(
         "module_attachment.proto",
         "module_def.proto",
     ],
+    visibility = ["//:__subpackages__"],
 )
 
 # We expect TensorFlow to already be installed on the system, e.g. via
