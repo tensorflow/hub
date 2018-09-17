@@ -63,12 +63,6 @@ upper_tabs:
       - include: /hub/api_docs/python/_toc.yaml
     - name: Modules
       contents:
-      - title: Overview
-        path: /hub/modules/
-      - title: Image Modules
-        path: /hub/modules/image
-      - title: Text Modules
-        path: /hub/modules/text
-      - title: Other Modules
-        path: /hub/modules/other
-      - include: /hub/modules/_toc.yaml
+      - title: Modules
+        path: https://tfhub.dev
+        status: external
