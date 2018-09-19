@@ -38,3 +38,43 @@ $ python
 > import tensorflow_hub as hub
 > hub.Module("/tmp/moduleA")
 ```
+
+## Running inference on pre-initialized module
+
+If you are applying a module over data multiple times (e.g. to serve user
+requests) you should use TensorFlow Session.run to avoid the overhead of
+constructing and initializing parts of the graph multiple times.
+
+Assuming your use-case model is **initialization** and subsequent **requests**
+(for example Django, Flask, custom HTTP server, etc.), you can set-up the
+serving as follows:
+
+* In the initialization part:
+    * Build the graph with a **placeholder** - entry point into the graph.
+    * Initialize the session.
+
+```python
+import tensorflow as tf
+import tensorflow_hub as hub
+
+# Create graph and finalize (finalizing optional but recommended).
+g = tf.Graph()
+with g.as_default():
+  # We will be feeding 1D tensors of text into the graph.
+  text_input = tf.placeholder(dtype=tf.string, shape=[None])
+  embed = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/2")
+  embedded_text = embed(text_input)
+  init_op = tf.group([tf.global_variables_initializer(), tf.tables_initializer()])
+g.finalize()
+
+# Create session and initialize.
+session = tf.Session(graph=g)
+session.run(init_op)
+```
+
+* In the request part:
+    * Use the session to feed data into the graph through the placeholder.
+
+```python
+result = session.run(embedded_text, feed_dict={text_input: ["Hello world"]})
+```
