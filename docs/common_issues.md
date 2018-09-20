@@ -10,7 +10,7 @@ up due to the network stack. Often this is a problem specific to the machine
 running the code and not an issue with the library. Here is a list of the common
 ones:
 
-* **"EOF occured in violation of protocol"** - This issue is likely to be
+* **"EOF occurred in violation of protocol"** - This issue is likely to be
 generated if the installed python version does not support the TLS requirements
 of the server hosting the module. Notably, python 2.7.5 is known to fail
 resolving modules from tfhub.dev domain. **FIX**: Please update to a newer
@@ -39,7 +39,7 @@ $ python
 > hub.Module("/tmp/moduleA")
 ```
 
-## Running inference on pre-initialized module
+## Running inference on a pre-initialized module
 
 If you are applying a module over data multiple times (e.g. to serve user
 requests) you should use TensorFlow Session.run to avoid the overhead of
