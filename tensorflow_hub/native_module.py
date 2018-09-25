@@ -126,7 +126,7 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   # Define a text embedding module.
   def my_text_module_fn():
     text_input = tf.placeholder(dtype=tf.string, shape=[None])
-    embeddings = compute_embedding(text)
+    embeddings = compute_embedding(text_input)
     hub.add_signature(inputs=text_input, outputs=embeddings)
   ```
 
