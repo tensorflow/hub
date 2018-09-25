@@ -59,6 +59,7 @@ upper_tabs:
       - title: Common Signatures for Text
         path: /hub/common_signatures/text
     - name: API
+      skip_translation: true
       contents:
       - include: /hub/api_docs/python/_toc.yaml
     - name: Modules
