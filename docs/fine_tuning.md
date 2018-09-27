@@ -10,7 +10,7 @@ exploring simpler quality tweaks.
 To enable fine-tuning, instantiate the module with
 `hub.Module(..., trainable=True)` to make its variables trainable and
 import TensorFlow's `REGULARIZATION_LOSSES`. If the module has multiple
-graph variants, make sure to pick the one approprate for training.
+graph variants, make sure to pick the one appropriate for training.
 Usually, that's the one with tags `{"train"}`.
 
 Choose a training regime that does not ruin the pre-trained weights,

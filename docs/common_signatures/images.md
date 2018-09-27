@@ -4,7 +4,7 @@ This page describes common signatures that should be implemented by modules
 for image-related tasks.
 
 Some modules can be used for more than one task (e.g., image classification
-modules tend do to some feature extraction on the way). Therefore, each module
+modules tend to do some feature extraction on the way). Therefore, each module
 provides (1) named signatures for all the tasks anticipated by the publisher,
 and (2) a default signature `output = m(images)` for its designated primary
 task.
