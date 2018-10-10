@@ -38,6 +38,44 @@ class ModuleSpec(object):
     """Do not instantiate directly."""
     pass
 
+  def export(self, path, _sentinel=None,  # pylint: disable=invalid-name
+             checkpoint_path=None, name_transform_fn=None):
+    """Exports a ModuleSpec with weights taken from a checkpoint.
+
+    This is an helper to export modules directly from a ModuleSpec
+    without having to create a session and set the variables to the
+    intended values.
+
+    Example usage:
+
+    ```python
+    spec = hub.create_module_spec(module_fn)
+    spec.export("/path/to/export_module",
+                checkpoint_path="/path/to/training_model")
+    ```
+
+    In some cases, the variable name in the checkpoint does not match
+    the variable name in the module. It is possible to work around that
+    by providing a checkpoint_map_fn that performs the variable mapping.
+    For example with: `name_transform_fn = lambda x: "extra_scope/" + x`.
+
+    Args:
+      path: path where to export the module to.
+      _sentinel: used to prevent positional arguments besides `path`.
+      checkpoint_path: path where to load the weights for the module.
+        Mandatory parameter and must be passed by name.
+      name_transform_fn: optional function to provide mapping between
+        variable name in the module and the variable name in the checkpoint.
+
+    Raises:
+      ValueError: if missing mandatory `checkpoint_path` parameter.
+    """
+    from tensorflow_hub.module import export_module_spec  # pylint: disable=g-import-not-at-top
+    if not checkpoint_path:
+      raise ValueError("Missing mandatory `checkpoint_path` parameter")
+    name_transform_fn = name_transform_fn or (lambda x: x)
+    export_module_spec(self, path, checkpoint_path, name_transform_fn)
+
   @abc.abstractmethod
   def get_signature_names(self, tags=None):
     """Returns the module's signature names as an iterable of strings."""

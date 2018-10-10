@@ -57,6 +57,20 @@ def load_module_spec(path):
   return registry.loader(path)
 
 
+def export_module_spec(spec, path, checkpoint_path, name_transform_fn):
+  """Helper function to ModuleSpec.export()."""
+  with tf.Graph().as_default():
+    m = Module(spec)
+    assign_map = {
+        name_transform_fn(name): value for name, value in m.variable_map.items()
+    }
+    tf.train.init_from_checkpoint(checkpoint_path, assign_map)
+    init_op = tf.initializers.global_variables()
+    with tf.Session() as session:
+      session.run(init_op)
+      m.export(path, session)
+
+
 # Module class provides a unified access to all ModuleSpecs implementations and
 # should not contain specific implementation code in it (e.g. SavedModel code).
 class Module(object):

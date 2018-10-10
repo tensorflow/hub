@@ -1424,5 +1424,64 @@ class TFHubOpsTest(tf.test.TestCase):
       native_module.register_ops_if_needed({"non-existent-op"})
 
 
+class TFHubExportSpecTest(tf.test.TestCase):
+
+  def f(self, x, dim=10):
+    return tf.layers.dense(x, dim)
+
+  def module_fn(self, dim=10):
+    x = tf.placeholder(dtype=tf.float32, shape=[None, dim])
+    y = self.f(x, dim=dim)
+    hub.add_signature(inputs=x, outputs=y)
+
+  def createCheckpoint(self, scope=None):
+    checkpoint_path = os.path.join(self.get_temp_dir(), "model")
+    with tf.Graph().as_default():
+      x = tf.random_normal([32, 10])
+      if scope:
+        with tf.variable_scope(scope):
+          y = self.f(x)
+      else:
+        y = self.f(x)
+      tf.layers.dense(y, 20)
+
+      saver = tf.train.Saver()
+      init_op = tf.initializers.global_variables()
+
+      with tf.Session() as session:
+        session.run(init_op)
+        saver.save(session, checkpoint_path)
+
+    return checkpoint_path
+
+  def testExportModuleSpec(self):
+    checkpoint_path = self.createCheckpoint()
+    export_path = os.path.join(self.get_temp_dir(), "module1")
+
+    spec = hub.create_module_spec(self.module_fn)
+    spec.export(export_path,
+                checkpoint_path=checkpoint_path)
+
+  def testExportModuleSpec_withWrongShape(self):
+    checkpoint_path = self.createCheckpoint(scope="block")
+    export_path = os.path.join(self.get_temp_dir(), "module2")
+
+    spec = hub.create_module_spec(lambda: self.module_fn(dim=20))
+    with self.assertRaisesRegexp(ValueError, "doesn't match with shape of"):
+      spec.export(export_path,
+                  checkpoint_path=checkpoint_path,
+                  name_transform_fn=lambda x: "block/" + x)
+
+  def testExportModuleSpec_withWrongScope(self):
+    checkpoint_path = self.createCheckpoint("block2")
+    export_path = os.path.join(self.get_temp_dir(), "module3")
+
+    spec = hub.create_module_spec(self.module_fn)
+    with self.assertRaisesRegexp(ValueError, "bias is not found in"):
+      spec.export(export_path,
+                  checkpoint_path=checkpoint_path,
+                  name_transform_fn=lambda x: "block/" + x)
+
+
 if __name__ == "__main__":
   tf.test.main()
