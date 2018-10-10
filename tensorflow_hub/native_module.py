@@ -426,7 +426,6 @@ class _ModuleImpl(module_impl.ModuleImpl):
     ]
     if self._trainable:
       # TODO(b/64049014): Import UPDATE_OPS which do not depend on inputs.
-      # This is needed for proper interaction with tf.contrib.quantize.
       import_collections.extend([tf.GraphKeys.TRAINABLE_VARIABLES,
                                  tf.GraphKeys.REGULARIZATION_LOSSES])
 
