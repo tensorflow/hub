@@ -230,7 +230,11 @@ class Module(object):
           "Module must be applied in the graph it was instantiated for.")
 
     signature = self._impl.get_signature_name(signature)
-    name = "%s_apply_%s" % (self._name, signature)
+    # SavedModel non-default signatures automatically includes ':' in them,
+    # but that is an invalid character for a name that is used as part
+    # of variable scopes.
+    safe_signature = signature.replace(":", "_")
+    name = "%s_apply_%s" % (self._name, safe_signature)
 
     dict_inputs = _prepare_dict_inputs(
         inputs, self._spec.get_input_info_dict(signature=signature,
