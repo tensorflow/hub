@@ -23,7 +23,7 @@ Note: A version of this tutorial is also available
 This tutorial uses [TensorFlow Hub](../index.md) to ingest
 pre-trained pieces of models, or *modules* as they are called. For starters,
 we will use the [image feature extraction
-module](../modules/google/imagenet/inception_v3/feature_vector/1.md)
+module](https://tfhub.dev/google/imagenet/inception_v3/feature_vector/1)
 with the Inception V3 architecture trained on ImageNet,
 and [come back later](#other_architectures) to further options, including
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)/PNASNet, as well as
@@ -364,27 +364,27 @@ By default the script uses an image feature extraction module with a pretrained
 instance of the Inception V3 architecture. This was a good place to start
 because it provides high accuracy results with moderate running time for the
 retraining script. But now let's take a look at [further options of a
-TensorFlow Hub module](../modules/image.md).
+TensorFlow Hub module](https://tfhub.dev/s?module-type=image-feature-vector).
 
 On the one hand, that list shows more recent, powerful architectures, such as
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)
 (notably
-[`nasnet_large`](../modules/google/imagenet/nasnet_large/feature_vector/1.md)
+[`nasnet_large`](https://tfhub.dev/google/imagenet/nasnet_large/feature_vector/1)
 and
-[`pnasnet_large`](../modules/google/imagenet/pnasnet_large/feature_vector/2.md)),
+[`pnasnet_large`](https://tfhub.dev/google/imagenet/pnasnet_large/feature_vector/2)),
 which could give you some extra precision.
 
 On the other hand, if you intend to deploy your model on mobile devices or other
 resource-constrained environments, you may want to trade a little accuracy
 for much smaller file sizes or faster speeds (also in training). For that, try
 the different
-[modules](../modules/image.md#mobilenet)
+[modules](https://tfhub.dev/s?keywords=mobilenet)
 implementing the [MobileNet
 V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html)
 or
 [V2](https://research.googleblog.com/2018/04/mobilenetv2-next-generation-of-on.html)
 architectures, or also
-[`nasnet_mobile`](../modules/google/imagenet/nasnet_mobile/feature_vector/1.md).
+[`nasnet_mobile`](https://tfhub.dev/google/imagenet/nasnet_mobile/feature_vector/1).
 
 Training with a different module is easy: Just pass the `--tfhub_module`
 flag with the module URL, for example:
