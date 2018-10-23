@@ -27,7 +27,7 @@ a `float32` tensor of shape `[batch_size, N]`. This is often called
     feature_columns = [
       hub.text_embedding_column("comment", "path/to/module", trainable=False),
     ]
-    input_fn = tf.estimator.input.numpy_input_fn(features, labels, shuffle=True)
+    input_fn = tf.estimator.inputs.numpy_input_fn(features, labels, shuffle=True)
     estimator = tf.estimator.DNNClassifier(hidden_units, feature_columns)
     estimator.train(input_fn, max_steps=100)
 ```

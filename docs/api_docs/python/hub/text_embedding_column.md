@@ -34,7 +34,7 @@ Example:
     ...
   }
   labels = np.array([[1], [0], ...])
-  input_fn = tf.estimator.input.numpy_input_fn(features, labels, shuffle=True)
+  input_fn = tf.estimator.inputs.numpy_input_fn(features, labels, shuffle=True)
   estimator = tf.estimator.DNNClassifier(hidden_units, feature_columns)
   estimator.train(input_fn, max_steps=100)
 ```
@@ -57,4 +57,5 @@ Example:
 
 #### Raises:
 
-* <b>`ValueError`</b>: if module_spec is not suitable for use in this feature column.
+*   <b>`ValueError`</b>: if module_spec is not suitable for use in this feature
+    column.
