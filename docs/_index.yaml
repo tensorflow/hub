@@ -22,7 +22,7 @@ landing_page:
           <li>Speed up training.</li>
         </ul>
         <div class="devsite-landing-row-item-buttons">
-          <a class="button button-primary tfo-button-primary" href="https://tfhub.dev">Browse Modules on tfhub.dev</a>
+          <a class="button button-primary tfo-button-primary" href="https://tfhub.dev">Browse modules on tfhub.dev</a>
         </div>
       code_block: |
         <pre class = "prettyprint">
@@ -48,7 +48,7 @@ landing_page:
       image_path: /ecosystem/images/hub-card-16x9.png
       path: https://tfhub.dev
       buttons:
-      - label: Browse Modules
+      - label: Browse modules
         path: https://tfhub.dev
     - heading: Introducing TensorFlow Hub
       image_path: /ecosystem/images/tf-logo-card-16x9.png
