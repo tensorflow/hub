@@ -128,25 +128,7 @@ def _convert_to_compatible_tensor(value, target, error_prefix):
   return tensor
 
 
-def convert_to_input_tensors(protomap, values):
-  """Converts `values` into tensors that can be fed into `protomap`.
-
-  Args:
-    protomap: A proto map<string,TensorInfo>.
-    values: A map with same keys as `protomap` with objects to convert.
-
-  Returns:
-    A map with same keys as `values` but values converted into
-    Tensors/SparseTensors that can be fed into `protomap`.
-
-  Raises:
-    TypeError: If it fails to convert.
-  """
-  targets = parse_tensor_info_map(protomap)
-  return make_compatible_dict(values, targets)
-
-
-def make_compatible_dict(values, targets):
+def convert_dict_to_compatible_tensor(values, targets):
   """Converts dict `values` in tensors that are compatible with `targets`.
 
   Args:
@@ -160,12 +142,6 @@ def make_compatible_dict(values, targets):
   Raises:
     TypeError: If it fails to convert.
   """
-  values_keys = set(values.keys())
-  targets_keys = set(targets.keys())
-  if values_keys != targets_keys:
-    raise TypeError("Cannot convert values: missing %r, extra given %r" %
-                    (sorted(list(targets_keys - values_keys)),
-                     sorted(list(values_keys - targets_keys))))
   result = {}
   for key, value in sorted(values.items()):
     result[key] = _convert_to_compatible_tensor(

@@ -135,20 +135,17 @@ class TensorInfoTest(tf.test.TestCase):
   def testConvertTensors(self):
     a = tf.placeholder(tf.int32, [None])
     protomap = _make_signature({"a": a}, {}).inputs
+    targets = tensor_info.parse_tensor_info_map(protomap)
 
     # convert constant
     in0 = [1, 2, 3]
-    output = tensor_info.convert_to_input_tensors(protomap, {"a": in0})
+    output = tensor_info.convert_dict_to_compatible_tensor({"a": in0}, targets)
     self.assertEquals(output["a"].dtype, a.dtype)
 
     # check sparsity
     in1 = tf.sparse_placeholder(tf.int32, [])
     with self.assertRaisesRegexp(TypeError, "dense"):
-      tensor_info.convert_to_input_tensors(protomap, {"a": in1})
-
-    # check args mismatch
-    with self.assertRaisesRegexp(TypeError, "missing"):
-      tensor_info.convert_to_input_tensors(protomap, {"b": in1})
+      tensor_info.convert_dict_to_compatible_tensor({"a": in1}, targets)
 
 
 if __name__ == "__main__":

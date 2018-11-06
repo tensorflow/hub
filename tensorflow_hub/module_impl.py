@@ -35,12 +35,12 @@ class ModuleImpl(object):
   __metaclass__ = abc.ABCMeta
 
   @abc.abstractmethod
-  def create_apply_graph(self, signature, inputs, name):
+  def create_apply_graph(self, signature, input_tensors, name):
     """Applies the module signature to inputs.
 
     Args:
       signature: A string with the signature to create.
-      inputs: A dictionary of tensors with the inputs.
+      input_tensors: A dictionary of tensors with the inputs.
       name: A name scope under which to instantiate the signature.
 
     Returns:

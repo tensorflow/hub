@@ -465,12 +465,9 @@ class _ModuleImpl(module_impl.ModuleImpl):
 
     return variables_tensor_map, state_map
 
-  def create_apply_graph(self, signature, inputs, name):
+  def create_apply_graph(self, signature, input_tensors, name):
     """See `ModuleImpl.create_apply_graph`."""
     signature_def = self._meta_graph.signature_def.get(signature)
-
-    input_tensors = tensor_info.convert_to_input_tensors(
-        signature_def.inputs, inputs)
 
     # Build a input map to feed when importing the apply-graph by augmenting the
     # state_map with the input args. This allows an input to override a tensor

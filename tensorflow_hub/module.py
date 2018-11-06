@@ -236,13 +236,13 @@ class Module(object):
     safe_signature = signature.replace(":", "_")
     name = "%s_apply_%s" % (self._name, safe_signature)
 
-    dict_inputs = _prepare_dict_inputs(
+    dict_inputs = _convert_dict_inputs(
         inputs, self._spec.get_input_info_dict(signature=signature,
                                                tags=self._tags))
 
     dict_outputs = self._impl.create_apply_graph(
         signature=signature,
-        inputs=dict_inputs,
+        input_tensors=dict_inputs,
         name=name)
     return _prepare_outputs(dict_outputs, as_dict=as_dict)
 
@@ -382,16 +382,7 @@ def _try_get_state_scope(name, mark_name_scope_used=True):
 
 
 def _prepare_dict_inputs(inputs, tensor_info_map):
-  """Converts from inputs into dict inputs.
-
-  This handles:
-    - converting of a single value into a dict with a single key
-      if the signature only has one expected input.
-    - converting all input values into tensors compatible with the
-      expected input tensor (dtype, shape).
-    - check sparse/non-sparse tensor types.
-    - check that exactly the needed inputs are given: i.e. no extra
-      args and no missing args.
+  """Converts inputs to a dict of inputs and checks extra/missing args.
 
   Args:
     inputs: inputs fed to Module.__call__().
@@ -399,7 +390,7 @@ def _prepare_dict_inputs(inputs, tensor_info_map):
       describing the signature inputs.
 
   Returns:
-    A dict of tensors to feed to the signature instantiation.
+    A dict of values with the same keys as tensor_info_map.
 
   Raises:
     TypeError: If it fails to convert the input values into a dict of tensors
@@ -415,8 +406,41 @@ def _prepare_dict_inputs(inputs, tensor_info_map):
     raise TypeError("Signature expects no inputs.")
   else:
     raise TypeError("Signature expects multiple inputs. Use a dict.")
-  # Finally convert a dict of values into a dict of tensors.
-  return tensor_info.make_compatible_dict(dict_inputs, tensor_info_map)
+
+  dict_inputs_keys = set(dict_inputs.keys())
+  tensor_info_map_keys = set(tensor_info_map.keys())
+  if dict_inputs_keys != tensor_info_map_keys:
+    raise TypeError("Cannot convert dict_inputs: missing %r, extra given %r" %
+                    (sorted(list(tensor_info_map_keys - dict_inputs_keys)),
+                     sorted(list(dict_inputs_keys - tensor_info_map_keys))))
+
+  return dict_inputs
+
+
+def _convert_dict_inputs(inputs, tensor_info_map):
+  """Converts from inputs into dict of input tensors.
+
+  This handles:
+    - putting inputs into a dict, per _prepare_dict_inputs(),
+    - converting all input values into tensors compatible with the
+      expected input tensor (dtype, shape).
+    - check sparse/non-sparse tensor types.
+
+  Args:
+    inputs: inputs fed to Module.__call__().
+    tensor_info_map: A map from string to `tensor_info.ParsedTensorInfo`
+      describing the signature inputs.
+
+  Returns:
+    A dict of tensors to feed to the signature instantiation.
+
+  Raises:
+    TypeError: If it fails to convert the input values into a dict of tensors
+      to feed to the signature instantiation.
+  """
+  dict_inputs = _prepare_dict_inputs(inputs, tensor_info_map)
+  return tensor_info.convert_dict_to_compatible_tensor(dict_inputs,
+                                                       tensor_info_map)
 
 
 def _prepare_outputs(dict_outputs, as_dict):

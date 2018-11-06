@@ -39,27 +39,27 @@ class TestConvertInputsOutputs(tf.test.TestCase):
       self.assertEqual(dict_inputs["x"].dtype, tf.float32)
       self.assertTrue(dict_inputs["x"].shape.is_compatible_with([None]))
 
-    _check(module._prepare_dict_inputs([1, 2], inputs_info))
-    _check(module._prepare_dict_inputs({"x": [1, 2]}, inputs_info))
+    _check(module._convert_dict_inputs([1, 2], inputs_info))
+    _check(module._convert_dict_inputs({"x": [1, 2]}, inputs_info))
 
     with self.assertRaisesRegexp(TypeError, r"missing \['x'\]"):
-      module._prepare_dict_inputs(None, inputs_info)
+      module._convert_dict_inputs(None, inputs_info)
 
     with self.assertRaisesRegexp(TypeError, r"extra given \['y'\]"):
-      module._prepare_dict_inputs({"x": [1, 2], "y": [1, 2]}, inputs_info)
+      module._convert_dict_inputs({"x": [1, 2], "y": [1, 2]}, inputs_info)
 
   def testNoInputs(self):
-    self.assertEqual(module._prepare_dict_inputs(None, {}), {})
-    self.assertEqual(module._prepare_dict_inputs({}, {}), {})
+    self.assertEqual(module._convert_dict_inputs(None, {}), {})
+    self.assertEqual(module._convert_dict_inputs({}, {}), {})
 
     with self.assertRaisesRegexp(TypeError, "expects no inputs"):
-      module._prepare_dict_inputs([None], {})
+      module._convert_dict_inputs([None], {})
 
     with self.assertRaisesRegexp(TypeError, "expects no inputs"):
-      module._prepare_dict_inputs(1, {})
+      module._convert_dict_inputs(1, {})
 
     with self.assertRaisesRegexp(TypeError, r"extra given \['x'\]"):
-      module._prepare_dict_inputs({"x": 1}, {})
+      module._convert_dict_inputs({"x": 1}, {})
 
   def testMultipleInputs(self):
     inputs_info = {
@@ -78,19 +78,19 @@ class TestConvertInputsOutputs(tf.test.TestCase):
         self.assertEqual(dict_inputs[key].dtype, tf.float32)
         self.assertTrue(dict_inputs[key].shape.is_compatible_with([None]))
 
-    _check(module._prepare_dict_inputs({"x": [1, 2], "y": [1, 2]},
+    _check(module._convert_dict_inputs({"x": [1, 2], "y": [1, 2]},
                                        inputs_info))
 
     with self.assertRaisesRegexp(TypeError, r"missing \['x', 'y'\]"):
-      module._prepare_dict_inputs(None, inputs_info)
+      module._convert_dict_inputs(None, inputs_info)
     with self.assertRaisesRegexp(TypeError, r"missing \['x', 'y'\]"):
-      module._prepare_dict_inputs({}, inputs_info)
+      module._convert_dict_inputs({}, inputs_info)
     with self.assertRaisesRegexp(TypeError, r"missing \['x', 'y'\]"):
-      module._prepare_dict_inputs({"z": 1}, inputs_info)
+      module._convert_dict_inputs({"z": 1}, inputs_info)
 
     with self.assertRaisesRegexp(
         TypeError, "Signature expects multiple inputs. Use a dict."):
-      module._prepare_dict_inputs(1, inputs_info)
+      module._convert_dict_inputs(1, inputs_info)
 
   def testOutputWithDefault(self):
     outputs = {"default": "result", "extra": "dbg info"}
@@ -205,11 +205,11 @@ class _ModuleImpl(module_impl.ModuleImpl):
     with tf.variable_scope(name):
       pass
 
-  def create_apply_graph(self, signature, inputs, name):
+  def create_apply_graph(self, signature, input_tensors, name):
     with tf.name_scope(name):
-      result = {"default": 2 * inputs["x"]}
+      result = {"default": 2 * input_tensors["x"]}
       if signature == "extra":
-        result["z"] = 2 * inputs["x"] + 3 * inputs["y"]
+        result["z"] = 2 * input_tensors["x"] + 3 * input_tensors["y"]
       return result
 
   def export(self, path, session):
