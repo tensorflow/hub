@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import contextlib
 import six
 import tensorflow as tf
 from tensorflow_hub import module_spec
@@ -464,3 +465,92 @@ def _prepare_outputs(dict_outputs, as_dict):
     return dict_outputs["default"]
   else:
     raise TypeError("There is no output named 'default'. Use as_dict=True.")
+
+
+@contextlib.contextmanager
+def eval_function_for_module(spec, tags=None):
+  """Context manager that yields a function to directly evaluate a Module.
+
+  This creates a separate graph, in which all of the signatures of the module
+  are instantiated. Then, it creates a session and initializes the module
+  variables. Finally, it returns a function which can be used to evaluate the
+  module signatures.
+
+  The function returned by eval_function_for_module has the same syntax as
+  Module.__call__ , except that inputs and outputs are not tensors but actual
+  values as used with Session.run().
+
+  ```python
+  with hub.eval_function_for_module("/tmp/text-embedding") as f:
+    # The module can be directly evaluated using f without constructing a graph.
+    embeddings = f(["Hello world!",], signature="mysignature")
+  ```
+
+  Args:
+    spec: A ModuleSpec defining the Module to instantiate or a path where to
+      load a ModuleSpec from via `load_module_spec`.
+    tags: A set of strings specifying the graph variant to use.
+
+  Yields:
+    A function whose keyword arguments are fed into the tfhub module and which
+      returns a dictionary with the value of the output tensors.
+
+  Raises:
+    RuntimeError: explaning the reason why it failed to instantiate the
+      Module.
+    ValueError: if the requested graph variant does not exists.
+  """
+  # We create a separate graph and add all the signatures of the module to it.
+  original_graph = tf.get_default_graph()
+  with tf.Graph().as_default():
+    module = Module(spec, tags=tags)
+    input_tensors_per_signature = {}
+    output_tensors_per_signature = {}
+    for signature in module.get_signature_names():
+      # We scope with the signature name as different signatures will likely
+      # contain tensors with the same name (e.g. the input and output tensors).
+      with tf.variable_scope(signature):
+        input_tensors = {}
+        for name, tensorinfo in module.get_input_info_dict(signature).items():
+          # We need to be care with the shape as it may be fully-known,
+          # partially-known or even unknown.
+          shape = tensorinfo.get_shape()
+          effective_shape = None if shape.dims is None else shape.as_list()
+          if tensorinfo.is_sparse:
+            input_tensors[name] = tf.sparse_placeholder(
+                tensorinfo.dtype, shape=effective_shape, name=name)
+          else:
+            input_tensors[name] = tf.placeholder(
+                tensorinfo.dtype, shape=effective_shape, name=name)
+        input_tensors_per_signature[signature] = input_tensors
+        output_tensors_per_signature[signature] = module(
+            input_tensors_per_signature[signature],
+            signature=signature,
+            as_dict=True)
+
+  # Evaluating the tfhub module requires an active tensorflow session.
+    with tf.train.SingularMonitoredSession() as sess:
+
+      def func(
+          inputs=None,
+          _sentinel=None,  # pylint: disable=invalid-name
+          signature=None,
+          as_dict=None):
+        """Function that directly evaluates a signature in the module."""
+        signature = signature or "default"
+        input_tensors = input_tensors_per_signature[signature]
+
+        dict_inputs = _prepare_dict_inputs(inputs, input_tensors)
+
+        # The input arguments are directly fed into the session.
+        feed_dict = {
+            input_tensors[key]: value for key, value in dict_inputs.items()
+        }
+        output = output_tensors_per_signature[signature]
+        output = _prepare_outputs(output, as_dict)
+        return sess.run(output, feed_dict=feed_dict)
+
+      with original_graph.as_default():
+        # Yield the function since that will keep the session alive until the
+        # user exits the context.
+        yield func

@@ -33,6 +33,7 @@ from tensorflow_hub.image_util import attach_image_module_info
 from tensorflow_hub.image_util import get_expected_image_size
 from tensorflow_hub.image_util import get_num_image_channels
 from tensorflow_hub.image_util import ImageModuleInfo
+from tensorflow_hub.module import eval_function_for_module
 from tensorflow_hub.module import load_module_spec
 from tensorflow_hub.module import Module
 from tensorflow_hub.module_spec import ModuleSpec

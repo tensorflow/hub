@@ -579,9 +579,8 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
       got = sess.run(x)
       self.assertAllClose(got, [3.1, 3.2, 3.3])
 
-  def testModuleWithTrainedVariable(self):
+  def _exportModulewithTrainedVariable(self):
     export_path = os.path.join(self.get_temp_dir(), "var-module")
-
     with tf.Graph().as_default():
       spec = hub.create_module_spec(stateful_module_fn)
       m = hub.Module(spec, trainable=True)
@@ -590,14 +589,21 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
       with tf.Session() as sess:
         sess.run(assign_op)
         m.export(export_path, sess)
+    return export_path
 
+  def testModuleWithTrainedVariable(self):
     with tf.Graph().as_default():
-      f = hub.Module(export_path)
+      f = hub.Module(self._exportModulewithTrainedVariable())
       out = f()
       with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         got = sess.run(out)
         self.assertAllClose(got, [9.0, 9.0, 9.0])
+
+  def testModuleEvalWithTrainedVariable(self):
+    export_path = self._exportModulewithTrainedVariable()
+    with hub.eval_function_for_module(export_path) as f:
+      self.assertAllClose(f(), [9.0, 9.0, 9.0])
 
 
 def table_lookup_module_fn():
@@ -611,7 +617,7 @@ def table_lookup_module_fn():
 
 class TFHubTableLookupModuleTest(tf.test.TestCase):
 
-  def testModuleWithTable(self):
+  def _exportModuleWithTable(self):
     export_path = os.path.join(self.get_temp_dir(), "table-module")
     with tf.Graph().as_default():
       spec = hub.create_module_spec(table_lookup_module_fn)
@@ -620,15 +626,22 @@ class TFHubTableLookupModuleTest(tf.test.TestCase):
       # variables to export.
       with tf.Session() as sess:
         m.export(export_path, sess)
+    return export_path
 
+  def testModuleWithTable(self):
     with tf.Graph().as_default():
       v = tf.placeholder(dtype=tf.int64)
-      f = hub.Module(export_path)
+      f = hub.Module(self._exportModuleWithTable())
       y = f(v)
       with tf.Session() as sess:
         sess.run(tf.tables_initializer())
         got = sess.run(y, feed_dict={v: [0, 1, 2, 3]})
         self.assertAllEqual(list(got), [b"index0", b"hello", b"world", b"UNK"])
+
+  def testModuleEvalWithTable(self):
+    with hub.eval_function_for_module(self._exportModuleWithTable()) as f:
+      got = f([0, 1, 2, 3])
+      self.assertAllEqual(list(got), [b"index0", b"hello", b"world", b"UNK"])
 
 
 def do_table_lookup(indices, vocabulary_file):

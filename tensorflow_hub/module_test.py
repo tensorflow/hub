@@ -163,16 +163,17 @@ class _ModuleSpec(module_spec.ModuleSpec):
 
   def get_signature_names(self, tags=None):
     if tags == set(["special"]):
-      return iter(["default", "extra"])
+      return iter(["default", "extra", "sparse"])
     else:
       return iter(["default"])
 
   def get_input_info_dict(self, signature=None, tags=None):
     result = {
-        "x": tensor_info.ParsedTensorInfo(
-            tf.float32,
-            tf.TensorShape([None]),
-            is_sparse=False),
+        "x":
+            tensor_info.ParsedTensorInfo(
+                tf.float32,
+                tf.TensorShape([None]),
+                is_sparse=(signature == "sparse" and tags == set(["special"]))),
     }
     if tags == set(["special"]) and signature == "extra":
       result["y"] = result["x"]
@@ -207,6 +208,11 @@ class _ModuleImpl(module_impl.ModuleImpl):
 
   def create_apply_graph(self, signature, input_tensors, name):
     with tf.name_scope(name):
+      if signature == "sparse":
+        input_tensors = {
+            key: tf.sparse_tensor_to_dense(value)
+            for key, value in input_tensors.items()
+        }
       result = {"default": 2 * input_tensors["x"]}
       if signature == "extra":
         result["z"] = 2 * input_tensors["x"] + 3 * input_tensors["y"]
@@ -256,11 +262,53 @@ class ModuleTest(tf.test.TestCase):
   def testModuleInterfaceGettersExplicitSignatureAndTags(self):
     """Tests that tags from Module(...) apply to module.get_*()."""
     m = module.Module(_ModuleSpec(), tags={"special"})
-    self.assertItemsEqual(m.get_signature_names(), ["default", "extra"])
+    self.assertItemsEqual(m.get_signature_names(),
+                          ["default", "extra", "sparse"])
     self.assertItemsEqual(m.get_input_info_dict(signature="extra").keys(),
                           ["x", "y"])
     self.assertItemsEqual(m.get_output_info_dict(signature="extra").keys(),
                           ["z", "default"])
+
+
+class EvalFunctionForModuleTest(tf.test.TestCase):
+  """Tests for hub.eval_function_for_module(...).
+
+  This tests that hub.eval_function_for_module parses input variables,
+  signatures and tags correctly and that it returns the correct output.
+  End-to-end tests with the native module are done in native_module_test.py.
+  """
+
+  def testSingleInput(self):
+    with module.eval_function_for_module(_ModuleSpec()) as f:
+      self.assertAllEqual(f([1, 2]), [2, 4])
+
+  def testSparseInput(self):
+    with module.eval_function_for_module(_ModuleSpec(), tags={"special"}) as f:
+      self.assertAllEqual(
+          f(tf.SparseTensorValue([[0]], [1], [2]),  # Value is [1, 0].
+            signature="sparse"),
+          [2, 0])
+
+  def testDictInput(self):
+    with module.eval_function_for_module(_ModuleSpec()) as f:
+      self.assertAllEqual(f({"x": [1, 2]}), [2, 4])
+
+  def testDictOutput(self):
+    with module.eval_function_for_module(_ModuleSpec()) as f:
+      result = f({"x": [1, 2]}, as_dict=True)
+    self.assertTrue(isinstance(result, dict))
+    self.assertAllEqual(list(result.keys()), ["default"])
+
+  def testSignature(self):
+    with module.eval_function_for_module(_ModuleSpec()) as f:
+      self.assertAllEqual(f([1, 2]), [2, 4])
+
+  def testExplicitSignatureAndTags(self):
+    with module.eval_function_for_module(_ModuleSpec(), tags={"special"}) as f:
+      result = f(dict(x=[1], y=[2]), signature="extra", as_dict=True)
+      self.assertAllEqual(result["default"], [2])
+      self.assertAllEqual(result["z"], [8])
+
 
 if __name__ == "__main__":
   tf.test.main()
