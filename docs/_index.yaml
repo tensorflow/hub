@@ -45,13 +45,13 @@ landing_page:
   - classname: devsite-landing-row-cards
     items:
     - heading: tfhub.dev
-      image_path: /ecosystem/images/hub-card-16x9.png
+      image_path: /resources/images/hub-card-16x9.png
       path: https://tfhub.dev
       buttons:
       - label: Browse modules
         path: https://tfhub.dev
     - heading: Introducing TensorFlow Hub
-      image_path: /ecosystem/images/tf-logo-card-16x9.png
+      image_path: /resources/images/tf-logo-card-16x9.png
       path: https://medium.com/tensorflow/introducing-tensorflow-hub-a-library-for-reusable-machine-learning-modules-in-tensorflow-cdee41fa18f9
       buttons:
       - label: Read on TensorFlow blog
@@ -62,7 +62,7 @@ landing_page:
       - label: Watch the video
         path: https://www.youtube.com/watch?v=rirzJ-e68cw
     - heading: TensorFlow Hub on GitHub
-      image_path: /ecosystem/images/github-card-16x9.png
+      image_path: /resources/images/github-card-16x9.png
       path: https://github.com/tensorflow/hub
       buttons:
       - label: View on GitHub
