@@ -13,9 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version (0.3.0-dev)
- * Under development.
-
 # Release 0.2.0
  * Add support for caching modules on GCS.
  * Add `ModuleSpec.export(export_path, checkpoint_path)` helper for module
