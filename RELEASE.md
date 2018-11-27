@@ -13,9 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version (0.2.0-dev)
+# Current version (0.3.0-dev)
  * Under development.
- * Add support for caching modules on GCS
+
+# Release 0.2.0
+ * Add support for caching modules on GCS.
+ * Add `ModuleSpec.export(export_path, checkpoint_path)` helper for module
+   creation from a separately trained checkpoint.
+ * Modules now have a key-value store of attached protocol messages
+   for domain- or library-specific auxiliary data.
+ * Image modules can have input shapes with variable height and width;
+   `hub.get_expected_image_size()` comes from an attached ImageModuleInfo
+    message.
+ * Add `with hub.eval_function_for_module("...") as f: out = f(in)`.
+ * New experimental function `hub.create_module_spec_from_saved_model()`.
+ * Added property `hub.Module.variables`.
+ * Bazel workspace dependency on protobuf library updated to version 3.6.0.
+ * Added progress bar for module downloads when interactive.
+ * Numerous minor fixes and updates from the master branch.
 
 # Release 0.1.1
  * Removed TensorFlow version checking.
