@@ -165,15 +165,7 @@ class DownloadManager(object):
     try:
       with tarfile.open(mode="r|*", fileobj=fileobj) as tgz:
         for tarinfo in tgz:
-          if tarinfo.name.startswith("/"):
-            tarinfo.name = tarinfo.name[1:]
-
-          # Check that the absolute path of the object to extract is inside
-          # `path`.
-          abs_target_path = os.path.join(dst_path, tarinfo.name)
-          if not abs_target_path.startswith(dst_path):
-            raise ValueError(
-                "Module archive contains files outside its directory")
+          abs_target_path = _merge_relative_path(dst_path, tarinfo.name)
 
           if tarinfo.isfile():
             self._extract_file(tgz, tarinfo, abs_target_path)
@@ -191,6 +183,28 @@ class DownloadManager(object):
             flush=True)
     except tarfile.ReadError:
       raise IOError("%s does not appear to be a valid module." % self._url)
+
+
+def _merge_relative_path(dst_path, rel_path):
+  """Merge a relative tar file to a destination (which can be "gs://...")."""
+  # Convert rel_path to be relative and normalize it to remove ".", "..", "//",
+  # which are valid directories in fileystems like "gs://".
+  norm_rel_path = os.path.normpath(rel_path.lstrip("/"))
+
+  if norm_rel_path == ".":
+    return dst_path
+
+  # Check that the norm rel path does not starts with "..".
+  if norm_rel_path.startswith(".."):
+    raise ValueError("Relative path %r is invalid." % rel_path)
+
+  merged = os.path.join(dst_path, norm_rel_path)
+
+  # After merging verify that the merged path keeps the original dst_path.
+  if not merged.startswith(dst_path):
+    raise ValueError("Relative path %r is invalid. Failed to merge with %r." % (
+        rel_path, dst_path))
+  return merged
 
 
 def _module_descriptor_file(module_dir):
