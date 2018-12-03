@@ -6,6 +6,8 @@ toc:
       path: /hub/api_docs/python/hub
     - title: add_signature
       path: /hub/api_docs/python/hub/add_signature
+    - title: attach_image_module_info
+      path: /hub/api_docs/python/hub/attach_image_module_info
     - title: attach_message
       path: /hub/api_docs/python/hub/attach_message
     - title: create_module_spec
@@ -16,6 +18,10 @@ toc:
       path: /hub/api_docs/python/hub/get_expected_image_size
     - title: get_num_image_channels
       path: /hub/api_docs/python/hub/get_num_image_channels
+    - title: ImageModuleInfo
+      path: /hub/api_docs/python/hub/ImageModuleInfo
+    - title: ImageModuleInfo.InputSize
+      path: /hub/api_docs/python/hub/ImageModuleInfo/InputSize
     - title: image_embedding_column
       path: /hub/api_docs/python/hub/image_embedding_column
     - title: LatestModuleExporter

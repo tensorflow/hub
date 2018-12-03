@@ -1,6 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.text_embedding_column" />
-<meta itemprop="path" content="stable" />
+<meta itemprop="path" content="Stable" />
 </div>
 
 # hub.text_embedding_column
@@ -57,5 +57,4 @@ Example:
 
 #### Raises:
 
-*   <b>`ValueError`</b>: if module_spec is not suitable for use in this feature
-    column.
+* <b>`ValueError`</b>: if module_spec is not suitable for use in this feature column.

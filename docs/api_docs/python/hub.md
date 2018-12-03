@@ -1,6 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub" />
-<meta itemprop="path" content="stable" />
+<meta itemprop="path" content="Stable" />
 <meta itemprop="property" content="__version__"/>
 </div>
 
@@ -9,6 +9,8 @@
 TensorFlow Hub Library.
 
 ## Classes
+
+[`class ImageModuleInfo`](./hub/ImageModuleInfo.md)
 
 [`class LatestModuleExporter`](./hub/LatestModuleExporter.md): Regularly exports registered modules into timestamped directories.
 
@@ -19,6 +21,8 @@ TensorFlow Hub Library.
 ## Functions
 
 [`add_signature(...)`](./hub/add_signature.md): Adds a signature to the module definition.
+
+[`attach_image_module_info(...)`](./hub/attach_image_module_info.md): Attaches an ImageModuleInfo message from within a module_fn.
 
 [`attach_message(...)`](./hub/attach_message.md): Adds an attached message to the module definition.
 
@@ -40,5 +44,5 @@ TensorFlow Hub Library.
 
 ## Other Members
 
-`__version__`
+<h3 id="__version__"><code>__version__</code></h3>
 

@@ -1,7 +1,8 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.Module" />
-<meta itemprop="path" content="stable" />
+<meta itemprop="path" content="Stable" />
 <meta itemprop="property" content="variable_map"/>
+<meta itemprop="property" content="variables"/>
 <meta itemprop="property" content="__call__"/>
 <meta itemprop="property" content="__init__"/>
 <meta itemprop="property" content="export"/>
@@ -48,36 +49,7 @@ that they will be used with common TensorFlow conventions such as session
 initialization and restore, use of collections for variables, regularization
 losses and updates, etc.
 
-## Properties
-
-<h3 id="variable_map"><code>variable_map</code></h3>
-
-Map from original variable names into tf.Variables (or lists of them).
-
-This map translates between variable names relative to the module and the
-corresponding Variable objects that have been created by instantiating it
-in the current graph (with the applicable scoping added). Each key in the
-map is a variable name as created by running the module's defining
-`module_fn` in the root scope of an empty graph. Each value in the map is
-a Variable object, or in case of partitioned variables a list of Variable
-objects.
-
-This property can be used with `tf.init_from_checkpoint` as `assignment_map`
-in order to restore a pre-trained checkpoint into a Module before calling
-`Module.export()`.
-
-#### Returns:
-
-A dict from the variable names in the Module to the instantiated
-tf.Variables or list of tf.Variables (if partitioned). The keys of this
-map are the same regardless of the scope of where the Module was
-instantiated.
-
-
-
-## Methods
-
-<h3 id="__init__"><code>__init__</code></h3>
+<h2 id="__init__"><code>__init__</code></h2>
 
 ``` python
 __init__(
@@ -122,6 +94,41 @@ on `name`. During this call a Module will:
 * <b>`RuntimeError`</b>: explaning the reason why it failed to instantiate the
     Module.
 * <b>`ValueError`</b>: if the requested graph variant does not exists.
+
+
+
+## Properties
+
+<h3 id="variable_map"><code>variable_map</code></h3>
+
+Map from original variable names into tf.Variables (or lists of them).
+
+This map translates between variable names relative to the module and the
+corresponding Variable objects that have been created by instantiating it
+in the current graph (with the applicable scoping added). Each key in the
+map is a variable name as created by running the module's defining
+`module_fn` in the root scope of an empty graph. Each value in the map is
+a Variable object, or in case of partitioned variables a list of Variable
+objects.
+
+This property can be used with `tf.init_from_checkpoint` as `assignment_map`
+in order to restore a pre-trained checkpoint into a Module before calling
+`Module.export()`.
+
+#### Returns:
+
+A dict from the variable names in the Module to the instantiated
+tf.Variables or list of tf.Variables (if partitioned). The keys of this
+map are the same regardless of the scope of where the Module was
+instantiated.
+
+<h3 id="variables"><code>variables</code></h3>
+
+Returns the list of all tf.Variables created by module instantiation.
+
+
+
+## Methods
 
 <h3 id="__call__"><code>__call__</code></h3>
 
