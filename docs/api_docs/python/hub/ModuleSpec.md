@@ -1,7 +1,8 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.ModuleSpec" />
-<meta itemprop="path" content="stable" />
+<meta itemprop="path" content="Stable" />
 <meta itemprop="property" content="__init__"/>
+<meta itemprop="property" content="export"/>
 <meta itemprop="property" content="get_attached_message"/>
 <meta itemprop="property" content="get_input_info_dict"/>
 <meta itemprop="property" content="get_output_info_dict"/>
@@ -25,15 +26,61 @@ a Module interface are public.
 Note: Do not instantiate this class directly. Use <a href="../hub/load_module_spec.md"><code>hub.load_module_spec</code></a> or
 <a href="../hub/create_module_spec.md"><code>hub.create_module_spec</code></a>.
 
-## Methods
-
-<h3 id="__init__"><code>__init__</code></h3>
+<h2 id="__init__"><code>__init__</code></h2>
 
 ``` python
 __init__()
 ```
 
 Do not instantiate directly.
+
+
+
+## Methods
+
+<h3 id="export"><code>export</code></h3>
+
+``` python
+export(
+    path,
+    _sentinel=None,
+    checkpoint_path=None,
+    name_transform_fn=None
+)
+```
+
+Exports a ModuleSpec with weights taken from a checkpoint.
+
+This is an helper to export modules directly from a ModuleSpec
+without having to create a session and set the variables to the
+intended values.
+
+Example usage:
+
+```python
+spec = hub.create_module_spec(module_fn)
+spec.export("/path/to/export_module",
+            checkpoint_path="/path/to/training_model")
+```
+
+In some cases, the variable name in the checkpoint does not match
+the variable name in the module. It is possible to work around that
+by providing a checkpoint_map_fn that performs the variable mapping.
+For example with: `name_transform_fn = lambda x: "extra_scope/" + x`.
+
+#### Args:
+
+* <b>`path`</b>: path where to export the module to.
+* <b>`_sentinel`</b>: used to prevent positional arguments besides `path`.
+* <b>`checkpoint_path`</b>: path where to load the weights for the module.
+    Mandatory parameter and must be passed by name.
+* <b>`name_transform_fn`</b>: optional function to provide mapping between
+    variable name in the module and the variable name in the checkpoint.
+
+
+#### Raises:
+
+* <b>`ValueError`</b>: if missing mandatory `checkpoint_path` parameter.
 
 <h3 id="get_attached_message"><code>get_attached_message</code></h3>
 
