@@ -1,6 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.create_module_spec" />
-<meta itemprop="path" content="stable" />
+<meta itemprop="path" content="Stable" />
 </div>
 
 # hub.create_module_spec
@@ -23,7 +23,7 @@ Example:
 # Define a text embedding module.
 def my_text_module_fn():
   text_input = tf.placeholder(dtype=tf.string, shape=[None])
-  embeddings = compute_embedding(text)
+  embeddings = compute_embedding(text_input)
   hub.add_signature(inputs=text_input, outputs=embeddings)
 ```
 

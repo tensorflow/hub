@@ -1,6 +1,6 @@
 <div itemscope itemtype="http://developers.google.com/ReferenceObject">
 <meta itemprop="name" content="hub.LatestModuleExporter" />
-<meta itemprop="path" content="stable" />
+<meta itemprop="path" content="Stable" />
 <meta itemprop="property" content="name"/>
 <meta itemprop="property" content="__init__"/>
 <meta itemprop="property" content="export"/>
@@ -35,17 +35,7 @@ Example use with EvalSpec:
 
 See `LatestModuleExporter.export()` for a direct use example.
 
-## Properties
-
-<h3 id="name"><code>name</code></h3>
-
-
-
-
-
-## Methods
-
-<h3 id="__init__"><code>__init__</code></h3>
+<h2 id="__init__"><code>__init__</code></h2>
 
 ``` python
 __init__(
@@ -73,6 +63,18 @@ Creates an `Exporter` to use with `tf.estimator.EvalSpec`.
 #### Raises:
 
 * <b>`ValueError`</b>: if any argument is invalid.
+
+
+
+## Properties
+
+<h3 id="name"><code>name</code></h3>
+
+
+
+
+
+## Methods
 
 <h3 id="export"><code>export</code></h3>
 
