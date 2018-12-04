@@ -42,14 +42,20 @@ upper_tabs:
       - title: Kaggle Text Classification
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb
         status: external
-      - title: Image Feature Matching
-        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_delf_module.ipynb
-        status: external
-      - title: Generating Images
-        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_generative_image_module.ipynb
+      - title: Image Classification
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/examples/colab/image_feature_vector.ipynb
         status: external
       - title: Object Detection
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/object_detection.ipynb
+        status: external
+      - title: Image Feature Matching
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_delf_module.ipynb
+        status: external
+      - title: Image Generation
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_generative_image_module.ipynb
+        status: external
+      - title: BigGAN Image Generation
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/biggan_generation_with_tf_hub.ipynb
         status: external
       - heading: Common Signatures
       - title: Overview
