@@ -73,3 +73,5 @@ upper_tabs:
       - title: Modules
         path: https://tfhub.dev
         status: external
+
+- include: /_upper_tabs_right.yaml
