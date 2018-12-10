@@ -110,8 +110,11 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         ]),
     }
     labels = np.array([[1], [0]])
-    input_fn = tf.estimator.inputs.numpy_input_fn(
-        features, labels, shuffle=True)
+    if hasattr(tf.compat, "v1"):
+      numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
+    else:
+      numpy_input_fn = tf.estimator.inputs.numpy_input_fn
+    input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
     estimator.predict(input_fn)
@@ -210,8 +213,11 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
         "number": np.array([[20], [1]]),
     }
     labels = np.array([[1], [0]])
-    input_fn = tf.estimator.inputs.numpy_input_fn(features, labels,
-                                                  shuffle=True)
+    if hasattr(tf.compat, "v1"):
+      numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
+    else:
+      numpy_input_fn = tf.estimator.inputs.numpy_input_fn
+    input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
     estimator.predict(input_fn)

@@ -51,6 +51,7 @@ def text_embedding_column(key, module_spec, trainable=False):
       ...
     }
     labels = np.array([[1], [0], ...])
+    # If running TF 2.x, use `tf.compat.v1.estimator.inputs.numpy_input_fn`
     input_fn = tf.estimator.inputs.numpy_input_fn(features, labels, shuffle=True)
     estimator = tf.estimator.DNNClassifier(hidden_units, feature_columns)
     estimator.train(input_fn, max_steps=100)
