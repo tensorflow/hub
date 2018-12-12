@@ -35,9 +35,9 @@ that can be reused on new tasks.
     *   [Creating a New Module](docs/creating.md)
     *   [Fine-Tuning a Module](docs/fine_tuning.md)
 *   Modules:
-    *   [Available Modules](docs/modules/index.md) -- quick links:
-        [image](docs/modules/image.md), [text](docs/modules/text.md),
-        [other](docs/modules/other.md)
+    *   [Available Modules](https://tfhub.dev/) -- quick links:
+        [image classification](https://tfhub.dev/s?module-type=image-classification), [text embedding](https://tfhub.dev/s?module-type=text-embedding),
+        [other](https://tfhub.dev/s?module-type=other-type)
     *   [Common Signatures for Modules](docs/common_signatures/index.md)
 
 
