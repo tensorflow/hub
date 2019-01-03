@@ -41,7 +41,7 @@ setup(
     long_description='',
     url='https://github.com/tensorflow/hub',
     author='Google LLC',
-    author_email='opensource@google.com',
+    author_email='packages@tensorflow.org',
     install_requires=REQUIRED_PACKAGES,
     packages=find_packages(),
     # PyPI package information.
