@@ -35,9 +35,7 @@ that can be reused on new tasks.
     *   [Creating a New Module](docs/creating.md)
     *   [Fine-Tuning a Module](docs/fine_tuning.md)
 *   Modules:
-    *   [Available Modules](docs/modules/index.md) -- quick links:
-        [image](docs/modules/image.md), [text](docs/modules/text.md),
-        [other](docs/modules/other.md)
+    *   Find available modules on [tfhub.dev](https://tfhub.dev/)
     *   [Common Signatures for Modules](docs/common_signatures/index.md)
 
 
