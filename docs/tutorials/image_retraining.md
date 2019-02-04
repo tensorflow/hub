@@ -1,5 +1,8 @@
 # How to Retrain an Image Classifier for New Categories
 
+Note: For a modern, simplified, Keras-based approach to this task see
+[Hub with Keras](https://tensorflow.org/tutorials/images/hub_with_keras)
+
 Modern image recognition models have millions of parameters. Training them from
 scratch requires a lot of labeled training data and a lot of computing power
 (hundreds of GPU-hours or more). Transfer learning is a technique that shortcuts
@@ -16,9 +19,6 @@ effective for many applications, works with moderate amounts of training data
 thirty minutes on a laptop without a GPU. This tutorial will show you how to run
 the example script on your own images, and will explain some of the options you
 have to help control the training process.
-
-Note: A version of this tutorial is also available
-[as a codelab](https://codelabs.developers.google.com/codelabs/tensorflow-for-poets/#0).
 
 This tutorial uses [TensorFlow Hub](../index.md) to ingest
 pre-trained pieces of models, or *modules* as they are called. For starters,
