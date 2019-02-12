@@ -709,6 +709,10 @@ def check_collections_are_supported(saved_model_handler, supported):
                        " as appropriate." % list(unsupported))
 
 
+def get_unsupported_collections(used_collection_keys):
+  return list(set(used_collection_keys) - _SUPPORTED_COLLECTIONS)
+
+
 def register_ops_if_needed(graph_ops):
   """Register graph ops absent in op_def_registry, if present in c++ registry.
 

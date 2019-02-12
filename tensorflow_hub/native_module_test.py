@@ -129,6 +129,26 @@ class NativeModuleTest(tf.test.TestCase):
       spec = native_module.create_module_spec(wrong_module_fn)
     self.assertIn("No signatures present", str(cm.exception))
 
+  def testUnsupportedCollections(self):
+
+    def module_fn():
+      scale = tf.get_variable("x", (), collections=["my_scope"])
+      x = tf.placeholder(tf.float32, shape=[None, 3])
+      native_module.add_signature("my_func", {"x": x}, {"y": x*scale})
+
+    with self.assertRaises(ValueError) as cm:
+      _ = native_module.create_module_spec(module_fn)
+      self.assertIn("Unsupported collections in graph", cm)
+
+    with tf.Graph().as_default() as tmp_graph:
+      module_fn()
+      unsupported_collections = native_module.get_unsupported_collections(
+          tmp_graph.get_all_collection_keys())
+      self.assertEqual(["my_scope"], unsupported_collections)
+
+    _ = native_module.create_module_spec(
+        module_fn, drop_collections=unsupported_collections)
+
 
 class RecoverPartitionedVariableMapTest(tf.test.TestCase):
 
