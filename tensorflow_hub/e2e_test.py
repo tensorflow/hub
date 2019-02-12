@@ -21,6 +21,7 @@ from __future__ import print_function
 import os
 import tarfile
 
+from absl import logging
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -90,7 +91,7 @@ class End2EndTest(tf.test.TestCase):
         self.assertAllClose(sess.run(out), 121)
 
       cache_content = sorted(tf.gfile.ListDirectory(cache_dir))
-      tf.logging.info("Cache context: %s", str(cache_content))
+      logging.info("Cache context: %s", str(cache_content))
       self.assertEqual(2, len(cache_content))
       self.assertTrue(cache_content[1].endswith(".descriptor.txt"))
       module_files = sorted(tf.gfile.ListDirectory(

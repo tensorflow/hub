@@ -26,12 +26,13 @@ import threading
 import time
 import uuid
 
+from absl import flags
 import tensorflow as tf
 
 from tensorflow_hub import resolver
 from tensorflow_hub import tf_utils
 
-FLAGS = tf.flags.FLAGS
+FLAGS = flags.FLAGS
 
 
 class PathResolverTest(tf.test.TestCase):

@@ -22,6 +22,7 @@ import collections
 import os
 import re
 
+from absl import logging
 import tensorflow as tf
 
 from tensorflow_hub import meta_graph_lib
@@ -222,7 +223,7 @@ def add_signature(name=None, inputs=None, outputs=None):
   if not isinstance(outputs, dict):
     outputs = {"default": outputs}
   message = find_signature_inputs_from_multivalued_ops(inputs)
-  if message: tf.logging.error(message)
+  if message: logging.error(message)
   message = find_signature_input_colocation_error(name, inputs)
   if message: raise ValueError(message)
   saved_model_lib.add_signature(name, inputs, outputs)
@@ -353,7 +354,7 @@ class _ModuleSpec(module_spec.ModuleSpec):
         module_def_filename,
         module_def_proto.SerializeToString(),
         overwrite=False)
-    tf.logging.info("Exported TF-Hub module to: %s", path)
+    logging.info("Exported TF-Hub module to: %s", path)
 
 
 class _ModuleImpl(module_impl.ModuleImpl):
@@ -731,12 +732,12 @@ def register_ops_if_needed(graph_ops):
   missing_op_list = op_def_pb2.OpList()
   for missing_op in missing_ops:
     if missing_op not in cpp_registry_ops:
-      tf.logging.info(
+      logging.info(
           "Op %s is missing from both the python and C++ registry.",
           missing_op)
     else:
       missing_op_list.op.extend([cpp_registry_ops[missing_op]])
-      tf.logging.info(
+      logging.info(
           "Adding op %s from c++ registry to python registry.",
           missing_op)
 

@@ -22,6 +22,7 @@ import os
 import time
 import uuid
 
+from absl import logging
 import tensorflow as tf
 
 
@@ -100,11 +101,11 @@ def get_timestamped_export_dir(export_dir_base):
       return export_dir
     time.sleep(1)
     attempts += 1
-    tf.logging.warn(
-        "Export directory {} already exists; retrying (attempt {}/{})".format(
-            export_dir, attempts, MAX_DIRECTORY_CREATION_ATTEMPTS))
+    logging.warn(
+        "Export directory %s already exists; retrying (attempt %d/%d)",
+        export_dir, attempts, MAX_DIRECTORY_CREATION_ATTEMPTS)
   raise RuntimeError("Failed to obtain a unique export directory name after "
-                     "{} attempts.".format(MAX_DIRECTORY_CREATION_ATTEMPTS))
+                     "%d attempts.".MAX_DIRECTORY_CREATION_ATTEMPTS)
 
 
 def get_temp_export_dir(timestamped_export_dir):
@@ -156,7 +157,7 @@ def garbage_collect_exports(export_dir_base, exports_to_keep):
     try:
       tf.gfile.DeleteRecursively(path)
     except tf.errors.NotFoundError as e:
-      tf.logging.warn("Can not delete %s recursively: %s" % (path, e))
+      logging.warn("Can not delete %s recursively: %s", path, e)
 
 
 def bytes_to_readable_str(num_bytes, include_b=False):

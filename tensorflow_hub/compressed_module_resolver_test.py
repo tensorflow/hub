@@ -32,6 +32,7 @@ import tarfile
 import tempfile
 import uuid
 
+from absl import flags
 import tensorflow as tf
 
 from tensorflow_hub import compressed_module_resolver
@@ -39,7 +40,8 @@ from tensorflow_hub import resolver
 from tensorflow_hub import test_utils
 from tensorflow_hub import tf_utils
 
-FLAGS = tf.flags.FLAGS
+
+FLAGS = flags.FLAGS
 
 
 class HttpCompressedFileResolverTest(tf.test.TestCase):

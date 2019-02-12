@@ -23,7 +23,7 @@ import socket
 import sys
 import threading
 
-import tensorflow as tf
+from absl import flags
 
 
 def _do_redirect(handler, location):
@@ -132,8 +132,8 @@ def start_http_server(redirect=None):
 
 def test_srcdir():
   """Returns the path where to look for test data files."""
-  if "test_srcdir" in tf.app.flags.FLAGS:
-    return tf.app.flags.FLAGS["test_srcdir"].value
+  if "test_srcdir" in flags.FLAGS:
+    return flags.FLAGS["test_srcdir"].value
   elif "TEST_SRCDIR" in os.environ:
     return os.environ["TEST_SRCDIR"]
   else:

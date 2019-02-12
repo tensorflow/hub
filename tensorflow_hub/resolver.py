@@ -28,12 +28,15 @@ import tempfile
 import time
 import uuid
 
+from absl import flags
+from absl import logging
 import tensorflow as tf
 from tensorflow_hub import tf_utils
 
-FLAGS = tf.flags.FLAGS
 
-tf.flags.DEFINE_string(
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string(
     "tfhub_cache_dir",
     None,
     "If set, TF-Hub will download and cache Modules into this directory. "
@@ -71,8 +74,8 @@ def tfhub_cache_dir(default_cache_dir=None, use_temp=False):
     # Place all TF-Hub modules under <system's temp>/tfhub_modules.
     cache_dir = os.path.join(tempfile.gettempdir(), "tfhub_modules")
   if cache_dir:
-    tf.logging.log_first_n(tf.logging.INFO, "Using %s to cache modules.", 1,
-                           cache_dir)
+    logging.log_first_n(logging.INFO, "Using %s to cache modules.", 1,
+                        cache_dir)
   return cache_dir
 
 
@@ -115,7 +118,7 @@ class DownloadManager(object):
     else:
       # Interactive progress tracking is disabled. Print progress to the
       # standard TF log.
-      tf.logging.info(msg)
+      logging.info(msg)
 
   def _log_progress(self, bytes_downloaded):
     """Logs progress information about ongoing module download.
@@ -307,8 +310,8 @@ def _wait_for_lock_to_disappear(handle, lock_file, lock_file_timeout_sec):
   lock_file_content = None
   while tf.gfile.Exists(lock_file):
     try:
-      tf.logging.log_every_n(
-          tf.logging.INFO,
+      logging.log_every_n(
+          logging.INFO,
           "Module '%s' already being downloaded by '%s'. Waiting.", 10,
           handle, tf_utils.read_file_to_string(lock_file))
       if (time.time() - locked_tmp_dir_size_check_time >
@@ -322,8 +325,8 @@ def _wait_for_lock_to_disappear(handle, lock_file, lock_file_timeout_sec):
           # There is was no data downloaded in the past
           # 'lock_file_timeout_sec'. Steal the lock and proceed with the
           # local download.
-          tf.logging.warning("Deleting lock file %s due to inactivity." %
-                             lock_file)
+          logging.warning("Deleting lock file %s due to inactivity.",
+                          lock_file)
           tf.gfile.Remove(lock_file)
           break
         locked_tmp_dir_size = cur_locked_tmp_dir_size
@@ -390,7 +393,7 @@ def atomic_download(handle,
       # would obtain a lock ourselves, or wait again for the lock to disappear.
 
     # Lock file acquired.
-    tf.logging.info("Downloading TF-Hub Module '%s'.", handle)
+    logging.info("Downloading TF-Hub Module '%s'.", handle)
     tf.gfile.MakeDirs(tmp_dir)
     download_fn(handle, tmp_dir)
     # Write module descriptor to capture information about which module was
@@ -405,9 +408,9 @@ def atomic_download(handle,
     _write_module_descriptor_file(handle, module_dir)
     try:
       tf.gfile.Rename(tmp_dir, module_dir)
-      tf.logging.info("Downloaded TF-Hub Module '%s'.", handle)
+      logging.info("Downloaded TF-Hub Module '%s'.", handle)
     except tf.errors.AlreadyExistsError:
-      tf.logging.warning("Module already exists in %s" % module_dir)
+      logging.warning("Module already exists in %s", module_dir)
 
   finally:
     try:

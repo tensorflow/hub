@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import os
 
+from absl import logging
 import tensorflow as tf
 from tensorflow_hub import tf_utils
 
@@ -160,8 +161,8 @@ class LatestModuleExporter(tf.estimator.Exporter):
         tf_utils.garbage_collect_exports(export_path, self._exports_to_keep)
         return export_dir
       else:
-        tf.logging.warn("LatestModuleExporter found zero modules to export. "
-                        "Use hub.register_module_for_export() if needed.")
+        logging.warn("LatestModuleExporter found zero modules to export. "
+                     "Use hub.register_module_for_export() if needed.")
         # No export_dir has been created.
         return None
 

@@ -23,6 +23,7 @@ from __future__ import print_function
 
 import re
 
+from absl import logging
 import tensorflow as tf
 
 
@@ -36,7 +37,7 @@ def prepend_name_scope(name, import_scope):
                     tf.compat.as_str_any(name))
     except TypeError as e:
       # If the name is not of a type we can process, simply return it.
-      tf.logging.warning(e)
+      logging.warning(e)
       return name
   else:
     return name
