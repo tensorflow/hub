@@ -19,11 +19,14 @@ from __future__ import division
 from __future__ import print_function
 
 import contextlib
+
 import six
 import tensorflow as tf
+
 from tensorflow_hub import module_spec
 from tensorflow_hub import registry
 from tensorflow_hub import tensor_info
+from tensorflow_hub import tf_v1
 
 
 def as_module_spec(spec):
@@ -65,9 +68,9 @@ def export_module_spec(spec, path, checkpoint_path, name_transform_fn):
     assign_map = {
         name_transform_fn(name): value for name, value in m.variable_map.items()
     }
-    tf.train.init_from_checkpoint(checkpoint_path, assign_map)
-    init_op = tf.initializers.global_variables()
-    with tf.Session() as session:
+    tf_v1.train.init_from_checkpoint(checkpoint_path, assign_map)
+    init_op = tf_v1.initializers.global_variables()
+    with tf_v1.Session() as session:
       session.run(init_op)
       m.export(path, session)
 
@@ -140,7 +143,7 @@ class Module(object):
         Module.
       ValueError: if the requested graph variant does not exists.
     """
-    self._graph = tf.get_default_graph()
+    self._graph = tf_v1.get_default_graph()
     self._spec = as_module_spec(spec)
     self._trainable = trainable
 
@@ -226,7 +229,7 @@ class Module(object):
         the module signature.
       RuntimeError: If there are errors during creation of the signature graph.
     """
-    if self._graph is not tf.get_default_graph():
+    if self._graph is not tf_v1.get_default_graph():
       raise RuntimeError(
           "Module must be applied in the graph it was instantiated for.")
 
@@ -302,7 +305,7 @@ class Module(object):
     Raises:
       RuntimeError: if there is an issue during the export.
     """
-    if self._graph is not tf.get_default_graph():
+    if self._graph is not tf_v1.get_default_graph():
       raise RuntimeError("default graph differs from the graph where the "
                          "module was instantiated.")
     if self._graph is not session.graph:
@@ -364,16 +367,16 @@ def _try_get_state_scope(name, mark_name_scope_used=True):
     RuntimeError: if the name scope of the freshly created variable scope is
         already used.
   """
-  tmp_scope_name = tf.get_variable_scope().name
+  tmp_scope_name = tf_v1.get_variable_scope().name
   if tmp_scope_name:
     tmp_scope_name += "/"
   with tf.name_scope(tmp_scope_name):
     # Pick an unused variable scope.
-    with tf.variable_scope(
+    with tf_v1.variable_scope(
         None, default_name=name, auxiliary_name_scope=False) as vs:
       abs_state_scope = vs.name + "/"
     # Verify that the name scope is available and mark it used if requested.
-    graph = tf.get_default_graph()
+    graph = tf_v1.get_default_graph()
     unique_name_scope = graph.unique_name(name, mark_name_scope_used) + "/"
     if unique_name_scope != abs_state_scope:
       raise RuntimeError(
@@ -501,7 +504,7 @@ def eval_function_for_module(spec, tags=None):
     ValueError: if the requested graph variant does not exists.
   """
   # We create a separate graph and add all the signatures of the module to it.
-  original_graph = tf.get_default_graph()
+  original_graph = tf_v1.get_default_graph()
   with tf.Graph().as_default():
     module = Module(spec, tags=tags)
     input_tensors_per_signature = {}
@@ -509,7 +512,7 @@ def eval_function_for_module(spec, tags=None):
     for signature in module.get_signature_names():
       # We scope with the signature name as different signatures will likely
       # contain tensors with the same name (e.g. the input and output tensors).
-      with tf.variable_scope(signature):
+      with tf_v1.variable_scope(signature):
         input_tensors = {}
         for name, tensorinfo in module.get_input_info_dict(signature).items():
           # We need to be care with the shape as it may be fully-known,
@@ -517,10 +520,10 @@ def eval_function_for_module(spec, tags=None):
           shape = tensorinfo.get_shape()
           effective_shape = None if shape.dims is None else shape.as_list()
           if tensorinfo.is_sparse:
-            input_tensors[name] = tf.sparse_placeholder(
+            input_tensors[name] = tf_v1.sparse_placeholder(
                 tensorinfo.dtype, shape=effective_shape, name=name)
           else:
-            input_tensors[name] = tf.placeholder(
+            input_tensors[name] = tf_v1.placeholder(
                 tensorinfo.dtype, shape=effective_shape, name=name)
         input_tensors_per_signature[signature] = input_tensors
         output_tensors_per_signature[signature] = module(
@@ -529,7 +532,7 @@ def eval_function_for_module(spec, tags=None):
             as_dict=True)
 
   # Evaluating the tfhub module requires an active tensorflow session.
-    with tf.train.SingularMonitoredSession() as sess:
+    with tf_v1.train.SingularMonitoredSession() as sess:
 
       def func(
           inputs=None,

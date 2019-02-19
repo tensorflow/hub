@@ -23,6 +23,7 @@ import tempfile
 
 import tensorflow as tf
 import tensorflow_hub as hub
+from tensorflow_hub import tf_v1
 
 _TEXT_FEATURE_NAME = "text"
 _EXPORT_MODULE_NAME = "embedding-text"
@@ -40,19 +41,19 @@ def _input_fn():
 
 def _serving_input_fn():
   """A serving input fn."""
-  text_features = tf.placeholder(dtype=tf.string, shape=[None])
-  return tf.estimator.export.ServingInputReceiver(
+  text_features = tf_v1.placeholder(dtype=tf.string, shape=[None])
+  return tf_v1.estimator.export.ServingInputReceiver(
       features={_TEXT_FEATURE_NAME: text_features},
       receiver_tensors=text_features)
 
 
 def text_module_fn():
-  weights = tf.get_variable(
+  weights = tf_v1.get_variable(
       "weights", dtype=tf.float32, shape=[100, 10])
   #      initializer=tf.random_uniform_initializer())
-  text = tf.placeholder(tf.string, shape=[None])
-  hash_buckets = tf.string_to_hash_bucket_fast(text, weights.get_shape()[0])
-  embeddings = tf.gather(weights, hash_buckets)
+  text = tf_v1.placeholder(tf.string, shape=[None])
+  hash_buckets = tf_v1.string_to_hash_bucket_fast(text, weights.get_shape()[0])
+  embeddings = tf_v1.gather(weights, hash_buckets)
   hub.add_signature(inputs=text, outputs=embeddings)
 
 
@@ -68,10 +69,10 @@ def _get_model_fn(register_module=False):
     predictions = embedding(features[_TEXT_FEATURE_NAME])
     loss = tf.constant(0.0)
 
-    global_step = tf.train.get_global_step()
-    train_op = tf.assign_add(global_step, 1)
+    global_step = tf_v1.train.get_global_step()
+    train_op = tf_v1.assign_add(global_step, 1)
 
-    return tf.estimator.EstimatorSpec(
+    return tf_v1.estimator.EstimatorSpec(
         mode=mode,
         predictions=predictions,
         loss=loss,
@@ -87,8 +88,8 @@ class EstimatorTest(tf.test.TestCase):
     export_base_dir = os.path.join(
         tempfile.mkdtemp(dir=self.get_temp_dir()), "export")
 
-    estimator = tf.estimator.Estimator(_get_model_fn(register_module=True),
-                                       model_dir=model_dir)
+    estimator = tf_v1.estimator.Estimator(
+        _get_model_fn(register_module=True), model_dir=model_dir)
     estimator.train(input_fn=_input_fn, steps=1)
 
     exporter = hub.LatestModuleExporter("exporter_name", _serving_input_fn)
@@ -98,7 +99,7 @@ class EstimatorTest(tf.test.TestCase):
                                  is_the_final_export=None)
 
     # Check that a timestamped directory is created in the expected location.
-    timestamp_dirs = tf.gfile.ListDirectory(export_base_dir)
+    timestamp_dirs = tf_v1.gfile.ListDirectory(export_base_dir)
     self.assertEquals(1, len(timestamp_dirs))
     self.assertEquals(
         tf.compat.as_bytes(os.path.join(export_base_dir, timestamp_dirs[0])),
@@ -108,16 +109,16 @@ class EstimatorTest(tf.test.TestCase):
     expected_module_dir = os.path.join(
         tf.compat.as_bytes(export_dir),
         tf.compat.as_bytes(_EXPORT_MODULE_NAME))
-    self.assertTrue(tf.gfile.IsDirectory(expected_module_dir))
+    self.assertTrue(tf_v1.gfile.IsDirectory(expected_module_dir))
 
   def test_latest_module_exporter_with_no_modules(self):
     model_dir = tempfile.mkdtemp(dir=self.get_temp_dir())
     export_base_dir = os.path.join(tempfile.mkdtemp(dir=self.get_temp_dir()),
                                    "export")
-    self.assertFalse(tf.gfile.Exists(export_base_dir))
+    self.assertFalse(tf_v1.gfile.Exists(export_base_dir))
 
-    estimator = tf.estimator.Estimator(_get_model_fn(register_module=False),
-                                       model_dir=model_dir)
+    estimator = tf_v1.estimator.Estimator(
+        _get_model_fn(register_module=False), model_dir=model_dir)
     estimator.train(input_fn=_input_fn, steps=1)
 
     exporter = hub.LatestModuleExporter("exporter_name", _serving_input_fn)
@@ -130,34 +131,34 @@ class EstimatorTest(tf.test.TestCase):
     self.assertIsNone(export_dir)
 
     # Check that a no directory has been created in the expected location.
-    self.assertFalse(tf.gfile.Exists(export_base_dir))
+    self.assertFalse(tf_v1.gfile.Exists(export_base_dir))
 
   def test_latest_module_exporter_with_eval_spec(self):
     model_dir = tempfile.mkdtemp(dir=self.get_temp_dir())
-    estimator = tf.estimator.Estimator(_get_model_fn(register_module=True),
-                                       model_dir=model_dir)
+    estimator = tf_v1.estimator.Estimator(
+        _get_model_fn(register_module=True), model_dir=model_dir)
     exporter = hub.LatestModuleExporter(
         "tf_hub", _serving_input_fn, exports_to_keep=2)
     estimator.train(_input_fn, max_steps=1)
     export_base_dir = os.path.join(model_dir, "export", "tf_hub")
 
     exporter.export(estimator, export_base_dir)
-    timestamp_dirs = tf.gfile.ListDirectory(export_base_dir)
+    timestamp_dirs = tf_v1.gfile.ListDirectory(export_base_dir)
     self.assertEquals(1, len(timestamp_dirs))
     oldest_timestamp = timestamp_dirs[0]
 
     expected_module_dir = os.path.join(export_base_dir,
                                        timestamp_dirs[0],
                                        _EXPORT_MODULE_NAME)
-    self.assertTrue(tf.gfile.IsDirectory(expected_module_dir))
+    self.assertTrue(tf_v1.gfile.IsDirectory(expected_module_dir))
 
     exporter.export(estimator, export_base_dir)
-    timestamp_dirs = tf.gfile.ListDirectory(export_base_dir)
+    timestamp_dirs = tf_v1.gfile.ListDirectory(export_base_dir)
     self.assertEquals(2, len(timestamp_dirs))
 
     # Triggering yet another export should clean the oldest export.
     exporter.export(estimator, export_base_dir)
-    timestamp_dirs = tf.gfile.ListDirectory(export_base_dir)
+    timestamp_dirs = tf_v1.gfile.ListDirectory(export_base_dir)
     self.assertEquals(2, len(timestamp_dirs))
     self.assertFalse(oldest_timestamp in timestamp_dirs)
 

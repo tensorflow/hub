@@ -19,13 +19,15 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+
 from tensorflow_hub import image_util
 from tensorflow_hub import module
 from tensorflow_hub import native_module
+from tensorflow_hub import tf_v1
 
 
 def image_module_fn():
-  images = tf.placeholder(dtype=tf.float32, shape=[None, 2, 4, 3])
+  images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 2, 4, 3])
   sum_by_channels = tf.reduce_sum(images, [1, 2])
   sum_all = tf.reduce_sum(images, [1, 2, 3])
   native_module.add_signature(inputs=dict(images=images),
@@ -34,7 +36,7 @@ def image_module_fn():
 
 
 def image_module_fn_with_info():
-  images = tf.placeholder(dtype=tf.float32, shape=[None, None, None, 3])
+  images = tf_v1.placeholder(dtype=tf.float32, shape=[None, None, None, 3])
   sum_all = tf.reduce_sum(images, [1, 2, 3])
   native_module.add_signature(inputs=dict(images=images),
                               outputs=dict(default=sum_all))
@@ -47,22 +49,25 @@ def image_module_fn_with_info():
 class ImageModuleTest(tf.test.TestCase):
 
   def testGetExpectedImageSizeFromShape(self):
-    spec = native_module.create_module_spec(image_module_fn)
-    self.assertAllEqual(image_util.get_expected_image_size(spec), [2, 4])
-    m = module.Module(spec)
-    self.assertAllEqual(image_util.get_expected_image_size(m), [2, 4])
+    with tf.Graph().as_default():
+      spec = native_module.create_module_spec(image_module_fn)
+      self.assertAllEqual(image_util.get_expected_image_size(spec), [2, 4])
+      m = module.Module(spec)
+      self.assertAllEqual(image_util.get_expected_image_size(m), [2, 4])
 
   def testGetExpectedImageSizeFromImageModuleInfo(self):
-    spec = native_module.create_module_spec(image_module_fn_with_info)
-    self.assertAllEqual(image_util.get_expected_image_size(spec), [2, 4])
-    m = module.Module(spec)
-    self.assertAllEqual(image_util.get_expected_image_size(m), [2, 4])
+    with tf.Graph().as_default():
+      spec = native_module.create_module_spec(image_module_fn_with_info)
+      self.assertAllEqual(image_util.get_expected_image_size(spec), [2, 4])
+      m = module.Module(spec)
+      self.assertAllEqual(image_util.get_expected_image_size(m), [2, 4])
 
   def testGetNumImageChannels(self):
-    spec = native_module.create_module_spec(image_module_fn)
-    self.assertEqual(image_util.get_num_image_channels(spec), 3)
-    m = module.Module(spec)
-    self.assertEqual(image_util.get_num_image_channels(m), 3)
+    with tf.Graph().as_default():
+      spec = native_module.create_module_spec(image_module_fn)
+      self.assertEqual(image_util.get_num_image_channels(spec), 3)
+      m = module.Module(spec)
+      self.assertEqual(image_util.get_num_image_channels(m), 3)
 
 
 if __name__ == "__main__":

@@ -19,133 +19,142 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+
 from tensorflow_hub import tensor_info
+from tensorflow_hub import tf_v1
 
 
 def _make_signature(inputs, outputs, name=None):
   input_info = {
-      input_name: tf.saved_model.utils.build_tensor_info(tensor)
+      input_name: tf_v1.saved_model.utils.build_tensor_info(tensor)
       for input_name, tensor in inputs.items()
   }
   output_info = {
-      output_name: tf.saved_model.utils.build_tensor_info(tensor)
+      output_name: tf_v1.saved_model.utils.build_tensor_info(tensor)
       for output_name, tensor in outputs.items()
   }
-  return tf.saved_model.signature_def_utils.build_signature_def(
+  return tf_v1.saved_model.signature_def_utils.build_signature_def(
       input_info, output_info, name)
 
 
 class TensorInfoTest(tf.test.TestCase):
 
   def testParsingTensorInfoProtoMaps(self):
-    sig = _make_signature({
-        "x": tf.placeholder(tf.string, [2]),
-    }, {
-        "y": tf.placeholder(tf.int32, [2]),
-        "z": tf.sparse_placeholder(tf.float32, [2, 10]),
-    })
+    with tf_v1.Graph().as_default():
+      sig = _make_signature({
+          "x": tf_v1.placeholder(tf.string, [2]),
+      }, {
+          "y": tf_v1.placeholder(tf.int32, [2]),
+          "z": tf_v1.sparse_placeholder(tf.float32, [2, 10]),
+      })
 
-    inputs = tensor_info.parse_tensor_info_map(sig.inputs)
-    self.assertEquals(set(inputs.keys()), set(["x"]))
-    self.assertEquals(inputs["x"].get_shape(), [2])
-    self.assertEquals(inputs["x"].dtype, tf.string)
-    self.assertFalse(inputs["x"].is_sparse)
+      inputs = tensor_info.parse_tensor_info_map(sig.inputs)
+      self.assertEqual(set(inputs.keys()), set(["x"]))
+      self.assertEqual(inputs["x"].get_shape(), [2])
+      self.assertEqual(inputs["x"].dtype, tf.string)
+      self.assertFalse(inputs["x"].is_sparse)
 
-    outputs = tensor_info.parse_tensor_info_map(sig.outputs)
-    self.assertEquals(set(outputs.keys()), set(["y", "z"]))
-    self.assertEquals(outputs["y"].get_shape(), [2])
-    self.assertEquals(outputs["y"].dtype, tf.int32)
-    self.assertFalse(outputs["y"].is_sparse)
+      outputs = tensor_info.parse_tensor_info_map(sig.outputs)
+      self.assertEqual(set(outputs.keys()), set(["y", "z"]))
+      self.assertEqual(outputs["y"].get_shape(), [2])
+      self.assertEqual(outputs["y"].dtype, tf.int32)
+      self.assertFalse(outputs["y"].is_sparse)
 
-    self.assertEquals(outputs["z"].get_shape(), [2, 10])
-    self.assertEquals(outputs["z"].dtype, tf.float32)
-    self.assertTrue(outputs["z"].is_sparse)
+      self.assertEqual(outputs["z"].get_shape(), [2, 10])
+      self.assertEqual(outputs["z"].dtype, tf.float32)
+      self.assertTrue(outputs["z"].is_sparse)
 
   def testRepr(self):
-    sig = _make_signature({
-        "x": tf.placeholder(tf.string, [2]),
-    }, {
-        "y": tf.placeholder(tf.int32, [2]),
-        "z": tf.sparse_placeholder(tf.float32, [2, 10]),
-    })
+    with tf_v1.Graph().as_default():
+      sig = _make_signature({
+          "x": tf_v1.placeholder(tf.string, [2]),
+      }, {
+          "y": tf_v1.placeholder(tf.int32, [2]),
+          "z": tf_v1.sparse_placeholder(tf.float32, [2, 10]),
+      })
 
-    outputs = tensor_info.parse_tensor_info_map(sig.outputs)
-    self.assertEquals(
-        repr(outputs["y"]),
-        "<hub.ParsedTensorInfo shape=(2,) dtype=int32 is_sparse=False>")
-    self.assertEquals(
-        repr(outputs["z"]),
-        "<hub.ParsedTensorInfo shape=(2, 10) dtype=float32 is_sparse=True>")
+      outputs = tensor_info.parse_tensor_info_map(sig.outputs)
+      self.assertEqual(
+          repr(outputs["y"]),
+          "<hub.ParsedTensorInfo shape=(2,) dtype=int32 is_sparse=False>")
+      self.assertEqual(
+          repr(outputs["z"]),
+          "<hub.ParsedTensorInfo shape=(2, 10) dtype=float32 is_sparse=True>")
 
 
   def testMatchingTensorInfoProtoMaps(self):
-    sig1 = _make_signature({
-        "x": tf.placeholder(tf.int32, [2]),
-    }, {
-        "x": tf.placeholder(tf.int32, [2]),
-    })
+    with tf_v1.Graph().as_default():
+      sig1 = _make_signature({
+          "x": tf_v1.placeholder(tf.int32, [2]),
+      }, {
+          "x": tf_v1.placeholder(tf.int32, [2]),
+      })
 
-    sig2 = _make_signature({
-        "x": tf.placeholder(tf.int32, [2]),
-    }, {
-        "x": tf.sparse_placeholder(tf.int64, [2]),
-    })
-    self.assertTrue(
-        tensor_info.tensor_info_proto_maps_match(sig1.inputs, sig2.inputs))
-    self.assertFalse(
-        tensor_info.tensor_info_proto_maps_match(sig1.outputs, sig2.outputs))
+      sig2 = _make_signature({
+          "x": tf_v1.placeholder(tf.int32, [2]),
+      }, {
+          "x": tf_v1.sparse_placeholder(tf.int64, [2]),
+      })
+      self.assertTrue(
+          tensor_info.tensor_info_proto_maps_match(sig1.inputs, sig2.inputs))
+      self.assertFalse(
+          tensor_info.tensor_info_proto_maps_match(sig1.outputs, sig2.outputs))
 
-    sig3 = _make_signature({
-        "x": tf.placeholder(tf.int32, [None]),
-    }, {
-        "x": tf.placeholder(tf.int32, [2]),
-    })
-    self.assertFalse(
-        tensor_info.tensor_info_proto_maps_match(sig1.inputs, sig3.inputs))
-    self.assertTrue(
-        tensor_info.tensor_info_proto_maps_match(sig1.outputs, sig3.outputs))
+      sig3 = _make_signature({
+          "x": tf_v1.placeholder(tf.int32, [None]),
+      }, {
+          "x": tf_v1.placeholder(tf.int32, [2]),
+      })
+      self.assertFalse(
+          tensor_info.tensor_info_proto_maps_match(sig1.inputs, sig3.inputs))
+      self.assertTrue(
+          tensor_info.tensor_info_proto_maps_match(sig1.outputs, sig3.outputs))
 
   def testBuildInputMap(self):
-    x = tf.placeholder(tf.int32, [2])
-    y = tf.sparse_placeholder(tf.string, [None])
-    sig = _make_signature({"x": x, "y": y}, {})
+    with tf_v1.Graph().as_default():
+      x = tf_v1.placeholder(tf.int32, [2])
+      y = tf_v1.sparse_placeholder(tf.string, [None])
+      sig = _make_signature({"x": x, "y": y}, {})
 
-    input_map = tensor_info.build_input_map(sig.inputs, {"x": x, "y": y})
-    self.assertEquals(len(input_map), 4)
-    self.assertEquals(input_map[x.name], x)
-    self.assertEquals(input_map[y.indices.name], y.indices)
-    self.assertEquals(input_map[y.values.name], y.values)
-    self.assertEquals(input_map[y.dense_shape.name], y.dense_shape)
+      input_map = tensor_info.build_input_map(sig.inputs, {"x": x, "y": y})
+      self.assertEqual(len(input_map), 4)
+      self.assertEqual(input_map[x.name], x)
+      self.assertEqual(input_map[y.indices.name], y.indices)
+      self.assertEqual(input_map[y.values.name], y.values)
+      self.assertEqual(input_map[y.dense_shape.name], y.dense_shape)
 
   def testBuildOutputMap(self):
-    x = tf.placeholder(tf.int32, [2])
-    y = tf.sparse_placeholder(tf.string, [None])
-    sig = _make_signature({}, {"x": x, "y": y})
+    with tf_v1.Graph().as_default():
+      x = tf_v1.placeholder(tf.int32, [2])
+      y = tf_v1.sparse_placeholder(tf.string, [None])
+      sig = _make_signature({}, {"x": x, "y": y})
 
-    def _get_tensor(name):
-      return tf.get_default_graph().get_tensor_by_name(name)
+      def _get_tensor(name):
+        return tf_v1.get_default_graph().get_tensor_by_name(name)
 
-    output_map = tensor_info.build_output_map(sig.outputs, _get_tensor)
-    self.assertEquals(len(output_map), 2)
-    self.assertEquals(output_map["x"], x)
-    self.assertEquals(output_map["y"].indices, y.indices)
-    self.assertEquals(output_map["y"].values, y.values)
-    self.assertEquals(output_map["y"].dense_shape, y.dense_shape)
+      output_map = tensor_info.build_output_map(sig.outputs, _get_tensor)
+      self.assertEqual(len(output_map), 2)
+      self.assertEqual(output_map["x"], x)
+      self.assertEqual(output_map["y"].indices, y.indices)
+      self.assertEqual(output_map["y"].values, y.values)
+      self.assertEqual(output_map["y"].dense_shape, y.dense_shape)
 
   def testConvertTensors(self):
-    a = tf.placeholder(tf.int32, [None])
-    protomap = _make_signature({"a": a}, {}).inputs
-    targets = tensor_info.parse_tensor_info_map(protomap)
+    with tf_v1.Graph().as_default():
+      a = tf_v1.placeholder(tf.int32, [None])
+      protomap = _make_signature({"a": a}, {}).inputs
+      targets = tensor_info.parse_tensor_info_map(protomap)
 
-    # convert constant
-    in0 = [1, 2, 3]
-    output = tensor_info.convert_dict_to_compatible_tensor({"a": in0}, targets)
-    self.assertEquals(output["a"].dtype, a.dtype)
+      # convert constant
+      in0 = [1, 2, 3]
+      output = tensor_info.convert_dict_to_compatible_tensor({"a": in0},
+                                                             targets)
+      self.assertEqual(output["a"].dtype, a.dtype)
 
-    # check sparsity
-    in1 = tf.sparse_placeholder(tf.int32, [])
-    with self.assertRaisesRegexp(TypeError, "dense"):
-      tensor_info.convert_dict_to_compatible_tensor({"a": in1}, targets)
+      # check sparsity
+      in1 = tf_v1.sparse_placeholder(tf.int32, [])
+      with self.assertRaisesRegexp(TypeError, "dense"):
+        tensor_info.convert_dict_to_compatible_tensor({"a": in1}, targets)
 
 
 if __name__ == "__main__":

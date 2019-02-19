@@ -23,6 +23,7 @@ import collections
 import tensorflow as tf
 from tensorflow_hub import image_util
 from tensorflow_hub import module
+from tensorflow_hub import tf_v1
 
 # TODO(b/73987364): It is not possible to extend feature columns without
 # depending on TensorFlow internal implementation details.
@@ -52,7 +53,8 @@ def text_embedding_column(key, module_spec, trainable=False):
     }
     labels = np.array([[1], [0], ...])
     # If running TF 2.x, use `tf.compat.v1.estimator.inputs.numpy_input_fn`
-    input_fn = tf.estimator.inputs.numpy_input_fn(features, labels, shuffle=True)
+    input_fn = tf.estimator.inputs.numpy_input_fn(features, labels,
+                                                  shuffle=True)
     estimator = tf.estimator.DNNClassifier(hidden_units, feature_columns)
     estimator.train(input_fn, max_steps=100)
   ```
@@ -142,7 +144,7 @@ class _TextEmbeddingColumn(
   @property
   def _parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
-    return {self.key: tf.FixedLenFeature([1], tf.string)}
+    return {self.key: tf_v1.FixedLenFeature([1], tf.string)}
 
   @property
   def _variable_shape(self):
@@ -264,7 +266,7 @@ class _ImageEmbeddingColumn(
     """Returns a `tf.Example` parsing spec as dict."""
     height, width = image_util.get_expected_image_size(self.module_spec)
     input_shape = [height, width, 3]
-    return {self.key: tf.FixedLenFeature(input_shape, tf.float32)}
+    return {self.key: tf_v1.FixedLenFeature(input_shape, tf.float32)}
 
   @property
   def _variable_shape(self):

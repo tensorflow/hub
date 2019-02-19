@@ -21,6 +21,12 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from tensorflow_hub import tf_v1
+
+# pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.ops.lookup_ops import HashTable
+from tensorflow.python.ops.lookup_ops import KeyValueTensorInitializer
+# pylint: enable=g-direct-tensorflow-import
 
 
 def text_module_fn():
@@ -31,26 +37,26 @@ def text_module_fn():
   ]
   keys = tf.constant([item[0] for item in embeddings], dtype=tf.string)
   indices = tf.constant(list(range(len(embeddings))), dtype=tf.int64)
-  tbl_init = tf.contrib.lookup.KeyValueTensorInitializer(keys, indices)
-  table = tf.contrib.lookup.HashTable(tbl_init, 0)
+  tbl_init = KeyValueTensorInitializer(keys, indices)
+  table = HashTable(tbl_init, 0)
 
   weights_initializer = tf.cast(
       tf.constant(list([item[1] for item in embeddings])),
       tf.float32)
 
-  weights = tf.get_variable(
+  weights = tf_v1.get_variable(
       "weights",
       dtype=tf.float32,
       initializer=weights_initializer)
 
-  text_tensor = tf.placeholder(dtype=tf.string, name="text", shape=[None])
+  text_tensor = tf_v1.placeholder(dtype=tf.string, name="text", shape=[None])
   indices_tensor = table.lookup(text_tensor)
   embedding_tensor = tf.gather(weights, indices_tensor)
   hub.add_signature(inputs=text_tensor, outputs=embedding_tensor)
 
 
 def invalid_text_module_fn():
-  text = tf.placeholder(tf.string, shape=[10])
+  text = tf_v1.placeholder(tf.string, shape=[10])
   hub.add_signature(inputs=text, outputs=tf.zeros([10, 3]))
 
 
@@ -65,9 +71,9 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
 
   def testMakeParseExampleSpec(self):
     text_column = hub.text_embedding_column("text", self.spec, trainable=False)
-    parsing_spec = tf.feature_column.make_parse_example_spec([text_column])
+    parsing_spec = tf_v1.feature_column.make_parse_example_spec([text_column])
     self.assertEqual(parsing_spec, {
-        "text": tf.FixedLenFeature([1], dtype=tf.string)
+        "text": tf_v1.FixedLenFeature([1], dtype=tf.string)
     })
 
   def testInputLayer(self):
@@ -80,8 +86,8 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         hub.text_embedding_column("text_b", self.spec, trainable=False),
     ]
     with tf.Graph().as_default():
-      input_layer = tf.feature_column.input_layer(features, feature_columns)
-      with tf.train.MonitoredSession() as sess:
+      input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
+      with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(input_layer)
         self.assertAllEqual(output, [[1, 2, 3, 4, 1, 2, 3, 4],
                                      [5, 5, 5, 5, 0, 0, 0, 0]])
@@ -89,10 +95,10 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
   def testWorksWithCannedEstimator(self):
     comment_embedding_column = hub.text_embedding_column(
         "comment", self.spec, trainable=False)
-    upvotes = tf.feature_column.numeric_column("upvotes")
+    upvotes = tf_v1.feature_column.numeric_column("upvotes")
 
     feature_columns = [comment_embedding_column, upvotes]
-    estimator = tf.estimator.DNNClassifier(
+    estimator = tf_v1.estimator.DNNClassifier(
         hidden_units=[10],
         feature_columns=feature_columns,
         model_dir=self.get_temp_dir())
@@ -113,7 +119,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     if hasattr(tf.compat, "v1"):
       numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
     else:
-      numpy_input_fn = tf.estimator.inputs.numpy_input_fn
+      numpy_input_fn = tf_v1.estimator.inputs.numpy_input_fn
     input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
@@ -129,13 +135,14 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
           "text": ["hello world", "pair-programming"],
       }
       target = [[1, 1, 1, 1], [4, 3, 2, 1]]
-      input_layer = tf.feature_column.input_layer(features, feature_columns)
+      input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
 
-      loss = tf.losses.mean_squared_error(input_layer, target)
-      optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.97)
+      loss = tf.cast(
+          tf_v1.losses.mean_squared_error(input_layer, target), tf.float64)
+      optimizer = tf_v1.train.GradientDescentOptimizer(learning_rate=0.97)
       train_op = optimizer.minimize(loss)
 
-      with tf.train.MonitoredSession() as sess:
+      with tf_v1.train.MonitoredSession() as sess:
         self.assertAllEqual(sess.run(input_layer), [[1, 2, 3, 4], [5, 5, 5, 5]])
         for _ in range(10):
           sess.run(train_op)
@@ -149,7 +156,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
 
 def image_module_fn():
   """Maps 1x2 images to sums of each color channel."""
-  images = tf.placeholder(dtype=tf.float32, shape=[None, 1, 2, 3])
+  images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 1, 2, 3])
   sum_channels = tf.reduce_sum(images, axis=[1, 2])
   hub.add_signature(inputs={"images": images}, outputs=sum_channels)
 
@@ -171,9 +178,9 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
 
   def testMakeParseExampleSpec(self):
     image_column = hub.image_embedding_column("image", self.spec)
-    parsing_spec = tf.feature_column.make_parse_example_spec([image_column])
+    parsing_spec = tf_v1.feature_column.make_parse_example_spec([image_column])
     self.assertEqual(parsing_spec, {
-        "image": tf.FixedLenFeature([1, 2, 3], dtype=tf.float32)
+        "image": tf_v1.FixedLenFeature([1, 2, 3], dtype=tf.float32)
     })
 
   def testInputLayer(self):
@@ -188,18 +195,18 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
         hub.image_embedding_column("image_b", self.spec),
     ]
     with tf.Graph().as_default():
-      input_layer = tf.feature_column.input_layer(features, feature_columns)
-      with tf.train.MonitoredSession() as sess:
+      input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
+      with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(input_layer)
         self.assertAllClose(output, [[0.5, 0.7, 0.9, 0.3, 0.3, 0.3],
                                      [0.8, 0.9, 1.0, 0.4, 0.4, 0.4]])
 
   def testWorksWithCannedEstimator(self):
     image_column = hub.image_embedding_column("image", self.spec)
-    other_column = tf.feature_column.numeric_column("number")
+    other_column = tf_v1.feature_column.numeric_column("number")
 
     feature_columns = [image_column, other_column]
-    estimator = tf.estimator.DNNClassifier(
+    estimator = tf_v1.estimator.DNNClassifier(
         hidden_units=[10],
         feature_columns=feature_columns,
         model_dir=self.get_temp_dir())
@@ -216,7 +223,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     if hasattr(tf.compat, "v1"):
       numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
     else:
-      numpy_input_fn = tf.estimator.inputs.numpy_input_fn
+      numpy_input_fn = tf_v1.estimator.inputs.numpy_input_fn
     input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)

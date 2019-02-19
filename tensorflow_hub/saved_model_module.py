@@ -18,9 +18,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
 from tensorflow_hub import native_module
 from tensorflow_hub import saved_model_lib
+from tensorflow_hub import tf_v1
 
 
 _ALWAYS_DROPPED_COLLECTIONS = [
@@ -30,7 +30,7 @@ _ALWAYS_DROPPED_COLLECTIONS = [
     # This collection is ignored when loading it as a module. However the
     # variable that contains the step would still be brought in if declared
     # in the VARIABLES collection.
-    tf.GraphKeys.GLOBAL_STEP,
+    tf_v1.GraphKeys.GLOBAL_STEP,
 
     # SavedModels exported for serving use cases contain collections which refer
     # to ops in the graph that when run are responsible to initialize the
@@ -39,10 +39,10 @@ _ALWAYS_DROPPED_COLLECTIONS = [
     # This generic initialization definition is impossible to support for many
     # hub use cases and therefore the assumption here is that the SavedModel
     # init op can be ignored in favor of initializing using the
-    # tf.train.MonitoredSession mechanisms + construction of a new tf.Saver()
+    # tf_v1.train.MonitoredSession mechanisms + construction of a new tf.Saver()
     # from the global variables collection.
-    tf.saved_model.constants.LEGACY_INIT_OP_KEY,
-    tf.saved_model.constants.MAIN_OP_KEY,
+    tf_v1.saved_model.constants.LEGACY_INIT_OP_KEY,
+    tf_v1.saved_model.constants.MAIN_OP_KEY,
 ]
 
 
@@ -63,7 +63,7 @@ def create_module_spec_from_saved_model(saved_model_path,
   - The serialized SaverDef can be ignored and instead can be reconstructed.
   - The init op and main op can be ignored and instead the module can be
     initialized by using the conventions followed by
-    `tf.train.MonitoredSession`.
+    `tf_v1.train.MonitoredSession`.
 
   Note that the set of features supported can increase over time and have side
   effects that were not previously visible. The pattern followed to avoid

@@ -18,7 +18,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import logging
 import os
+from distutils.version import LooseVersion
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -121,4 +123,12 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
 
 
 if __name__ == "__main__":
-  tf.test.main()
+  # This test is only supported in TF 1.x.
+  if (LooseVersion(tf.__version__) <
+      LooseVersion("2.0.0")):
+    logging.info("Using TF version: %s", tf.__version__)
+    tf.test.main()
+  else:
+    logging.warning("Skipping running tests for TF Version: %s",
+                    tf.__version__)
+

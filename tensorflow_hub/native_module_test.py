@@ -26,6 +26,13 @@ import tensorflow_hub as hub
 
 from tensorflow_hub import module_def_pb2
 from tensorflow_hub import native_module
+from tensorflow_hub import tf_v1
+
+# pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.ops.lookup_ops import HashTable
+from tensorflow.python.ops.lookup_ops import index_to_string_table_from_file
+from tensorflow.python.ops.lookup_ops import KeyValueTensorInitializer
+# pylint: enable=g-direct-tensorflow-import
 
 
 def load_module_spec(spec):
@@ -34,29 +41,29 @@ def load_module_spec(spec):
 
 
 def multi_signature_module():
-  x = tf.placeholder(tf.float32, shape=[None])
+  x = tf_v1.placeholder(tf.float32, shape=[None])
   native_module.add_signature("double", {"x": x}, {"y": 2*x})
 
-  z = tf.placeholder(tf.float32, shape=[None])
+  z = tf_v1.placeholder(tf.float32, shape=[None])
   native_module.add_signature("square", {"z": z}, {"z_out": z*z})
 
 
 def batch_norm_module(training):
-  x = tf.placeholder(tf.float32, shape=[None, 3])
-  y = tf.layers.batch_normalization(x, training=training)
+  x = tf_v1.placeholder(tf.float32, shape=[None, 3])
+  y = tf_v1.layers.batch_normalization(x, training=training)
   native_module.add_signature(inputs=x, outputs=y)
 
 
 def module_with_variables():
-  tf.get_variable(
+  tf_v1.get_variable(
       name="weights",
       shape=[3],
-      initializer=tf.zeros_initializer())
-  tf.get_variable(
+      initializer=tf_v1.zeros_initializer())
+  tf_v1.get_variable(
       name="partition",
       shape=[4],
-      initializer=tf.zeros_initializer(),
-      partitioner=tf.fixed_size_partitioner(3))
+      initializer=tf_v1.zeros_initializer(),
+      partitioner=tf_v1.fixed_size_partitioner(3))
   hub.add_signature(outputs=tf.constant(1.0))
 
 
@@ -64,9 +71,9 @@ class NativeModuleTest(tf.test.TestCase):
 
   def testModuleWithMissingRequiredFeature(self):
     path = os.path.join(self.get_temp_dir(), "required-feature")
-    tf.gfile.MakeDirs(path)
+    tf_v1.gfile.MakeDirs(path)
     proto_path = native_module.get_module_proto_path(path)
-    with tf.gfile.Open(proto_path, mode="wb") as f:
+    with tf_v1.gfile.Open(proto_path, mode="wb") as f:
       module_def_proto = module_def_pb2.ModuleDef()
       module_def_proto.format = module_def_pb2.ModuleDef.FORMAT_V3
       module_def_proto.required_features.extend(["foo-test-missing"])
@@ -97,32 +104,33 @@ class NativeModuleTest(tf.test.TestCase):
                         [set(["training"]), set(["inference"])])
 
   def testModuleWithVariablesAndNoCheckpoint(self):
-    spec = native_module.create_module_spec(module_with_variables)
-    spec._create_impl(name="module", trainable=False, tags=None)
-    self.assertAllEqual(
-        [x.op.name for x in tf.global_variables()],
-        [
-            "module/weights",
-            "module/partition/part_0",
-            "module/partition/part_1",
-            "module/partition/part_2",
-        ])
+    with tf.Graph().as_default():
+      spec = native_module.create_module_spec(module_with_variables)
+      spec._create_impl(name="module", trainable=False, tags=None)
+      self.assertAllEqual(
+          [x.op.name for x in tf_v1.global_variables()],
+          [
+              "module/weights",
+              "module/partition/part_0",
+              "module/partition/part_1",
+              "module/partition/part_2",
+          ])
 
-    with tf.Session() as session:
-      session.run(tf.initializers.global_variables())
-      expected_values = [
-          [0.0, 0.0, 0.0],
-          [0.0, 0.0],
-          [0.0],
-          [0.0],
-      ]
-      for a, b in zip(session.run(tf.global_variables()), expected_values):
-        self.assertAllEqual(a, b)
+      with tf_v1.Session() as session:
+        session.run(tf_v1.initializers.global_variables())
+        expected_values = [
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0],
+            [0.0],
+            [0.0],
+        ]
+        for a, b in zip(session.run(tf_v1.global_variables()), expected_values):
+          self.assertAllEqual(a, b)
 
   def testNoSignaturesPresent(self):
 
     def wrong_module_fn():
-      x = tf.placeholder(tf.float32, shape=[None, 3])
+      x = tf_v1.placeholder(tf.float32, shape=[None, 3])
       return tf.identity(x)
 
     with self.assertRaises(ValueError) as cm:
@@ -132,8 +140,8 @@ class NativeModuleTest(tf.test.TestCase):
   def testUnsupportedCollections(self):
 
     def module_fn():
-      scale = tf.get_variable("x", (), collections=["my_scope"])
-      x = tf.placeholder(tf.float32, shape=[None, 3])
+      scale = tf_v1.get_variable("x", (), collections=["my_scope"])
+      x = tf_v1.placeholder(tf.float32, shape=[None, 3])
       native_module.add_signature("my_func", {"x": x}, {"y": x*scale})
 
     with self.assertRaises(ValueError) as cm:
@@ -153,48 +161,49 @@ class NativeModuleTest(tf.test.TestCase):
 class RecoverPartitionedVariableMapTest(tf.test.TestCase):
 
   def testRecoverPartitionedVariableMap(self):
-    with tf.variable_scope("test"):
-      partitioner = tf.fixed_size_partitioner(3)
-      tf.get_variable(
-          initializer=tf.ones([11, 5]),
-          name="partitioned_variable",
-          partitioner=partitioner)
-      tf.get_variable(
-          initializer=tf.ones([11, 5]),
-          name="normal_variable")
+    with tf.Graph().as_default():
+      with tf_v1.variable_scope("test"):
+        partitioner = tf_v1.fixed_size_partitioner(3)
+        tf_v1.get_variable(
+            initializer=tf.ones([11, 5]),
+            name="partitioned_variable",
+            partitioner=partitioner)
+        tf_v1.get_variable(
+            initializer=tf.ones([11, 5]),
+            name="normal_variable")
 
-    all_vars = tf.global_variables()
-    all_vars_dict = {var.op.name[5:]: var for var in all_vars}
-    self.assertEqual(set(all_vars_dict.keys()), set([
-        "partitioned_variable/part_0",
-        "partitioned_variable/part_1",
-        "partitioned_variable/part_2",
-        "normal_variable"]))
+      all_vars = tf_v1.global_variables()
+      all_vars_dict = {var.op.name[5:]: var for var in all_vars}
+      self.assertEqual(set(all_vars_dict.keys()), set([
+          "partitioned_variable/part_0",
+          "partitioned_variable/part_1",
+          "partitioned_variable/part_2",
+          "normal_variable"]))
 
-    self.assertEqual(len(all_vars_dict), 4)
-    var_map = native_module.recover_partitioned_variable_map(all_vars_dict)
-    self.assertEqual(set(var_map.keys()), set([
-        "partitioned_variable", "normal_variable"]))
+      self.assertEqual(len(all_vars_dict), 4)
+      var_map = native_module.recover_partitioned_variable_map(all_vars_dict)
+      self.assertEqual(set(var_map.keys()), set([
+          "partitioned_variable", "normal_variable"]))
 
-    # Verify order of the partitioned variable list
-    self.assertAllEqual(
-        [v.op.name for v in var_map["partitioned_variable"]],
-        [
-            "test/partitioned_variable/part_0",
-            "test/partitioned_variable/part_1",
-            "test/partitioned_variable/part_2",
-        ])
+      # Verify order of the partitioned variable list
+      self.assertAllEqual(
+          [v.op.name for v in var_map["partitioned_variable"]],
+          [
+              "test/partitioned_variable/part_0",
+              "test/partitioned_variable/part_1",
+              "test/partitioned_variable/part_2",
+          ])
 
 
 def stateless_module_fn():
-  x = tf.placeholder(tf.int64)
+  x = tf_v1.placeholder(tf.int64)
   y = x*x
   hub.add_signature(inputs=x, outputs=y)
 
 
 def unused_input_module_fn():
-  x = tf.placeholder(tf.int64)
-  y = tf.placeholder(tf.int64)
+  x = tf_v1.placeholder(tf.int64)
+  y = tf_v1.placeholder(tf.int64)
   result = x*x
   hub.add_signature(
       inputs={"x": x, "unused": y},
@@ -203,7 +212,7 @@ def unused_input_module_fn():
 
 def double_module_fn():
   w = tf.Variable(2.0)
-  x = tf.placeholder(dtype=tf.float32)
+  x = tf_v1.placeholder(dtype=tf.float32)
   hub.add_signature(inputs=x, outputs=x*w)
 
 
@@ -211,12 +220,12 @@ def create_partitioned_variable_module_fn(partitions, shape):
   """Returns a module summing one normal and one partitioned variable."""
   def module_fn():
     """A module summing one normal and one partitioned variable."""
-    partitioner = tf.fixed_size_partitioner(partitions)
-    var_1 = tf.get_variable(
+    partitioner = tf_v1.fixed_size_partitioner(partitions)
+    var_1 = tf_v1.get_variable(
         initializer=tf.ones(shape),
         name="partitioned_variable",
         partitioner=partitioner)
-    var_2 = tf.get_variable(
+    var_2 = tf_v1.get_variable(
         initializer=tf.ones(shape), name="normal_variable")
     hub.add_signature(outputs=var_1 + var_2)
 
@@ -226,17 +235,17 @@ def create_partitioned_variable_module_fn(partitions, shape):
 class TFHubStatelessModuleTest(tf.test.TestCase):
 
   def testLoadModuleFromFuncDef(self):
-    with tf.Session() as sess:
-      v = tf.placeholder(tf.int64)
+    with tf_v1.Session() as sess:
+      v = tf_v1.placeholder(tf.int64)
       spec = hub.create_module_spec(stateless_module_fn)
       m = hub.Module(spec)
       y = m(v)
       self.assertEqual(sess.run(y, feed_dict={v: 10}), 100)
 
   def testUnusedInputModule(self):
-    with tf.Session() as sess:
-      v1 = tf.placeholder(tf.int64)
-      v2 = tf.placeholder(tf.int64)
+    with tf_v1.Session() as sess:
+      v1 = tf_v1.placeholder(tf.int64)
+      v2 = tf_v1.placeholder(tf.int64)
       spec = hub.create_module_spec(unused_input_module_fn)
       m = hub.Module(spec)
       out = m({"x": v1, "unused": v2})
@@ -244,53 +253,54 @@ class TFHubStatelessModuleTest(tf.test.TestCase):
 
   def testConvertToTensor(self):
     spec = hub.create_module_spec(stateless_module_fn)
-    with tf.Session() as sess:
+    with tf_v1.Session() as sess:
       m = hub.Module(spec)
       y = m([10, 2])
       self.assertAllEqual(sess.run(y), [100, 4])
-    with tf.Session() as sess:
+    with tf_v1.Session() as sess:
       m = hub.Module(spec)
       with self.assertRaises(TypeError):
         m("hello")
 
   def testArgErrors(self):
     spec = hub.create_module_spec(stateless_module_fn)
-    with tf.Session():
+    with tf_v1.Session():
       m = hub.Module(spec)
       with self.assertRaisesRegexp(TypeError, "missing"):
         m()
 
   def testUseWithinWhileLoop(self):
-    spec = hub.create_module_spec(double_module_fn)
-    m = hub.Module(spec)
-    i = tf.constant(0)
-    x = tf.constant(10.0)
-    p = tf.placeholder(dtype=tf.int32)
-    c = lambda i, x: tf.less(i, p)
-    b = lambda i, x: (tf.add(i, 1), m(x))
-    oi, ox = tf.while_loop(c, b, [i, x])
-    dox = tf.gradients(ox, x)[0]
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 1}), [1, 20])
-      self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 2}), [2, 40])
-      self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 4}), [4, 160])
-      # Gradients also use the control flow structures setup earlier.
-      # Also check they are working properly.
-      self.assertAllEqual(sess.run([dox], feed_dict={p: 1}), [2])
-      self.assertAllEqual(sess.run([dox], feed_dict={p: 2}), [4])
-      self.assertAllEqual(sess.run([dox], feed_dict={p: 4}), [16])
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(double_module_fn)
+      m = hub.Module(spec)
+      i = tf.constant(0)
+      x = tf.constant(10.0)
+      p = tf_v1.placeholder(dtype=tf.int32)
+      c = lambda i, x: tf.less(i, p)
+      b = lambda i, x: (tf.add(i, 1), m(x))
+      oi, ox = tf.while_loop(c, b, [i, x])
+      dox = tf.gradients(ox, x)[0]
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 1}), [1, 20])
+        self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 2}), [2, 40])
+        self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 4}), [4, 160])
+        # Gradients also use the control flow structures setup earlier.
+        # Also check they are working properly.
+        self.assertAllEqual(sess.run([dox], feed_dict={p: 1}), [2])
+        self.assertAllEqual(sess.run([dox], feed_dict={p: 2}), [4])
+        self.assertAllEqual(sess.run([dox], feed_dict={p: 4}), [16])
 
   def testClearControlDependenciesForModuleStateButNotApplyGraphs(self):
     module_spec = hub.create_module_spec(stateless_module_fn)
 
     with tf.Graph().as_default() as g1:
-      v = tf.placeholder(dtype=tf.int64, name="v")
+      v = tf_v1.placeholder(dtype=tf.int64, name="v")
       m = hub.Module(module_spec)
       m(v)
 
     with tf.Graph().as_default() as g2:
-      v = tf.placeholder(dtype=tf.int64, name="v")
+      v = tf_v1.placeholder(dtype=tf.int64, name="v")
       with tf.control_dependencies([v]):
         m = hub.Module(module_spec)
       m(v)
@@ -298,12 +308,12 @@ class TFHubStatelessModuleTest(tf.test.TestCase):
     self.assertEqual(g1.as_graph_def(), g2.as_graph_def())
 
     with tf.Graph().as_default() as g3:
-      v = tf.placeholder(dtype=tf.int64, name="v")
+      v = tf_v1.placeholder(dtype=tf.int64, name="v")
       m = hub.Module(module_spec)
       m(v)
 
     with tf.Graph().as_default() as g4:
-      v = tf.placeholder(dtype=tf.int64, name="v")
+      v = tf_v1.placeholder(dtype=tf.int64, name="v")
       m = hub.Module(module_spec)
       with tf.control_dependencies([v]):
         m(v)
@@ -312,7 +322,7 @@ class TFHubStatelessModuleTest(tf.test.TestCase):
 
 
 def sparse_square_module_fn():
-  x = tf.sparse_placeholder(dtype=tf.int64, name="x")
+  x = tf_v1.sparse_placeholder(dtype=tf.int64, name="x")
   out = tf.SparseTensor(x.indices, x.values * x.values, x.dense_shape)
   hub.add_signature(inputs=x, outputs=out)
 
@@ -324,14 +334,14 @@ class TFHubSparseTensorModuleTest(tf.test.TestCase):
 
     with tf.Graph().as_default():
       square = hub.Module(square_spec)
-      v = tf.sparse_placeholder(dtype=tf.int64, name="v")
+      v = tf_v1.sparse_placeholder(dtype=tf.int64, name="v")
       y = square(v)
 
-      with tf.Session().as_default():
+      with tf_v1.Session().as_default():
         indices = [[0, 0], [0, 1], [1, 1]]
         values = [10, 2, 1]
         shape = [2, 2]
-        v1 = tf.SparseTensorValue(indices, values, shape)
+        v1 = tf_v1.SparseTensorValue(indices, values, shape)
         v2 = y.eval(feed_dict={v: v1})
         v4 = y.eval(feed_dict={v: v2})
 
@@ -341,36 +351,36 @@ class TFHubSparseTensorModuleTest(tf.test.TestCase):
 
 
 def stateful_module_fn():
-  v = tf.get_variable(
+  v = tf_v1.get_variable(
       "var123", shape=[3],
-      initializer=tf.constant_initializer([1.0, 2.0, 3.0]))
+      initializer=tf_v1.constant_initializer([1.0, 2.0, 3.0]))
   hub.add_signature(outputs=v.value())
 
 
 def stateful_rv_module_fn():
-  r = tf.get_variable(
+  r = tf_v1.get_variable(
       "rv_var123", shape=[],
-      initializer=tf.constant_initializer(10.0),
+      initializer=tf_v1.constant_initializer(10.0),
       use_resource=True)
   hub.add_signature(outputs=r.value())
 
 
 def stateful_non_rv_module_fn():
-  v = tf.get_variable(
+  v = tf_v1.get_variable(
       "var123", shape=[],
-      initializer=tf.constant_initializer(10.0),
+      initializer=tf_v1.constant_initializer(10.0),
       use_resource=False)
   hub.add_signature(outputs=v.value())
 
 
 def stateful_module_fn_with_colocation():
-  v = tf.get_variable(
+  v = tf_v1.get_variable(
       "var123", shape=[],
-      initializer=tf.constant_initializer(1.0),
+      initializer=tf_v1.constant_initializer(1.0),
       use_resource=False)
   v_value = v.value()
-  x = tf.placeholder(dtype=tf.float32, name="x")
-  with tf.colocate_with(v), tf.colocate_with(x):
+  x = tf_v1.placeholder(dtype=tf.float32, name="x")
+  with tf_v1.colocate_with(v), tf_v1.colocate_with(x):
     y = tf.add(v_value, x, name="y")
   hub.add_signature(inputs=x, outputs=y)
 
@@ -378,38 +388,40 @@ def stateful_module_fn_with_colocation():
 class TFHubStatefulModuleTest(tf.test.TestCase):
 
   def testVariables(self):
-    spec = hub.create_module_spec(stateful_module_fn)
-    m = hub.Module(spec, name="test")
-    out = m()
-    self.assertEqual(list(m.variable_map.keys()), ["var123"])
-    self.assertEqual(m.variable_map["var123"].name, "test/var123:0")
-    self.assertEqual([v.name for v in m.variables], ["test/var123:0"])
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllClose(sess.run(out), [1.0, 2.0, 3.0])
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(stateful_module_fn)
+      m = hub.Module(spec, name="test")
+      out = m()
+      self.assertEqual(list(m.variable_map.keys()), ["var123"])
+      self.assertEqual(m.variable_map["var123"].name, "test/var123:0")
+      self.assertEqual([v.name for v in m.variables], ["test/var123:0"])
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllClose(sess.run(out), [1.0, 2.0, 3.0])
 
   def testResourceVariables(self):
-    spec = hub.create_module_spec(stateful_rv_module_fn)
-    m = hub.Module(spec, name="test_rv")
-    out = m()
-    self.assertEqual(list(m.variable_map.keys()), ["rv_var123"])
-    self.assertEqual(m.variable_map["rv_var123"].name, "test_rv/rv_var123:0")
-    self.assertEqual([v.name for v in m.variables], ["test_rv/rv_var123:0"])
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(stateful_rv_module_fn)
+      m = hub.Module(spec, name="test_rv")
+      out = m()
+      self.assertEqual(list(m.variable_map.keys()), ["rv_var123"])
+      self.assertEqual(m.variable_map["rv_var123"].name, "test_rv/rv_var123:0")
+      self.assertEqual([v.name for v in m.variables], ["test_rv/rv_var123:0"])
 
-    # Check that "shared_name" attributes are adapted correctly:
-    for op_prefix in ["test_rv", "test_rv_apply_default"]:
-      var_handle_op_name = op_prefix + "/rv_var123"
-      var_handle_op = tf.get_default_graph().get_operation_by_name(
-          var_handle_op_name)
-      self.assertEqual(
-          var_handle_op.get_attr("shared_name"),
-          tf.compat.as_bytes(var_handle_op_name))
+      # Check that "shared_name" attributes are adapted correctly:
+      for op_prefix in ["test_rv", "test_rv_apply_default"]:
+        var_handle_op_name = op_prefix + "/rv_var123"
+        var_handle_op = tf_v1.get_default_graph().get_operation_by_name(
+            var_handle_op_name)
+        self.assertEqual(
+            var_handle_op.get_attr("shared_name"),
+            tf.compat.as_bytes(var_handle_op_name))
 
-    export_path = os.path.join(self.get_temp_dir(), "resource-variables")
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllClose(sess.run(out), 10.0)
-      m.export(export_path, sess)
+      export_path = os.path.join(self.get_temp_dir(), "resource-variables")
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllClose(sess.run(out), 10.0)
+        m.export(export_path, sess)
 
     with tf.Graph().as_default():
       f = hub.Module(export_path)
@@ -433,17 +445,17 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
       # Check that "shared_name" attributes are adapted correctly:
       for op_prefix in ["module", "module_apply_default"]:
         var_handle_op_name = op_prefix + "/rv_var123"
-        var_handle_op = tf.get_default_graph().get_operation_by_name(
+        var_handle_op = tf_v1.get_default_graph().get_operation_by_name(
             var_handle_op_name)
         self.assertEqual(
             var_handle_op.get_attr("shared_name"),
             tf.compat.as_bytes(var_handle_op_name))
 
       # Create a saver for the whole graph.
-      saver = tf.train.Saver()
+      saver = tf_v1.train.Saver()
 
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         self.assertAllClose(sess.run(out), 10.0)
 
         # Make sure that the variable names stored in a checkpoint of the graph
@@ -451,151 +463,158 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
         variables_path = os.path.join(self.get_temp_dir(), "variables")
         saver.save(
             sess, variables_path, write_meta_graph=False, write_state=False)
-        variable_names_and_shapes = tf.train.list_variables(
+        variable_names_and_shapes = tf_v1.train.list_variables(
             ckpt_dir_or_file=variables_path)
         variable_names = set(name for name, _ in variable_names_and_shapes)
         self.assertEqual(variable_names, {"module/rv_var123"})
 
   def testNonResourceVariables(self):
-    spec = hub.create_module_spec(stateful_non_rv_module_fn)
-    m = hub.Module(spec, name="test_non_rv")
-    out = m()
-    self.assertEqual(list(m.variable_map.keys()), ["var123"])
-    self.assertEqual(m.variable_map["var123"].name, "test_non_rv/var123:0")
-    self.assertEqual([v.name for v in m.variables], ["test_non_rv/var123:0"])
-
-    export_path = os.path.join(self.get_temp_dir(), "non-resource-variables")
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllClose(sess.run(out), 10.0)
-      m.export(export_path, sess)
-
     with tf.Graph().as_default():
-      f = hub.Module(export_path)
-      out = f()
+      spec = hub.create_module_spec(stateful_non_rv_module_fn)
+      m = hub.Module(spec, name="test_non_rv")
+      out = m()
+      self.assertEqual(list(m.variable_map.keys()), ["var123"])
+      self.assertEqual(m.variable_map["var123"].name, "test_non_rv/var123:0")
+      self.assertEqual([v.name for v in m.variables], ["test_non_rv/var123:0"])
 
-      # Test that the read op in the apply graph gets colocated with the
-      # variable in the state graph scope "module/" (and not the stillborn
-      # copy in the apply graph scope).
-      self.assertItemsEqual(out.op.colocation_groups(),
-                            [tf.compat.as_bytes("loc:@module/var123")])
-
-      # Create a saver for the whole graph.
-      saver = tf.train.Saver()
-
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      export_path = os.path.join(self.get_temp_dir(), "non-resource-variables")
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         self.assertAllClose(sess.run(out), 10.0)
+        m.export(export_path, sess)
 
-        # Make sure that the variable names stored in a checkpoint of the graph
-        # are as expected.
-        variables_path = os.path.join(self.get_temp_dir(), "variables")
-        saver.save(
-            sess, variables_path, write_meta_graph=False, write_state=False)
-        variable_names_and_shapes = tf.train.list_variables(
-            ckpt_dir_or_file=variables_path)
-        variable_names = set(name for name, _ in variable_names_and_shapes)
-        self.assertEqual(variable_names, {"module/var123"})
+      with tf.Graph().as_default():
+        f = hub.Module(export_path)
+        out = f()
+
+        # Test that the read op in the apply graph gets colocated with the
+        # variable in the state graph scope "module/" (and not the stillborn
+        # copy in the apply graph scope).
+        self.assertItemsEqual(out.op.colocation_groups(),
+                              [tf.compat.as_bytes("loc:@module/var123")])
+
+        # Create a saver for the whole graph.
+        saver = tf_v1.train.Saver()
+
+        with tf_v1.Session() as sess:
+          sess.run(tf_v1.global_variables_initializer())
+          self.assertAllClose(sess.run(out), 10.0)
+
+          # Make sure that the variable names stored in a checkpoint of the
+          # graph are as expected.
+          variables_path = os.path.join(self.get_temp_dir(), "variables")
+          saver.save(
+              sess, variables_path, write_meta_graph=False, write_state=False)
+          variable_names_and_shapes = tf_v1.train.list_variables(
+              ckpt_dir_or_file=variables_path)
+          variable_names = set(name for name, _ in variable_names_and_shapes)
+          self.assertEqual(variable_names, {"module/var123"})
 
   def testNonResourceVariableInWhileLoop(self):
-    # This test uses non-Resource variables to see an actual colocation
-    # constraint propagated to the context Enter op. The long comment on
-    # colocation in testResourceVariables explains why they may not offer that.
-    spec = hub.create_module_spec(stateful_non_rv_module_fn)
-    m = hub.Module(spec)
-    cond = lambda i, x: tf.less(i, 4)
-    def body(i, x):
-      v = m()
-      self.assertItemsEqual(v.op.colocation_groups(),
-                            [tf.compat.as_bytes("loc:@module/var123")])
-      return (tf.add(i, 1), 2*x)
-    oi, ox = tf.while_loop(cond, body, [0, 10.0])
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllEqual(sess.run([oi, ox]), [4, 160.0])
+    with tf.Graph().as_default():
+      # This test uses non-Resource variables to see an actual colocation
+      # constraint propagated to the context Enter op. The long comment on
+      # colocation in testResourceVariables explains why they may not offer
+      # that.
+      spec = hub.create_module_spec(stateful_non_rv_module_fn)
+      m = hub.Module(spec)
+      cond = lambda i, x: tf.less(i, 4)
+      def body(i, x):
+        v = m()
+        self.assertItemsEqual(v.op.colocation_groups(),
+                              [tf.compat.as_bytes("loc:@module/var123")])
+        return (tf.add(i, 1), 2*x)
+      oi, ox = tf.while_loop(cond, body, [0, 10.0])
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllEqual(sess.run([oi, ox]), [4, 160.0])
 
   def testNonResourceVariableInCond(self):
-    spec = hub.create_module_spec(stateful_non_rv_module_fn)
-    m = hub.Module(spec)
-    pred = tf.placeholder(tf.bool)
-    def true_fn():
-      v = m()
-      self.assertItemsEqual(v.op.colocation_groups(),
-                            [tf.compat.as_bytes("loc:@module/var123")])
-      return v
-    def false_fn():
-      return tf.constant(9.0)
-    out = tf.cond(pred, true_fn, false_fn)
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertEqual(sess.run(out, feed_dict={pred: True}), 10.0)
-      self.assertEqual(sess.run(out, feed_dict={pred: False}), 9.0)
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(stateful_non_rv_module_fn)
+      m = hub.Module(spec)
+      pred = tf_v1.placeholder(tf.bool)
+      def true_fn():
+        v = m()
+        self.assertItemsEqual(v.op.colocation_groups(),
+                              [tf.compat.as_bytes("loc:@module/var123")])
+        return v
+      def false_fn():
+        return tf.constant(9.0)
+      out = tf.cond(pred, true_fn, false_fn)
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertEqual(sess.run(out, feed_dict={pred: True}), 10.0)
+        self.assertEqual(sess.run(out, feed_dict={pred: False}), 9.0)
 
   def testVariableColocationPropagation(self):
-    spec = hub.create_module_spec(stateful_module_fn_with_colocation)
-    m = hub.Module(spec)
-    u1 = tf.constant(1, name="u1")
-    u2 = tf.constant(2, name="u2")
-    with tf.colocate_with(u1), tf.colocate_with(u2):
-      x = tf.constant(100.0, name="x")
-    y = m(x)
-    self.assertItemsEqual(y.op.colocation_groups(),
-                          [tf.compat.as_bytes("loc:@module/var123"),
-                           tf.compat.as_bytes("loc:@u1"),
-                           tf.compat.as_bytes("loc:@u2")])
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertEqual(sess.run(y), 101.0)
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(stateful_module_fn_with_colocation)
+      m = hub.Module(spec)
+      u1 = tf.constant(1, name="u1")
+      u2 = tf.constant(2, name="u2")
+      with tf_v1.colocate_with(u1), tf_v1.colocate_with(u2):
+        x = tf.constant(100.0, name="x")
+      y = m(x)
+      self.assertItemsEqual(y.op.colocation_groups(),
+                            [tf.compat.as_bytes("loc:@module/var123"),
+                             tf.compat.as_bytes("loc:@u1"),
+                             tf.compat.as_bytes("loc:@u2")])
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertEqual(sess.run(y), 101.0)
 
   def testPartitionedVariables(self):
-    spec = hub.create_module_spec(
-        create_partitioned_variable_module_fn(partitions=3, shape=[7, 3]))
-    m = hub.Module(spec, name="test")
-    out = m()
-    self.assertEqual(len(m.variable_map), 2)
-    self.assertEqual(m.variable_map["normal_variable"].name,
-                     "test/normal_variable:0")
-    self.assertAllEqual(
-        [variable.name for variable in m.variable_map["partitioned_variable"]],
-        ["test/partitioned_variable/part_0:0",
-         "test/partitioned_variable/part_1:0",
-         "test/partitioned_variable/part_2:0"])
-    self.assertAllEqual(  # Check deterministric order (by variable_map key).
-        [variable.name for variable in m.variables],
-        ["test/normal_variable:0",
-         "test/partitioned_variable/part_0:0",
-         "test/partitioned_variable/part_1:0",
-         "test/partitioned_variable/part_2:0"])
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllClose(sess.run(out), 2 * np.ones([7, 3]))
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(
+          create_partitioned_variable_module_fn(partitions=3, shape=[7, 3]))
+      m = hub.Module(spec, name="test")
+      out = m()
+      self.assertEqual(len(m.variable_map), 2)
+      self.assertEqual(m.variable_map["normal_variable"].name,
+                       "test/normal_variable:0")
+      self.assertAllEqual([
+          variable.name for variable in m.variable_map["partitioned_variable"]
+      ], [
+          "test/partitioned_variable/part_0:0",
+          "test/partitioned_variable/part_1:0",
+          "test/partitioned_variable/part_2:0"
+      ])
+      self.assertAllEqual(  # Check deterministric order (by variable_map key).
+          [variable.name for variable in m.variables],
+          ["test/normal_variable:0",
+           "test/partitioned_variable/part_0:0",
+           "test/partitioned_variable/part_1:0",
+           "test/partitioned_variable/part_2:0"])
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllClose(sess.run(out), 2 * np.ones([7, 3]))
 
   def testLargePartitionedVariables(self):
-    spec = hub.create_module_spec(
-        create_partitioned_variable_module_fn(partitions=25, shape=[600, 3]))
-    m = hub.Module(spec, name="test")
-    out = m()
-    self.assertEqual(len(m.variable_map), 2)
-    self.assertEqual(len(m.variable_map["partitioned_variable"]), 25)
-    self.assertEqual(len(m.variables), 26)
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllClose(sess.run(out), 2 * np.ones([600, 3]))
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(
+          create_partitioned_variable_module_fn(partitions=25, shape=[600, 3]))
+      m = hub.Module(spec, name="test")
+      out = m()
+      self.assertEqual(len(m.variable_map), 2)
+      self.assertEqual(len(m.variable_map["partitioned_variable"]), 25)
+      self.assertEqual(len(m.variables), 26)
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllClose(sess.run(out), 2 * np.ones([600, 3]))
 
   def testLoadTrainableModuleFromFuncDef(self):
-    with tf.Session() as sess:
+    with tf_v1.Session() as sess:
       spec = hub.create_module_spec(stateful_module_fn)
       m = hub.Module(spec, trainable=True)
       x = m()
       step = tf.Variable(0, trainable=False, name="global_step")
-      train = tf.contrib.layers.optimize_loss(
-          loss=tf.losses.mean_squared_error(x, [3.1, 3.2, 3.3]),
-          global_step=step,
-          learning_rate=0.40,
-          optimizer="SGD")
-      sess.run(tf.global_variables_initializer())
+      train_op = tf_v1.train.GradientDescentOptimizer(0.40).minimize(
+          loss=tf_v1.losses.mean_squared_error(x, [3.1, 3.2, 3.3]),
+          global_step=step)
+      sess.run(tf_v1.global_variables_initializer())
       for _ in range(50):
-        sess.run(train)
+        sess.run(train_op)
       got = sess.run(x)
       self.assertAllClose(got, [3.1, 3.2, 3.3])
 
@@ -604,9 +623,9 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
     with tf.Graph().as_default():
       spec = hub.create_module_spec(stateful_module_fn)
       m = hub.Module(spec, trainable=True)
-      assign_op = tf.assign(m.variable_map["var123"],
-                            tf.constant([9.0, 9.0, 9.0]))
-      with tf.Session() as sess:
+      assign_op = tf_v1.assign(m.variable_map["var123"],
+                               tf.constant([9.0, 9.0, 9.0]))
+      with tf_v1.Session() as sess:
         sess.run(assign_op)
         m.export(export_path, sess)
     return export_path
@@ -615,8 +634,8 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
     with tf.Graph().as_default():
       f = hub.Module(self._exportModulewithTrainedVariable())
       out = f()
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         got = sess.run(out)
         self.assertAllClose(got, [9.0, 9.0, 9.0])
 
@@ -627,11 +646,12 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
 
 
 def table_lookup_module_fn():
-  x = tf.placeholder(dtype=tf.int64, name="x")
+  x = tf_v1.placeholder(dtype=tf.int64, name="x")
   keys = tf.constant([0, 1, 2], dtype=tf.int64)
   values = tf.constant(["index0", "hello", "world"])
-  tbl_init = tf.contrib.lookup.KeyValueTensorInitializer(keys, values)
-  table = tf.contrib.lookup.HashTable(tbl_init, "UNK")
+
+  tbl_init = KeyValueTensorInitializer(keys, values)
+  table = HashTable(tbl_init, "UNK")
   hub.add_signature(inputs=x, outputs=table.lookup(x))
 
 
@@ -644,17 +664,17 @@ class TFHubTableLookupModuleTest(tf.test.TestCase):
       m = hub.Module(spec)
       # Export requires a session to work regardless of the module having no
       # variables to export.
-      with tf.Session() as sess:
+      with tf_v1.Session() as sess:
         m.export(export_path, sess)
     return export_path
 
   def testModuleWithTable(self):
     with tf.Graph().as_default():
-      v = tf.placeholder(dtype=tf.int64)
+      v = tf_v1.placeholder(dtype=tf.int64)
       f = hub.Module(self._exportModuleWithTable())
       y = f(v)
-      with tf.Session() as sess:
-        sess.run(tf.tables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.tables_initializer())
         got = sess.run(y, feed_dict={v: [0, 1, 2, 3]})
         self.assertAllEqual(list(got), [b"index0", b"hello", b"world", b"UNK"])
 
@@ -665,7 +685,7 @@ class TFHubTableLookupModuleTest(tf.test.TestCase):
 
 
 def do_table_lookup(indices, vocabulary_file):
-  table = tf.contrib.lookup.index_to_string_table_from_file(
+  table = index_to_string_table_from_file(
       vocabulary_file=vocabulary_file,
       default_value="UNKNOWN")
   return table.lookup(indices)
@@ -675,14 +695,17 @@ def layers_module_fn():
   """Module that exercises the use of layers."""
   # This is a plain linear map Mx+b regularized by the sum of the squares
   # of the coefficients in M and b.
-  x = tf.placeholder(dtype=tf.float32, shape=[None, 2], name="x")
-  # Cancels internal factor 0.5.
-  l2_reg = tf.contrib.layers.l2_regularizer(scale=2.0)
-  h = tf.layers.dense(
+  x = tf_v1.placeholder(dtype=tf.float32, shape=[None, 2], name="x")
+  def l2(weights):
+    """Applies l2 regularization to weights."""
+    with tf.control_dependencies([weights]):
+      return 2.0 * tf_v1.nn.l2_loss(weights)
+
+  h = tf_v1.layers.dense(
       x, 2,
       activation=None,
-      kernel_regularizer=l2_reg,
-      bias_regularizer=l2_reg)
+      kernel_regularizer=l2,
+      bias_regularizer=l2)
   hub.add_signature(inputs=x, outputs=h)
 
 
@@ -696,19 +719,19 @@ class TFHubLayersModuleTest(tf.test.TestCase):
     spec = hub.create_module_spec(layers_module_fn)
     with tf.Graph().as_default():
       m = hub.Module(spec, trainable=False)
-      x = tf.placeholder(dtype=tf.float32)
+      x = tf_v1.placeholder(dtype=tf.float32)
       y = m(x)
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         sample_output = sess.run(y, feed_dict={x: sample_input})
         m.export(export_path, sess)
 
     with tf.Graph().as_default():
-      x = tf.placeholder(dtype=tf.float32)
+      x = tf_v1.placeholder(dtype=tf.float32)
       y = hub.Module(export_path)(x)
 
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         got = sess.run(y, feed_dict={x: sample_input})
         self.assertAllEqual(got, sample_output)
 
@@ -723,16 +746,16 @@ class TFHubLayersModuleTest(tf.test.TestCase):
     spec = hub.create_module_spec(layers_module_fn)
     with tf.Graph().as_default():
       m = hub.Module(spec, trainable=True)
-      x = tf.placeholder(dtype=tf.float32)
+      x = tf_v1.placeholder(dtype=tf.float32)
       y = m(x)
-      squared_loss = tf.losses.mean_squared_error(y, target, weights=2.0)
+      squared_loss = tf_v1.losses.mean_squared_error(y, target, weights=2.0)
       # Recover REGULARIZATION_LOSSES from the module.
-      total_loss = squared_loss + tf.losses.get_regularization_loss()
+      total_loss = squared_loss + tf_v1.losses.get_regularization_loss()
       step = tf.Variable(0, trainable=False, name="global_step")
-      train = tf.contrib.layers.optimize_loss(
-          loss=total_loss, global_step=step, learning_rate=0.1, optimizer="SGD")
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      train = tf_v1.train.GradientDescentOptimizer(0.1).minimize(
+          loss=total_loss, global_step=step)
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         for _ in range(50):
           sess.run(train, feed_dict={x: train_input})
         # Verify M = [[1,1],[1,1]], b = [1,1] by evaluating at three points.
@@ -745,15 +768,15 @@ class TFHubLayersModuleTest(tf.test.TestCase):
 def valid_colocation_module_fn():
   w = tf.Variable(42 + 69, name="w")
   # w.op has the same name on resource and non-resource variables
-  with tf.colocate_with(w.op):
+  with tf_v1.colocate_with(w.op):
     # A colocation reference among state nodes is ok.
     v = tf.Variable(1.0, name="v")
     assert v.op.colocation_groups() == [tf.compat.as_bytes("loc:@w")]
     # A colocation reference from other nodes to state nodes is ok.
     y = tf.add(v, 1, name="y")
     assert y.op.colocation_groups() == [tf.compat.as_bytes("loc:@w")]
-  x = tf.placeholder(dtype=tf.float32, name="x")
-  with tf.colocate_with(x):
+  x = tf_v1.placeholder(dtype=tf.float32, name="x")
+  with tf_v1.colocate_with(x):
     # A colocation reference from other nodes to input nodes is ok.
     z = tf.add(x, 1, name="z")
     assert z.op.colocation_groups() == [tf.compat.as_bytes("loc:@x")]
@@ -762,26 +785,26 @@ def valid_colocation_module_fn():
 
 def bad_input_colocation_module_fn():
   u = tf.add(42, 69, name="u")
-  with tf.colocate_with(u):
+  with tf_v1.colocate_with(u):
     # Inputs must not reference other nodes for colocation.
-    x = tf.placeholder(tf.float32, name="x")
+    x = tf_v1.placeholder(tf.float32, name="x")
   y = x + 1.0
   hub.add_signature(inputs=x, outputs=y)
 
 
 def bad_state_colocation_module_fn():
   u = tf.add(42, 69, name="u")
-  with tf.colocate_with(u):
+  with tf_v1.colocate_with(u):
     # State-holding nodes must not reference other nodes for colocation.
     v = tf.Variable(1.0, name="v")
-  x = tf.placeholder(dtype=tf.float32)
+  x = tf_v1.placeholder(dtype=tf.float32)
   y = x + v
   hub.add_signature(inputs=x, outputs=y)
 
 
 def brittle_multivalued_colocation_module_fn():
   x, y = tf.split([1, 2], 2, name="split")
-  with tf.colocate_with(x), tf.colocate_with(y):
+  with tf_v1.colocate_with(x), tf_v1.colocate_with(y):
     z = tf.add(x, y, name="add")
     assert z.op.colocation_groups() == [tf.compat.as_bytes("loc:@split")]
   hub.add_signature(inputs=dict(x=x, y=y), outputs=z, name="both")
@@ -840,11 +863,11 @@ class ColocationRewritingTest(tf.test.TestCase):
   def testSparseInputsFromMultivaluedOp(self):
     """Tests warning for SparseTensor inputs from multivalued ops."""
     with tf.Graph().as_default():
-      one, _ = tf.sparse_split(
+      one, _ = tf_v1.sparse_split(
           sp_input=tf.SparseTensor(indices=[[0, 1], [1, 2]], values=[1, 2],
                                    dense_shape=[2, 3]),
           num_split=2, axis=0, name="op1")
-      _, two = tf.sparse_split(
+      _, two = tf_v1.sparse_split(
           sp_input=tf.SparseTensor(indices=[[0, 0], [1, 1]], values=[3, 4],
                                    dense_shape=[2, 3]),
           num_split=2, axis=0, name="op2")
@@ -869,7 +892,7 @@ class ColocationRewritingTest(tf.test.TestCase):
     spec = hub.create_module_spec(brittle_multivalued_colocation_module_fn)
     with tf.Graph().as_default():
       u = tf.constant([1], name="u")
-      with tf.colocate_with(u):
+      with tf_v1.colocate_with(u):
         v = tf.constant([2], name="v")
       w = tf.constant([3], name="w")
       m = hub.Module(spec, name="m")
@@ -902,7 +925,7 @@ class ColocationRewritingTest(tf.test.TestCase):
 
 def update_ops_module_fn():
   counter = tf.Variable(0, trainable=False)
-  tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, counter.assign_add(1))
+  tf_v1.add_to_collection(tf_v1.GraphKeys.UPDATE_OPS, counter.assign_add(1))
   hub.add_signature(inputs=None, outputs=counter.value())
 
 
@@ -910,7 +933,7 @@ class TFHubUpdateOpsTest(tf.test.TestCase):
 
   def testUpdateOps(self):
     spec = hub.create_module_spec(update_ops_module_fn)
-    with tf.Session() as sess:
+    with tf_v1.Session() as sess:
       trainable_module = hub.Module(spec, trainable=True)
       fixed_module = hub.Module(spec, trainable=False)
 
@@ -922,13 +945,13 @@ class TFHubUpdateOpsTest(tf.test.TestCase):
 
       variable = tf.Variable(0.0)
       step = tf.Variable(0, trainable=False, name="global_step")
-      train_op = tf.contrib.layers.optimize_loss(
-          variable,
-          global_step=step,
-          learning_rate=0.1,
-          optimizer="SGD")
+      update_ops = tf_v1.get_collection(tf_v1.GraphKeys.UPDATE_OPS)
+      with tf.control_dependencies(update_ops):
+        train_op = tf_v1.train.GradientDescentOptimizer(0.1).minimize(
+            loss=variable,
+            global_step=step)
 
-      sess.run(tf.global_variables_initializer())
+      sess.run(tf_v1.global_variables_initializer())
       sess.run(train_op)
       trainable_module_vars = list(trainable_module.variable_map.values())
       self.assertEqual(len(trainable_module_vars), 1)
@@ -940,17 +963,12 @@ class TFHubUpdateOpsTest(tf.test.TestCase):
 
 def batch_norm_module_fn(is_training):
   """Module that exercises batch normalization, incl. UPDATE_OPS."""
-  x = tf.placeholder(dtype=tf.float32, shape=[None, 1], name="x")
-  y = tf.contrib.layers.batch_norm(
-      x,
-      center=True,
-      scale=True,
-      is_training=is_training,
-      # Let the moving_mean (aggregated for normalization at serving time)
-      # decay quickly for more accurate values after few iterations.
-      decay=0.6,
-      # TODO(b/38416827): re-enable after the tests are updated.
-      fused=False)
+  x = tf_v1.placeholder(dtype=tf.float32, shape=[None, 1], name="x")
+  y = tf_v1.layers.batch_normalization(
+      momentum=0.4,
+      inputs=x,
+      fused=False,
+      training=is_training)
   hub.add_signature(inputs=x, outputs=y)
 
 
@@ -971,7 +989,7 @@ class TFHubBatchNormModuleTest(tf.test.TestCase):
     # because tf.contrib.layers.batch_norm() does not return it, and even if,
     # module_fn() has no way to return it next to the result for training.
     moving_mean_name = (
-        "module/BatchNorm/moving_mean/Read/ReadVariableOp:0")
+        "module/batch_normalization/moving_mean/Read/ReadVariableOp:0")
 
     batch_norm_train_tags = ["batch_norm_trains"]
     batch_norm_fixed_tags = ["batch_norm_fixed"]
@@ -991,14 +1009,13 @@ class TFHubBatchNormModuleTest(tf.test.TestCase):
       y_target = tf.constant([[22.0], [24.0], [26.0]])
       y = m(x)
       step = tf.Variable(0, trainable=False, name="global_step")
-      train = tf.contrib.layers.optimize_loss(
-          loss=tf.losses.mean_squared_error(y, y_target),
-          global_step=step,
-          learning_rate=0.1,
-          optimizer="SGD")
       moving_mean = g.get_tensor_by_name(moving_mean_name)
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      update_ops = tf_v1.get_collection(tf_v1.GraphKeys.UPDATE_OPS)
+      with tf.control_dependencies(update_ops):
+        train = tf_v1.train.GradientDescentOptimizer(0.1).minimize(
+            loss=tf_v1.losses.mean_squared_error(y, y_target), global_step=step)
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         self.assertAllClose(sess.run(moving_mean), [0.0])
         for _ in range(100):
           sess.run([train])
@@ -1019,8 +1036,8 @@ class TFHubBatchNormModuleTest(tf.test.TestCase):
       y = hub.Module(
           spec, tags=batch_norm_fixed_tags)(x)
       moving_mean = g.get_tensor_by_name(moving_mean_name)
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
         for _ in range(100):
           served_moving_mean, served_y = sess.run([moving_mean, y])
         # No update occurs to the moving_mean from training time.
@@ -1030,7 +1047,7 @@ class TFHubBatchNormModuleTest(tf.test.TestCase):
 
 
 def multiple_outputs_module_fn():
-  x = tf.placeholder(dtype=tf.float32)
+  x = tf_v1.placeholder(dtype=tf.float32)
   v = tf.Variable([3.0])
   hub.add_signature(
       inputs={"x": x},
@@ -1040,13 +1057,13 @@ def multiple_outputs_module_fn():
 class TFHubMultipleOutputsTest(tf.test.TestCase):
 
   def testMultipleOutputs(self):
-    with tf.Session() as sess:
+    with tf_v1.Session() as sess:
       spec = hub.create_module_spec(multiple_outputs_module_fn)
       m = hub.Module(spec)
       output = m(tf.constant([2.0]), as_dict=True)
       output1 = output["y"]
       output2 = output["z"]
-      sess.run(tf.global_variables_initializer())
+      sess.run(tf_v1.global_variables_initializer())
       self.assertAllClose(sess.run(output1), [6.0])
       self.assertAllClose(sess.run(output2), [18.0])
 
@@ -1054,7 +1071,7 @@ class TFHubMultipleOutputsTest(tf.test.TestCase):
 def create_assets_module_fn(vocabulary_file):
 
   def assets_module_fn():
-    indices = tf.placeholder(dtype=tf.int64, name="indices")
+    indices = tf_v1.placeholder(dtype=tf.int64, name="indices")
     outputs = do_table_lookup(indices, vocabulary_file)
     hub.add_signature(inputs=indices, outputs=outputs)
 
@@ -1064,7 +1081,7 @@ def create_assets_module_fn(vocabulary_file):
 def create_consumer_module_fn(exported_hub_module):
 
   def consumer_module_fn():
-    indices = tf.placeholder(dtype=tf.int64, name="indices")
+    indices = tf_v1.placeholder(dtype=tf.int64, name="indices")
     inner_module = hub.Module(exported_hub_module)
     inner_module_output = inner_module(indices)
     output = tf.identity(inner_module_output)
@@ -1092,30 +1109,30 @@ class TFHubAssetsTest(tf.test.TestCase):
       spec = hub.create_module_spec(assets_module_fn)
       embedding_module = hub.Module(spec)
       output = embedding_module(tf.constant([1, 2], dtype=tf.int64))
-      with tf.Session() as sess:
-        sess.run(tf.tables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.tables_initializer())
         self.assertAllEqual(list(sess.run(output)), [b"lake", b"palmer"])
         embedding_module.export(export_path, sess)
 
     asset_file = os.path.join(*[export_path, "assets", "tokens.txt"])
     # Check that asset file got written to the expected place:
-    self.assertTrue(tf.gfile.Exists(asset_file))
+    self.assertTrue(tf_v1.gfile.Exists(asset_file))
 
     # Assets should be hermetic, so we can delete the original vocab file:
-    tf.gfile.Remove(vocabulary_file)
+    tf_v1.gfile.Remove(vocabulary_file)
 
     with tf.Graph().as_default():
       spec = load_module_spec(export_path)
       embedding_module = hub.Module(spec)
       output = embedding_module(tf.constant([1, 2], dtype=tf.int64))
-      with tf.Session() as sess:
-        sess.run(tf.tables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.tables_initializer())
         # Check functionality:
         self.assertAllEqual(list(sess.run(output)), [b"lake", b"palmer"])
         # Check that the ASSET_FILEPATHS collection was restored properly:
         asset_filepaths = [
             sess.run(tensor)
-            for tensor in tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS)
+            for tensor in tf_v1.get_collection(tf_v1.GraphKeys.ASSET_FILEPATHS)
         ]
         # ASSET_FILEPATHS are added for the state graph and for the apply graph:
         self.assertAllEqual(asset_filepaths,
@@ -1126,8 +1143,8 @@ class TFHubAssetsTest(tf.test.TestCase):
 
     def module_with_duplicate_asset():
       vocabulary_file = self.create_vocab_file("tokens2.txt", ["1", "2", "3"])
-      indices1 = tf.placeholder(dtype=tf.int64, name="indices1")
-      indices2 = tf.placeholder(dtype=tf.int64, name="indices2")
+      indices1 = tf_v1.placeholder(dtype=tf.int64, name="indices1")
+      indices2 = tf_v1.placeholder(dtype=tf.int64, name="indices2")
       hub.add_signature(
           inputs={
               "indices_1": indices1,
@@ -1143,8 +1160,8 @@ class TFHubAssetsTest(tf.test.TestCase):
       module_a = hub.Module(spec)
       module_a({"indices_1": tf.constant([1, 2], dtype=tf.int64),
                 "indices_2": tf.constant([1, 2], dtype=tf.int64)}, as_dict=True)
-      with tf.Session() as sess:
-        sess.run(tf.tables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.tables_initializer())
         module_a.export(export_path, sess)
 
   def testExportedConsumerModelWorksIfItUsesHubModuleWithAssets(self):
@@ -1156,12 +1173,12 @@ class TFHubAssetsTest(tf.test.TestCase):
     spec = hub.create_module_spec(assets_module_fn)
     with tf.Graph().as_default():
       small_module = hub.Module(spec)
-      with tf.Session() as sess:
+      with tf_v1.Session() as sess:
         small_module.export(module_export_path, sess)
     # 2. Remove the original vocab file and move the module to another location.
-    tf.gfile.Remove(vocabulary_file)
+    tf_v1.gfile.Remove(vocabulary_file)
     inner_module_path = os.path.join(self.get_temp_dir(), "inner-module")
-    tf.gfile.Rename(module_export_path, inner_module_path)
+    tf_v1.gfile.Rename(module_export_path, inner_module_path)
     del module_export_path
     # 3. Use the module in a consumer model (which is another module here).
     module_export_path = os.path.join(self.get_temp_dir(), "consumer-module")
@@ -1169,25 +1186,25 @@ class TFHubAssetsTest(tf.test.TestCase):
     spec = hub.create_module_spec(consumer_module_fn)
     with tf.Graph().as_default():
       consumer_module = hub.Module(spec)
-      with tf.Session() as sess:
+      with tf_v1.Session() as sess:
         consumer_module.export(module_export_path, sess)
     # 4. Delete the inner module on disk and move the consumer model to a final
     # location for serving.
-    tf.gfile.DeleteRecursively(inner_module_path)
+    tf_v1.gfile.DeleteRecursively(inner_module_path)
     module_serving_path = os.path.join(self.get_temp_dir(), "serving-module")
-    tf.gfile.Rename(module_export_path, module_serving_path)
+    tf_v1.gfile.Rename(module_export_path, module_serving_path)
     # 5. Make sure the model can be served successfully.
     with tf.Graph().as_default():
       serving_module = hub.Module(module_serving_path)
       output = serving_module(tf.constant([1, 2], dtype=tf.int64))
-      with tf.Session() as sess:
-        sess.run(tf.tables_initializer())
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.tables_initializer())
         self.assertAllEqual(list(sess.run(output)), [b"lake", b"palmer"])
 
 
 def another_stateful_module_fn():
   """Stateful module with inputs."""
-  module_input = tf.placeholder(dtype=tf.float32)
+  module_input = tf_v1.placeholder(dtype=tf.float32)
   variable = tf.Variable([3.0], name="iamtheoneandonly")
   hub.add_signature(inputs=module_input, outputs=module_input*variable)
 
@@ -1197,71 +1214,71 @@ class TFHubApplyStatefulModuleMultipleTimesTest(tf.test.TestCase):
   def testApplyStatefulModuleMultipleTimes(self):
     export_path = os.path.join(self.get_temp_dir(), "another-module")
 
-    with tf.Session() as sess:
+    with tf_v1.Session() as sess:
       spec = hub.create_module_spec(another_stateful_module_fn)
       stateful_module = hub.Module(spec, trainable=True)
       times2 = stateful_module(tf.constant([2.0]))
       times3 = stateful_module(tf.constant([3.0]))
       step = tf.Variable(0, trainable=False, name="global_step")
       # Training will adapt the hidden variable to be approximately 2:
-      train = tf.contrib.layers.optimize_loss(
-          loss=tf.losses.mean_squared_error(times2, [4.0]),
-          global_step=step,
-          learning_rate=0.05,
-          optimizer="SGD")
-      sess.run(tf.global_variables_initializer())
+      train = tf_v1.train.GradientDescentOptimizer(0.05).minimize(
+          loss=tf_v1.losses.mean_squared_error(times2, [4.0]),
+          global_step=step)
+
+      sess.run(tf_v1.global_variables_initializer())
       for _ in range(50):
         sess.run(train)
       self.assertAllClose(sess.run(times2), [4.0])
       self.assertAllClose(sess.run(times3), [6.0])
       stateful_module.export(export_path, sess)
-    with tf.Session() as sess:
+    with tf_v1.Session() as sess:
       stateful_module = hub.Module(export_path)
       times4 = stateful_module(tf.constant([4.0]))
       times5 = stateful_module(tf.constant([5.0]))
-      sess.run(tf.global_variables_initializer())
+      sess.run(tf_v1.global_variables_initializer())
       self.assertAllClose(sess.run(times4), [8.0])
       self.assertAllClose(sess.run(times5), [10.0])
 
   def testMultipleApplicationsInDifferentScopes(self):
-    export_path = os.path.join(self.get_temp_dir(), "module-applied-in-scope")
+    with tf.Graph().as_default():
+      export_path = os.path.join(self.get_temp_dir(), "module-applied-in-scope")
 
-    spec = hub.create_module_spec(another_stateful_module_fn)
-    stateful_module = hub.Module(spec, name="moduleA")
-    with tf.name_scope("foo"):
-      with tf.variable_scope("bar"):
-        times2 = stateful_module(tf.constant([2.0]))
-    with tf.name_scope("baz"):
-      times3 = stateful_module(tf.constant([3.0]))
+      spec = hub.create_module_spec(another_stateful_module_fn)
+      stateful_module = hub.Module(spec, name="moduleA")
+      with tf.name_scope("foo"):
+        with tf_v1.variable_scope("bar"):
+          times2 = stateful_module(tf.constant([2.0]))
+      with tf.name_scope("baz"):
+        times3 = stateful_module(tf.constant([3.0]))
 
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllClose(sess.run(times2), [6.0])
-      self.assertAllClose(sess.run(times3), [9.0])
-      self.assertEqual(len(stateful_module.variable_map), 1)
-      self.assertEqual(
-          stateful_module.variable_map["iamtheoneandonly"].name,
-          "moduleA/iamtheoneandonly:0")
-      stateful_module.export(export_path, sess)
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllClose(sess.run(times2), [6.0])
+        self.assertAllClose(sess.run(times3), [9.0])
+        self.assertEqual(len(stateful_module.variable_map), 1)
+        self.assertEqual(
+            stateful_module.variable_map["iamtheoneandonly"].name,
+            "moduleA/iamtheoneandonly:0")
+        stateful_module.export(export_path, sess)
 
-    # Check minimal functionality of the exported module.
-    tf.reset_default_graph()
-    stateful_module = hub.Module(export_path, name="moduleB")
-    times2 = stateful_module(tf.constant([2.0]))
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      self.assertAllClose(sess.run(times2), [6.0])
+      # Check minimal functionality of the exported module.
+    with tf.Graph().as_default():
+      stateful_module = hub.Module(export_path, name="moduleB")
+      times2 = stateful_module(tf.constant([2.0]))
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllClose(sess.run(times2), [6.0])
 
 
 def multiple_signature_module_fn():
   """Stateful module with multiple signatures."""
   weight = tf.Variable([3.0])
 
-  x_input = tf.placeholder(dtype=tf.float32)
+  x_input = tf_v1.placeholder(dtype=tf.float32)
   x_output = tf.multiply(x_input, weight)
   hub.add_signature("mul", inputs=x_input, outputs=x_output)
 
-  y_input = tf.placeholder(dtype=tf.float32)
+  y_input = tf_v1.placeholder(dtype=tf.float32)
   y_output = tf.divide(y_input, weight)
   hub.add_signature("div", inputs=y_input, outputs=y_output)
 
@@ -1273,29 +1290,30 @@ class TFHubModuleWithMultipleSignatures(tf.test.TestCase):
     self.assertEqual(sorted(spec.get_signature_names()), ["div", "mul"])
 
   def testModuleWithMultipleSignatures(self):
-    spec = hub.create_module_spec(multiple_signature_module_fn)
-    module_a = hub.Module(spec, name="moduleA")
-    in_tensor = tf.placeholder(dtype=tf.float32)
-    out_tensor_a = module_a(in_tensor, signature="mul")
-    out_tensor_b = module_a(out_tensor_a, signature="div")
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(multiple_signature_module_fn)
+      module_a = hub.Module(spec, name="moduleA")
+      in_tensor = tf_v1.placeholder(dtype=tf.float32)
+      out_tensor_a = module_a(in_tensor, signature="mul")
+      out_tensor_b = module_a(out_tensor_a, signature="div")
 
-    with tf.Session() as sess:
-      sess.run(tf.global_variables_initializer())
-      in_values = [6, 3, 1]
-      self.assertAllClose(
-          sess.run(out_tensor_b, feed_dict={in_tensor: in_values}), in_values)
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        in_values = [6, 3, 1]
+        self.assertAllClose(
+            sess.run(out_tensor_b, feed_dict={in_tensor: in_values}), in_values)
 
 
 def cond_module_fn():
   """Computes relu(x) with a conditional."""
-  x = tf.placeholder(dtype=tf.float32, name="x", shape=[])
+  x = tf_v1.placeholder(dtype=tf.float32, name="x", shape=[])
   result = tf.cond(0 < x, lambda: tf.identity(x), lambda: tf.constant(0.0))
   hub.add_signature(inputs=x, outputs=result)
 
 
 def nested_cond_module_fn():
   """Computes relu(x) with nested conditionals."""
-  x = tf.placeholder(dtype=tf.float32, name="x", shape=[])
+  x = tf_v1.placeholder(dtype=tf.float32, name="x", shape=[])
   # pylint: disable=g-long-lambda
   result = tf.cond(
       0 < x,
@@ -1311,8 +1329,8 @@ def nested_cond_module_fn():
 
 def while_module_fn():
   """Compute x^n with while_loop."""
-  x = tf.placeholder(dtype=tf.float32, name="x", shape=[])
-  n = tf.placeholder(dtype=tf.int32, name="n")
+  x = tf_v1.placeholder(dtype=tf.float32, name="x", shape=[])
+  n = tf_v1.placeholder(dtype=tf.int32, name="n")
   _, pow_x = tf.while_loop(
       lambda i, ix: i < n, lambda i, ix: [tf.add(i, 1), ix * x],
       [tf.constant(0), tf.constant(1.0)])
@@ -1321,9 +1339,9 @@ def while_module_fn():
 
 def nested_control_flow_module_fn():
   """Compute the sum of elements greater than 'a' with nested control flow."""
-  elems = tf.placeholder(
+  elems = tf_v1.placeholder(
       dtype=tf.float32, name="elems", shape=[None])
-  a = tf.placeholder(dtype=tf.float32, name="a")
+  a = tf_v1.placeholder(dtype=tf.float32, name="a")
 
   def sum_above_a(acc, x):
     return acc + tf.cond(x > a, lambda: x, lambda: 0.0)
@@ -1344,8 +1362,8 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
   def _testReluModule(self, module_fn):
     spec = hub.create_module_spec(module_fn)
     with tf.Graph().as_default():
-      with tf.Session() as sess:
-        x = tf.placeholder(dtype=tf.float32, name="x")
+      with tf_v1.Session() as sess:
+        x = tf_v1.placeholder(dtype=tf.float32, name="x")
         relu_module = hub.Module(spec)
         y = relu_module(x)
         self.assertAllClose(sess.run(y, {x: 9.1}), 9.1)
@@ -1357,9 +1375,9 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
   def testWhileModule(self):
     spec = hub.create_module_spec(while_module_fn)
     with tf.Graph().as_default():
-      with tf.Session() as sess:
-        x = tf.placeholder(tf.float32)
-        n = tf.placeholder(tf.int32)
+      with tf_v1.Session() as sess:
+        x = tf_v1.placeholder(tf.float32)
+        n = tf_v1.placeholder(tf.int32)
         pow_module = hub.Module(spec)
         y = pow_module({"x": x, "n": n})
         self.assertAllClose(sess.run(y, {x: 9.1, n: 1}), 9.1)
@@ -1370,9 +1388,9 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
   def testNestedControlFlowModule(self):
     spec = hub.create_module_spec(nested_control_flow_module_fn)
     with tf.Graph().as_default():
-      with tf.Session() as sess:
-        elems = tf.placeholder(tf.float32, shape=[None])
-        a = tf.placeholder(tf.float32)
+      with tf_v1.Session() as sess:
+        elems = tf_v1.placeholder(tf.float32, shape=[None])
+        a = tf_v1.placeholder(tf.float32)
         m = hub.Module(spec)
         out = m({"elems": elems, "a": a})
         self.assertAllClose(
@@ -1387,15 +1405,16 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
 
 
 def attached_messages_module_fn(tagged=0):
-  x = tf.placeholder(tf.float32, shape=[None])
+  x = tf_v1.placeholder(tf.float32, shape=[None])
   hub.add_signature(inputs={"x": x}, outputs={"y": 2*x})
   # For brevity, this test borrows two well-known, stable message types
   # from TensorFlow. They are not likely choices for actual uses.
-  hub.attach_message("numbers", tf.train.Int64List(value=[-3])) # Overwritten.
-  hub.attach_message("numbers", tf.train.Int64List(value=[42, 69]))
-  hub.attach_message("letters", tf.train.BytesList(value=[
+  hub.attach_message("numbers",
+                     tf_v1.train.Int64List(value=[-3]))  # Overwritten.
+  hub.attach_message("numbers", tf_v1.train.Int64List(value=[42, 69]))
+  hub.attach_message("letters", tf_v1.train.BytesList(value=[
       tf.compat.as_bytes("abc"), tf.compat.as_bytes("xyz")]))
-  hub.attach_message("tagged", tf.train.Int64List(value=[tagged]))
+  hub.attach_message("tagged", tf_v1.train.Int64List(value=[tagged]))
 
 
 class TFHubModuleWithAttachedMessages(tf.test.TestCase):
@@ -1403,24 +1422,27 @@ class TFHubModuleWithAttachedMessages(tf.test.TestCase):
   def testModuleSpec(self):
     """This is the general test for ModuleSpec and native_module._ModuleSpec."""
     spec = hub.create_module_spec(attached_messages_module_fn)
-    attached_letters = spec.get_attached_message("letters", tf.train.BytesList)
+    attached_letters = spec.get_attached_message("letters",
+                                                 tf_v1.train.BytesList)
     self.assertSequenceEqual(
         attached_letters.value,
-        [tf.compat.as_bytes("abc"), tf.compat.as_bytes("xyz")])
-    attached_numbers = spec.get_attached_message("numbers", tf.train.Int64List)
+        [tf.compat.as_bytes("abc"),
+         tf.compat.as_bytes("xyz")])
+    attached_numbers = spec.get_attached_message("numbers",
+                                                 tf_v1.train.Int64List)
     self.assertSequenceEqual(attached_numbers.value, [42, 69])
-    attached_train = spec.get_attached_message("tagged", tf.train.Int64List)
+    attached_train = spec.get_attached_message("tagged", tf_v1.train.Int64List)
     self.assertSequenceEqual(attached_train.value, [0])
-    self.assertIsNone(spec.get_attached_message("bad", tf.train.BytesList))
+    self.assertIsNone(spec.get_attached_message("bad", tf_v1.train.BytesList))
     with self.assertRaises(KeyError):
-      spec.get_attached_message("bad", tf.train.BytesList, required=True)
+      spec.get_attached_message("bad", tf_v1.train.BytesList, required=True)
 
   def testModule(self):
     """Tests forwarding from Module to ModuleSpec."""
     spec = hub.create_module_spec(attached_messages_module_fn)
     with tf.Graph().as_default():
       module = hub.Module(spec)
-      attached = module.get_attached_message("numbers", tf.train.Int64List)
+      attached = module.get_attached_message("numbers", tf_v1.train.Int64List)
       self.assertSequenceEqual(attached.value, [42, 69])
 
   def testGraphVersions(self):
@@ -1431,22 +1453,24 @@ class TFHubModuleWithAttachedMessages(tf.test.TestCase):
                                   tags_and_args=tags_and_args)
     for tags, args in tags_and_args:
       attached_to_spec = spec.get_attached_message(
-          "tagged", tf.train.Int64List, tags=tags)
+          "tagged", tf_v1.train.Int64List, tags=tags)
       self.assertSequenceEqual(attached_to_spec.value, [args["tagged"]])
       with tf.Graph().as_default():
         module = hub.Module(spec, tags=tags)
         attached_to_module = module.get_attached_message(
-            "tagged", tf.train.Int64List)
+            "tagged", tf_v1.train.Int64List)
         self.assertSequenceEqual(attached_to_module.value, [args["tagged"]])
 
   def testSeparateCopies(self):
     """Mutating returned objects does not affect future returned values."""
     spec = hub.create_module_spec(attached_messages_module_fn)
-    attached_numbers = spec.get_attached_message("numbers", tf.train.Int64List)
+    attached_numbers = spec.get_attached_message("numbers",
+                                                 tf_v1.train.Int64List)
     self.assertSequenceEqual(attached_numbers.value, [42, 69])
     attached_numbers.Clear()
     self.assertSequenceEqual(attached_numbers.value, [])
-    attached_numbers = spec.get_attached_message("numbers", tf.train.Int64List)
+    attached_numbers = spec.get_attached_message("numbers",
+                                                 tf_v1.train.Int64List)
     self.assertSequenceEqual(attached_numbers.value, [42, 69])
 
 
@@ -1460,28 +1484,29 @@ class TFHubOpsTest(tf.test.TestCase):
 class TFHubExportSpecTest(tf.test.TestCase):
 
   def f(self, x, dim=10):
-    return tf.layers.dense(x, dim)
+    return tf_v1.layers.dense(x, dim)
 
   def module_fn(self, dim=10):
-    x = tf.placeholder(dtype=tf.float32, shape=[None, dim])
+    x = tf_v1.placeholder(dtype=tf.float32, shape=[None, dim])
     y = self.f(x, dim=dim)
     hub.add_signature(inputs=x, outputs=y)
 
   def createCheckpoint(self, scope=None):
     checkpoint_path = os.path.join(self.get_temp_dir(), "model")
     with tf.Graph().as_default():
-      x = tf.random_normal([32, 10])
+      x = tf_v1.get_variable(
+          "x", [32, 10], initializer=tf_v1.initializers.random_normal())
       if scope:
-        with tf.variable_scope(scope):
+        with tf_v1.variable_scope(scope):
           y = self.f(x)
       else:
         y = self.f(x)
-      tf.layers.dense(y, 20)
+      tf_v1.layers.dense(y, 20)
 
-      saver = tf.train.Saver()
-      init_op = tf.initializers.global_variables()
+      saver = tf_v1.train.Saver()
+      init_op = tf_v1.initializers.global_variables()
 
-      with tf.Session() as session:
+      with tf_v1.Session() as session:
         session.run(init_op)
         saver.save(session, checkpoint_path)
 

@@ -23,6 +23,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from tensorflow_hub import tf_v1
+
 
 class ParsedTensorInfo(object):
   """This is a tensor-looking object with information about a Tensor.
@@ -95,7 +97,7 @@ def parse_tensor_info_map(protomap):
 def _is_sparse(x):
   """Returns whether x is a SparseTensor or a parsed sparse tensor info."""
   return (
-      isinstance(x, (tf.SparseTensor, tf.SparseTensorValue)) or
+      isinstance(x, (tf.SparseTensor, tf_v1.SparseTensorValue)) or
       (hasattr(x, "is_sparse") and x.is_sparse))
 
 
@@ -114,7 +116,7 @@ def _convert_to_compatible_tensor(value, target, error_prefix):
     A Tensor or SparseTensor compatible with tensor_info.
   """
   try:
-    tensor = tf.convert_to_tensor_or_indexed_slices(value, target.dtype)
+    tensor = tf_v1.convert_to_tensor_or_indexed_slices(value, target.dtype)
   except TypeError as e:
     raise TypeError("%s: %s" % (error_prefix, e))
   if _is_sparse(tensor) != _is_sparse(target):

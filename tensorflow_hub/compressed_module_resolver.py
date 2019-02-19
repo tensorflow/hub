@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import hashlib
 # pylint:disable=g-import-not-at-top
+# pylint:disable=g-importing-member
 try:
   import urllib.request as url
   import urllib.parse as urlparse
@@ -29,10 +30,10 @@ except ImportError:
   from urllib import urlencode
   import urlparse
 # pylint:disable=g-import-not-at-top
-
-import tensorflow as tf
+# pylint:enable=g-importing-member
 
 from tensorflow_hub import resolver
+from tensorflow_hub import tf_v1
 
 
 LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
@@ -117,7 +118,7 @@ class GcsCompressedFileResolver(resolver.Resolver):
 
     def download(handle, tmp_dir):
       return resolver.DownloadManager(handle).download_and_uncompress(
-          tf.gfile.GFile(handle, "r"), tmp_dir)
+          tf_v1.gfile.GFile(handle, "r"), tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
                                     LOCK_FILE_TIMEOUT_SEC)
