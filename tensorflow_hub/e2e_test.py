@@ -18,10 +18,19 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+try:
+  import mock as mock
+except ImportError:
+  import unittest.mock as mock
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+
 import os
 import tarfile
+import tempfile
 
 from absl import logging
+from distutils.version import LooseVersion
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -49,35 +58,34 @@ class End2EndTest(tf.test.TestCase):
     y = x*x
     hub.add_signature(inputs=x, outputs=y)
 
-  def _list_module_files(self, module_dir):
-    files = []
-    for f in tf_v1.gfile.ListDirectory(module_dir):
-      full_path = os.path.join(module_dir, f)
-      stat_res = tf_v1.gfile.Stat(full_path)
-      if stat_res.is_directory:
-        files.extend(self._list_module_files(full_path))
-      else:
-        files.append(f)
-    return files
+  def _create_tgz(self, export_path, archive_name="test_module.tgz"):
+    os.chdir(export_path)
+
+    tar = tarfile.open(archive_name, "w")
+    for directory, subdirs, files in tf_v1.gfile.Walk(export_path):
+      for subdir in subdirs:
+        tar.add(subdir)
+      for file_name in files:
+        full_path = os.path.join(directory, file_name)
+        tar.add(full_path[len(export_path)+1:])
+    tar.close()
+
+  def _generate_module(self):
+    spec = hub.create_module_spec(self._stateless_module_fn)
+    m = hub.Module(spec, name="test_module")
+    out = m(10)
+
+    export_path = os.path.join(self.get_temp_dir(), "module")
+    with tf_v1.Session() as sess:
+      sess.run(tf_v1.global_variables_initializer())
+      self.assertAllClose(sess.run(out), 100)
+      m.export(export_path, sess)
+
+    self._create_tgz(export_path)
 
   def test_http_locations(self):
     with tf.Graph().as_default():
-      spec = hub.create_module_spec(self._stateless_module_fn)
-      m = hub.Module(spec, name="test_module")
-      out = m(10)
-
-      export_path = os.path.join(self.get_temp_dir(), "module")
-      with tf_v1.Session() as sess:
-        sess.run(tf_v1.global_variables_initializer())
-        self.assertAllClose(sess.run(out), 100)
-        m.export(export_path, sess)
-
-      os.chdir(export_path)
-
-      tar = tarfile.open("test_module.tgz", "w")
-      for f in self._list_module_files(export_path):
-        tar.add(f)
-      tar.close()
+      self._generate_module()
 
       m = hub.Module("http://localhost:%d/test_module.tgz" % self.server_port)
       out = m(11)
@@ -102,8 +110,9 @@ class End2EndTest(tf.test.TestCase):
         self.assertTrue(cache_content[1].endswith(".descriptor.txt"))
         module_files = sorted(tf_v1.gfile.ListDirectory(
             os.path.join(cache_dir, cache_content[0])))
-        self.assertListEqual(["saved_model.pb", "tfhub_module.pb"],
-                             module_files)
+        self.assertListEqual(
+            ["assets", "saved_model.pb", "tfhub_module.pb", "variables"],
+            module_files)
       finally:
         os.unsetenv("TFHUB_CACHE_DIR")
 
@@ -142,6 +151,51 @@ class End2EndTest(tf.test.TestCase):
         sorted(module_files))
     module_files = tf_v1.gfile.ListDirectory(os.path.join(export_dir, "assets"))
     self.assertListEqual(["tokens.txt"], module_files)
+
+  def test_resolve(self):
+    with tf.Graph().as_default():
+      self._generate_module()
+
+      module_dir = hub.resolve(
+          "http://localhost:%d/test_module.tgz" % self.server_port)
+      self.assertIn(tempfile.gettempdir(), module_dir)
+      module_files = sorted(tf_v1.gfile.ListDirectory(module_dir))
+      self.assertEqual(
+          ["assets", "saved_model.pb", "tfhub_module.pb", "variables"],
+          module_files)
+
+  def test_load(self):
+    if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
+      try:
+        hub.load("@my/tf2_module/2")
+        self.fail("Failure expected. hub.module() not support in TF 1.x")
+      except NotImplementedError:
+        pass
+    else:
+
+      class AdderModule(tf.train.Checkpoint):
+
+        @tf.function(
+            input_signature=[tf.TensorSpec(shape=None, dtype=tf.float32)])
+        def add(self, x):
+          return x + x + 1.
+
+      to_export = AdderModule()
+      save_dir = os.path.join(self.get_temp_dir(), "saved_model_v2")
+      tf.saved_model.save(to_export, save_dir)
+      module_name = "test_module_v2.tgz"
+      self._create_tgz(save_dir, module_name)
+      fake_return_value = "<fake return value>"
+
+      # TODO(b/124848627): Remove the mocking once the symbol is available.
+      with mock.patch(
+          "tensorflow.saved_model.load",
+          create=True,
+          return_value=fake_return_value):
+        restored_module = hub.load(
+            "http://localhost:%d/%s" % (self.server_port, module_name))
+        self.assertEqual(fake_return_value, restored_module)
+
 
 if __name__ == "__main__":
   tf.test.main()

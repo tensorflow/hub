@@ -34,8 +34,10 @@ from tensorflow_hub.image_util import get_expected_image_size
 from tensorflow_hub.image_util import get_num_image_channels
 from tensorflow_hub.image_util import ImageModuleInfo
 from tensorflow_hub.module import eval_function_for_module
+from tensorflow_hub.module import load
 from tensorflow_hub.module import load_module_spec
 from tensorflow_hub.module import Module
+from tensorflow_hub.module import resolve
 from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.native_module import add_signature
 from tensorflow_hub.native_module import attach_message
@@ -66,5 +68,7 @@ _allowed_symbols = [
     "attach_message",
     "create_module_spec",
     "create_module_spec_from_saved_model",
+    "load",
     "load_module_spec",
+    "resolve",
 ]
