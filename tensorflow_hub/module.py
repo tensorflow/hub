@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import contextlib
 
-from distutils.version import LooseVersion
 import six
 import tensorflow as tf
 
@@ -606,7 +605,9 @@ def load(handle):
     NotImplementedError: If the code is running against incompatible (1.x)
                          version of TF.
   """
-  if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
-    raise NotImplementedError("hub.load() is not implemented for TF 1.x.")
-  module_handle = resolve(handle)
-  return tf.saved_model.load(module_handle)
+  if hasattr(tf_v1.saved_model, "load_v2"):
+    module_handle = resolve(handle)
+    return tf_v1.saved_model.load_v2(module_handle)
+  else:
+    raise NotImplementedError("hub.load() is not implemented for TF < 1.14.x, "
+                              "Current version: %s", tf.__version__)

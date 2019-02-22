@@ -18,19 +18,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-try:
-  import mock as mock
-except ImportError:
-  import unittest.mock as mock
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
 
 import os
 import tarfile
 import tempfile
 
 from absl import logging
-from distutils.version import LooseVersion
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -165,13 +158,13 @@ class End2EndTest(tf.test.TestCase):
           module_files)
 
   def test_load(self):
-    if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
+    if not hasattr(tf_v1.saved_model, "load_v2"):
       try:
         hub.load("@my/tf2_module/2")
         self.fail("Failure expected. hub.module() not support in TF 1.x")
       except NotImplementedError:
         pass
-    else:
+    elif tf_v1.executing_eagerly():
 
       class AdderModule(tf.train.Checkpoint):
 
@@ -185,16 +178,11 @@ class End2EndTest(tf.test.TestCase):
       tf.saved_model.save(to_export, save_dir)
       module_name = "test_module_v2.tgz"
       self._create_tgz(save_dir, module_name)
-      fake_return_value = "<fake return value>"
 
-      # TODO(b/124848627): Remove the mocking once the symbol is available.
-      with mock.patch(
-          "tensorflow.saved_model.load",
-          create=True,
-          return_value=fake_return_value):
-        restored_module = hub.load(
-            "http://localhost:%d/%s" % (self.server_port, module_name))
-        self.assertEqual(fake_return_value, restored_module)
+      restored_module = hub.load(
+          "http://localhost:%d/%s" % (self.server_port, module_name))
+      self.assertIsNotNone(restored_module)
+      self.assertTrue(hasattr(restored_module, "add"))
 
 
 if __name__ == "__main__":
