@@ -33,6 +33,7 @@ py_library(
         ":estimator",
         ":feature_column",
         ":image_util",
+        ":keras_layer",
         ":module",
         ":saved_model_module",
         "//tensorflow_hub:expect_tensorflow_installed",
@@ -352,6 +353,25 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":registry",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "keras_layer",
+    srcs = ["keras_layer.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_test(
+    name = "keras_layer_test",
+    srcs = ["keras_layer_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":tensorflow_hub",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )

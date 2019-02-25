@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl import logging
+from distutils.version import LooseVersion
 import tensorflow as tf
 
 
@@ -44,12 +46,22 @@ from tensorflow_hub.native_module import attach_message
 from tensorflow_hub.native_module import create_module_spec
 from tensorflow_hub.saved_model_module import create_module_spec_from_saved_model
 from tensorflow_hub.version import __version__
-# pylint: enable=g-import-not-at-top
 
 # pylint: disable=g-bad-import-order
+# The following imports may fail if TensorFlow is too old for TF2 features.
+try:
+  from tensorflow_hub.keras_layer import KerasLayer
+except ImportError:
+  if LooseVersion(tf.__version__) < LooseVersion("1.14.0"):
+    logging.warning("Some hub symbols are not available "
+                    "because TensorFlow version is less than 1.14")
+  else:
+    raise  # This is unexpected and indicates a problem.
+
 from tensorflow_hub.config import _run
 _run()
 # pylint: enable=g-bad-import-order
+# pylint: enable=g-import-not-at-top
 
 
 # Used by doc generation script.
@@ -62,6 +74,7 @@ _allowed_symbols = [
     "get_expected_image_size",
     "get_num_image_channels",
     "ImageModuleInfo",
+    "KerasLayer",
     "Module",
     "ModuleSpec",
     "add_signature",
