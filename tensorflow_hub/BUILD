@@ -35,6 +35,7 @@ py_library(
         ":image_util",
         ":keras_layer",
         ":module",
+        ":module_v2",
         ":saved_model_module",
         "//tensorflow_hub:expect_tensorflow_installed",
         ":config",
@@ -269,6 +270,9 @@ py_library(
 py_test(
     name = "e2e_test",
     srcs = ["e2e_test.py"],
+    data = [
+        "testdata/half_plus_two_v1.tar.gz",
+    ],
     srcs_version = "PY2AND3",
     deps = [
         ":tensorflow_hub",
@@ -396,4 +400,16 @@ py_library(
 # `pip install numpy`
 py_library(
     name = "expect_numpy_installed",
+)
+
+py_library(
+    name = "module_v2",
+    srcs = ["module_v2.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":module",
+        ":native_module",
+        ":tf_v1",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
 )

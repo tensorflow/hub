@@ -22,7 +22,7 @@ import functools
 
 import tensorflow as tf
 
-from tensorflow_hub import module
+from tensorflow_hub import module_v2
 
 # ATTENTION: This file uses private imports from TF2.
 # __init__ may not import this file if tensorflow is too old.
@@ -75,7 +75,7 @@ class KerasLayer(tf.keras.layers.Layer):
     if callable(handle):
       self._func = handle
     else:
-      self._func = module.load(handle)
+      self._func = module_v2.load(handle)
       if not callable(self._func):
         raise ValueError("Non-callable result from hub.load('%s')" %
                          str(handle))
