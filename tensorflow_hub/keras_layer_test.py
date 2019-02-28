@@ -59,7 +59,7 @@ class KerasLayerTest(tf.test.TestCase):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _save_half_plus_one_model(export_dir)
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
-    imported = hub.KerasLayer(export_dir, output_shape=(1,), trainable=True)
+    imported = hub.KerasLayer(export_dir, trainable=True)
     outp = imported(inp)
     model = tf.keras.Model(inp, outp)
     # The consumer model computes y = x/2 + 1 as expected.
@@ -88,6 +88,13 @@ class KerasLayerTest(tf.test.TestCase):
                         atol=0.0, rtol=0.03)
     self.assertAllClose(model.losses, np.array([0.01], dtype=np.float32),
                         atol=0.0, rtol=0.06)
+
+  def testComputeOutputShape(self):
+    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
+    _save_half_plus_one_model(export_dir)
+    layer = hub.KerasLayer(export_dir, output_shape=[1])
+    self.assertEqual([10, 1],
+                     layer.compute_output_shape(tuple([10, 1])).as_list())
 
 
 if __name__ == "__main__":

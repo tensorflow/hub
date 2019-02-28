@@ -57,20 +57,32 @@ class KerasLayer(tf.keras.layers.Layer):
       Keras Layer. Each one must accept zero arguments and return a scalar
       tensor.
 
+  Note: to work-around missing shape inference functionalities from functions
+  created from FunctionDefs, in many cases one has to pass an 'output_shape'
+  and potentially 'input_shape' and 'dtype'. E.g. the following is a typical
+  work-around:
+  ```
+  hub.KerasLayer(
+      "/tmp/text_embedding_model",
+      output_shape=[20],  # Outputs a tensor with shape [batch_size, 20].
+      input_shape=[],     # Expects a tensor of shape [batch_size] as input.
+      dtype=tf.string)    # Expects a tf.string input tensor.
+  ```
+
   Args:
     handle: a callable object (subject to the conventions above), or a
       Python string for which hub.load() returns such a callable.
-    output_shape: A tuple with the (possibly partial) output shape of the
-      callable *without* leading batch size.
     trainable: Boolean controlling whether the trainable variables of the
       callable are reported as trainable variables of this layer.
     arguments: optionally, a dict with additional keyword arguments passed
       to the callable.
+    **kwargs: 'output_shape': A tuple with the (possibly partial) output
+      shape of the callable *without* leading batch size. Other arguments
+      are pass into the Layer constructor.
   """
 
   @tracking_base.no_automatic_dependency_tracking
-  def __init__(self, handle, output_shape, trainable=False, arguments=None,
-               **kwargs):
+  def __init__(self, handle, trainable=False, arguments=None, **kwargs):
     # Resolve the handle to a callable `func`.
     if callable(handle):
       self._func = handle
@@ -94,6 +106,12 @@ class KerasLayer(tf.keras.layers.Layer):
                                      if v not in trainable_variables_set]
     else:
       self._non_trainable_weights = []
+
+    # TODO(b/124219898): We should be able to get the embedding dimension from
+    # the restored model.
+    if "output_shape" in kwargs:
+      self._output_shape = tuple(kwargs.pop("output_shape"))
+
     super(KerasLayer, self).__init__(trainable=trainable, **kwargs)
 
     # Prepare to call `func`.
@@ -102,9 +120,6 @@ class KerasLayer(tf.keras.layers.Layer):
         "training" in self._func_fullargspec.args or
         "training" in self._func_fullargspec.kwonlyargs)
     self._arguments = arguments or {}
-    # TODO(b/124219898): We should be able to get the embedding dimension from
-    # the restored model.
-    self._output_shape = tuple(output_shape)
 
     # Forward the callable's regularization losses (if any).
     if hasattr(self._func, "regularization_losses"):
@@ -115,9 +130,9 @@ class KerasLayer(tf.keras.layers.Layer):
               "iterable of callables, each returning a scalar loss term.")
         self.add_loss(l)  # Supports callables.
 
-  def call(self, x, training=None):
+  def call(self, inputs, training=None):
     # We basically want to call this...
-    f = functools.partial(self._func, x, **self._arguments)
+    f = functools.partial(self._func, inputs, **self._arguments)
     # ...but we may also have to pass a Python boolean for `training`.
     if not self._func_wants_training:
       result = f()
@@ -128,8 +143,6 @@ class KerasLayer(tf.keras.layers.Layer):
                                      lambda: f(training=True),
                                      lambda: f(training=False))
     # TODO(b/124219898): Polymorphic function should return shaped tensor.
-    result.set_shape(self.compute_output_shape(x.shape))
+    if hasattr(self, "_output_shape"):
+      result.set_shape((inputs.shape[0],) + self._output_shape)
     return result
-
-  def compute_output_shape(self, input_shape):  # Override this Layer method.
-    return (input_shape[0],) + self._output_shape
