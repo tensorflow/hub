@@ -13,9 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version (0.4.0-dev)
- * Under development.
-
 # Release 0.3.0
   * Initial support for Tensorflow 2.0
   * Tensorflow Hub Library API for Tensorflow 2.0
