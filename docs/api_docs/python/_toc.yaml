@@ -24,8 +24,12 @@ toc:
       path: /hub/api_docs/python/hub/ImageModuleInfo/InputSize
     - title: image_embedding_column
       path: /hub/api_docs/python/hub/image_embedding_column
+    - title: KerasLayer
+      path: /hub/api_docs/python/hub/KerasLayer
     - title: LatestModuleExporter
       path: /hub/api_docs/python/hub/LatestModuleExporter
+    - title: load
+      path: /hub/api_docs/python/hub/load
     - title: load_module_spec
       path: /hub/api_docs/python/hub/load_module_spec
     - title: Module
@@ -34,5 +38,7 @@ toc:
       path: /hub/api_docs/python/hub/ModuleSpec
     - title: register_module_for_export
       path: /hub/api_docs/python/hub/register_module_for_export
+    - title: resolve
+      path: /hub/api_docs/python/hub/resolve
     - title: text_embedding_column
       path: /hub/api_docs/python/hub/text_embedding_column

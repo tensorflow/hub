@@ -10,6 +10,13 @@
 ## Class `InputSize`
 
 
+
+
+
+This is an alias for a Python built-in.
+
+
+
 ## Class Members
 
 <h3 id="height"><code>height</code></h3>

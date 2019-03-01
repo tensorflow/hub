@@ -39,7 +39,7 @@ _ALWAYS_DROPPED_COLLECTIONS = [
     # This generic initialization definition is impossible to support for many
     # hub use cases and therefore the assumption here is that the SavedModel
     # init op can be ignored in favor of initializing using the
-    # tf_v1.train.MonitoredSession mechanisms + construction of a new tf.Saver()
+    # tf.train.MonitoredSession mechanisms + construction of a new tf.Saver()
     # from the global variables collection.
     tf_v1.saved_model.constants.LEGACY_INIT_OP_KEY,
     tf_v1.saved_model.constants.MAIN_OP_KEY,
@@ -63,7 +63,7 @@ def create_module_spec_from_saved_model(saved_model_path,
   - The serialized SaverDef can be ignored and instead can be reconstructed.
   - The init op and main op can be ignored and instead the module can be
     initialized by using the conventions followed by
-    `tf_v1.train.MonitoredSession`.
+    `tf.train.MonitoredSession`.
 
   Note that the set of features supported can increase over time and have side
   effects that were not previously visible. The pattern followed to avoid

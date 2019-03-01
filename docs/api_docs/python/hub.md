@@ -12,6 +12,8 @@ TensorFlow Hub Library.
 
 [`class ImageModuleInfo`](./hub/ImageModuleInfo.md)
 
+[`class KerasLayer`](./hub/KerasLayer.md): Wraps a Hub module (or a similar callable) for TF2 as a Keras Layer.
+
 [`class LatestModuleExporter`](./hub/LatestModuleExporter.md): Regularly exports registered modules into timestamped directories.
 
 [`class Module`](./hub/Module.md): Part of a TensorFlow model that can be transferred between models.
@@ -36,9 +38,13 @@ TensorFlow Hub Library.
 
 [`image_embedding_column(...)`](./hub/image_embedding_column.md): Uses a Module to get a dense 1-D representation from the pixels of images.
 
+[`load(...)`](./hub/load.md): Loads a module from a handle.
+
 [`load_module_spec(...)`](./hub/load_module_spec.md): Loads a ModuleSpec from the filesystem.
 
 [`register_module_for_export(...)`](./hub/register_module_for_export.md): Register a Module to be exported under `export_name`.
+
+[`resolve(...)`](./hub/resolve.md): Resolves a module handle into a path.
 
 [`text_embedding_column(...)`](./hub/text_embedding_column.md): Uses a Module to construct a dense representation from a text feature.
 
