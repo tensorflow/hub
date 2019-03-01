@@ -281,7 +281,7 @@ Describes the outputs provided by a signature.
 
 #### Returns:
 
-The result of ModuleSpec.get_input_info_dict() for the given signature,
+The result of ModuleSpec.get_output_info_dict() for the given signature,
 and the graph variant selected by `tags` when this Module was initialized.
 
 
