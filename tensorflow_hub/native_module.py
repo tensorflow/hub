@@ -159,7 +159,7 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
     module_fn: a function to build a graph for the Module.
     tags_and_args: Optional list of tuples (tags, kwargs) of tags and keyword
       args used to define graph variants. If omitted, it is interpreted as
-      [set(), {}], meaning `module_fn` is called once with no args.
+      [(set(), {})], meaning `module_fn` is called once with no args.
     drop_collections: list of collection to drop.
 
   Returns:
