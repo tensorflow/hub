@@ -78,6 +78,7 @@ py_test(
     name = "estimator_test",
     srcs = ["estimator_test.py"],
     srcs_version = "PY2AND3",
+    tags = ["notsan"],  # b/111624588
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",
