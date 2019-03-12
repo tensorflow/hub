@@ -42,6 +42,7 @@ from tensorflow.core.protobuf import meta_graph_pb2
 # without having to do "import library_that_register_missing_op".
 # pylint: disable=g-bad-import-order
 from tensorflow.core.framework import op_def_pb2
+from tensorflow.core.framework import types_pb2
 from tensorflow.python.framework import op_def_registry
 from tensorflow.python import pywrap_tensorflow as c_api
 # pylint: enable=g-bad-import-order
@@ -373,38 +374,38 @@ class _ModuleImpl(module_impl.ModuleImpl):
         unused name scope.
     """
     self._spec = spec
-    self._graph = tf_v1.get_default_graph()
     self._meta_graph = meta_graph
     self._trainable = trainable
     self._checkpoint_path = checkpoint_path
 
     register_ops_if_needed({
         op.name for op in self._meta_graph.meta_info_def.stripped_op_list.op})
-    self._init_state(name)
 
-  def _init_state(self, name):
-    # Clear dependencies so Modules can be constructed from deep inside
+    # Use an init scope to clear dependencies and lift state ops outside of
+    # function-building graphs. Modules can be constructed from deep inside
     # functions that have dependencies active. Note that the dependencies
     # would be active when applying the Module signature, just not active
     # when creating the Module state. This use case has showed up in some
     # TPU training code.
-    with tf.control_dependencies(None):
-      variable_tensor_map, self._state_map = self._create_state_graph(name)
-      self._variable_map = recover_partitioned_variable_map(
-          get_node_map_from_tensor_map(variable_tensor_map)
-      )
-      if self._variable_map and self._checkpoint_path:
-        tf_v1.train.init_from_checkpoint(self._checkpoint_path,
-                                         self._variable_map)
+    with tf.init_scope():
+      self._init_state(name)
 
-      # Build Saver so it can be used later on to export the variables.
-      if self._variable_map:
-        self._saver = tf_v1.train.Saver(
-            self._variable_map,
-            sharded=True,
-            write_version=tf_v1.train.SaverDef.V2)
-      else:
-        self._saver = None
+  def _init_state(self, name):
+    variable_tensor_map, self._state_map = self._create_state_graph(name)
+    self._variable_map = recover_partitioned_variable_map(
+        get_node_map_from_tensor_map(variable_tensor_map))
+    if self._variable_map and self._checkpoint_path:
+      tf_v1.train.init_from_checkpoint(self._checkpoint_path,
+                                       self._variable_map)
+
+    # Build Saver so it can be used later on to export the variables.
+    if self._variable_map:
+      self._saver = tf_v1.train.Saver(
+          self._variable_map,
+          sharded=True,
+          write_version=tf_v1.train.SaverDef.V2)
+    else:
+      self._saver = None
 
   def _create_state_graph(self, name):
     """Creates the graph nodes that hold the state of the Module.
@@ -432,7 +433,8 @@ class _ModuleImpl(module_impl.ModuleImpl):
       import_collections.extend([tf_v1.GraphKeys.TRAINABLE_VARIABLES,
                                  tf_v1.GraphKeys.REGULARIZATION_LOSSES])
 
-    absolute_scope_name = self._graph.unique_name(name, mark_as_used=False)
+    absolute_scope_name = tf_v1.get_default_graph().unique_name(
+        name, mark_as_used=False)
     relative_scope_name = absolute_scope_name.split("/")[-1]
     assert relative_scope_name == name  # verify name scope was indeed unused.
 
@@ -458,37 +460,61 @@ class _ModuleImpl(module_impl.ModuleImpl):
     # Build a map of tensors to feed from the state-graph into subsequent
     # apply-graphs.
     def _get_tensor(tensor_name):
-      return self._graph.get_tensor_by_name(
-          meta_graph_lib.prepend_name_scope(tensor_name,
-                                            import_scope=absolute_scope_name))
+      return tf_v1.get_default_graph().get_tensor_by_name(
+          meta_graph_lib.prepend_name_scope(
+              tensor_name, import_scope=absolute_scope_name))
 
     state_op_names = list_registered_stateful_ops_without_inputs()
-    state_map = get_state_map(self._meta_graph, state_op_names, set(),
-                              _get_tensor)
+    state_map = get_state_map(meta_graph, state_op_names, set(), _get_tensor)
 
     return variables_tensor_map, state_map
 
   def create_apply_graph(self, signature, input_tensors, name):
     """See `ModuleImpl.create_apply_graph`."""
     signature_def = self._meta_graph.signature_def.get(signature)
+    meta_graph = meta_graph_pb2.MetaGraphDef()
+    meta_graph.CopyFrom(self._meta_graph)
+    apply_graph = tf_v1.get_default_graph()
+    infeed_map = tensor_info.build_input_map(signature_def.inputs,
+                                             input_tensors)
 
     # Build a input map to feed when importing the apply-graph by augmenting the
     # state_map with the input args. This allows an input to override a tensor
     # from the state-graph.
     feed_map = dict(self._state_map)
-    feed_map.update(
-        tensor_info.build_input_map(signature_def.inputs, input_tensors))
+    # If we are applying the module in a function with a TPUReplicateContext, we
+    # must capture the state tensors in generating our feedmap and prune out
+    # assign ops. Function graph semantics are different in that all ops are
+    # executed regardless of dependency.
+    # TODO(b/112575006): The following adds functionality of function call
+    # within a TPU context. Work to generalize this for all function calls is
+    # ongoing.
+    if self._is_tpu_graph_function():
+      for k, v in self._state_map.items():
+        feed_map[k] = apply_graph.capture(v)
+      meta_graph_lib.prune_unused_nodes(meta_graph, signature_def)
+    elif apply_graph.building_function:
+      raise NotImplementedError(
+          "Using TF-Hub module within a TensorFlow defined function "
+          "is currently not supported.")
+
+    # As state ops in the apply graph are unused, replace them with Placeholders
+    # so that in a heirarchical instantiation, apply_graph state ops are
+    # ignored.
+    replace_apply_state(meta_graph,
+                        list_registered_stateful_ops_without_inputs(), feed_map)
+    feed_map.update(infeed_map)
 
     # Make state tensors enter the current context. This way the Module can be
     # applied inside a control flow structure such as a while_loop.
-    control_flow = self._graph._get_control_flow_context()  # pylint: disable=protected-access
+    control_flow = apply_graph._get_control_flow_context()  # pylint: disable=protected-access
     if control_flow:
       for key, value in sorted(feed_map.items()):
         feed_map[key] = control_flow.AddValue(value)
 
     # Don't mark the name as used at this point - import_scoped_meta_graph will
     # start using it.
-    absolute_scope_name = self._graph.unique_name(name, mark_as_used=False)
+    absolute_scope_name = apply_graph.unique_name(name, mark_as_used=False)
     relative_scope_name = absolute_scope_name.split("/")[-1]
 
     import_collections = [
@@ -504,12 +530,13 @@ class _ModuleImpl(module_impl.ModuleImpl):
     if self._trainable:
       import_collections.extend([tf_v1.GraphKeys.UPDATE_OPS])
 
-    meta_graph = meta_graph_pb2.MetaGraphDef()
-    meta_graph.CopyFrom(self._meta_graph)
-
     meta_graph_lib.filter_collections(meta_graph, import_collections)
     meta_graph_lib.prefix_shared_name_attributes(meta_graph,
                                                  absolute_scope_name)
+    if len(meta_graph.collection_def) and self._is_tpu_graph_function():
+      raise NotImplementedError(
+          "Applying modules with collections inside TPU functions is not "
+          "supported.")
 
     tf_v1.train.import_meta_graph(
         meta_graph,
@@ -524,11 +551,17 @@ class _ModuleImpl(module_impl.ModuleImpl):
       try:
         return feed_map[name]
       except KeyError:
-        return self._graph.get_tensor_by_name(
-            meta_graph_lib.prepend_name_scope(name,
-                                              import_scope=absolute_scope_name))
+        return apply_graph.get_tensor_by_name(
+            meta_graph_lib.prepend_name_scope(
+                name, import_scope=absolute_scope_name))
 
     return tensor_info.build_output_map(signature_def.outputs, get_tensor)
+
+  def _is_tpu_graph_function(self):
+    apply_graph = tf_v1.get_default_graph()
+    return (apply_graph.building_function and
+            type(apply_graph._get_control_flow_context()).__name__.endswith(  # pylint: disable=protected-access
+                "TPUReplicateContext"))
 
   def export(self, path, session):
     """See `Module.export`."""
@@ -579,6 +612,25 @@ def get_state_map(meta_graph, state_ops, unsupported_state_ops,
     if node.op in unsupported_state_ops:
       raise ValueError("Unsupported stateful op: %s" % node.op)
   return state_map
+
+
+def replace_apply_state(meta_graph, state_ops, feed_map):
+  """Replaces state ops with non state Placeholder ops for the apply graph."""
+  for node in meta_graph.graph_def.node:
+    keys_to_purge = []
+    tensor_name = node.name + ":0"
+    # Verify that the node is a state op and that its due to be rewired
+    # in the feedmap.
+    if node.op in state_ops and tensor_name in feed_map:
+      node.op = "Placeholder"
+      for key in node.attr:
+        # Only shape and dtype are required for Placeholder. Remove other
+        # attributes.
+        if key != "shape":
+          keys_to_purge.append(key)
+      for key in keys_to_purge:
+        del node.attr[key]
+      node.attr["dtype"].type = types_pb2.DT_RESOURCE
 
 
 def get_node_map_from_tensor_map(tensor_map):

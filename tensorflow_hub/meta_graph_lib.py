@@ -26,6 +26,8 @@ import re
 from absl import logging
 import tensorflow as tf
 
+from tensorflow_hub import tf_v1
+
 
 def prepend_name_scope(name, import_scope):
   """Prepends name scope to a name."""
@@ -53,6 +55,67 @@ def prefix_shared_name_attributes(meta_graph, absolute_import_scope):
         node.attr[shared_name_attr].s = tf.compat.as_bytes(
             prepend_name_scope(
                 shared_name_value.s, import_scope=absolute_import_scope))
+
+
+def mark_backward(output_tensor, used_node_names):
+  """Function to propagate backwards in the graph and mark nodes as used.
+
+  Traverses recursively through the graph from the end tensor, through the op
+  that generates the tensor, and then to the input tensors that feed the op.
+  Nodes encountered are stored in used_node_names.
+
+  Args:
+    output_tensor: A Tensor which we start the propagation.
+    used_node_names: A list of strings, stores the name of nodes we've marked as
+      visited.
+  """
+  op = output_tensor.op
+  if op.name in used_node_names:
+    return
+  used_node_names.add(op.name)
+  for input_tensor in op.inputs:
+    mark_backward(input_tensor, used_node_names)
+  for control_input_op in op.control_inputs:
+    used_node_names.add(control_input_op.name)
+    for input_tensor in control_input_op.inputs:
+      mark_backward(input_tensor, used_node_names)
+
+
+def prune_unused_nodes(meta_graph, signature_def):
+  """Function to prune unused ops given a signature def.
+
+  This function does a graph traversal through from all outputs as
+  defined in the signature_def to collect all used nodes. Then, any
+  nodes which are unused can be discarded. This is useful for graph which are
+  executing eagerly or on TPUs.
+
+  Args:
+    meta_graph: The input/output MetaGraphDef for which we wish to prune.
+   signature_def: A SignatureDef which specifies the outputs from which we wish
+     to start graph traversal.
+  """
+  # Instantiate a temporary empty graph so that we have access to Graph API
+  # and import the meta_graph.
+  graph = tf_v1.Graph()
+  with graph.as_default():
+    tf_v1.train.import_meta_graph(meta_graph, input_map={}, import_scope="")
+    # Traverse from all outputs and mark all nodes.
+    used_node_names = set()
+    for _, tensor_def in signature_def.outputs.items():
+      output_tensor = graph.get_tensor_by_name(tensor_def.name)
+      mark_backward(output_tensor, used_node_names)
+    # Filter out all nodes in the meta_graph that are not used.
+    node_filter_in_list = []
+    for node in meta_graph.graph_def.node:
+      # Make a special exception for VarHandleOp. Removing VarhandleOps
+      # will make the graph not importable as they often leave nodes hanging.
+      # These will be disconnected through the feedmap when importing the
+      # metagraph.
+      if node.name in used_node_names or node.op == "VarHandleOp":
+        node_filter_in_list.append(node)
+    del meta_graph.graph_def.node[:]
+    meta_graph.graph_def.node.extend(node_filter_in_list)
+  del graph
 
 
 def filter_collections(meta_graph, collections):

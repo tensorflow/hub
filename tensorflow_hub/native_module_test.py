@@ -29,6 +29,9 @@ from tensorflow_hub import native_module
 from tensorflow_hub import tf_v1
 
 # pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.eager import function as function_eager
+from tensorflow.python.framework import function
+from tensorflow.python.ops.control_flow_ops import ControlFlowContext
 from tensorflow.python.ops.lookup_ops import HashTable
 from tensorflow.python.ops.lookup_ops import index_to_string_table_from_file
 from tensorflow.python.ops.lookup_ops import KeyValueTensorInitializer
@@ -365,6 +368,58 @@ def stateful_rv_module_fn():
   hub.add_signature(outputs=r.value())
 
 
+class TPUReplicateContext(ControlFlowContext):
+
+  def __init__(self):
+    super(TPUReplicateContext, self).__init__()
+    self._name = "TPUReplicateContext"
+
+  def AddOp(self, _):
+    pass
+
+  def AddValue(self, x):
+    return x
+
+  def to_control_flow_context_def(self, context_def, export_scope=None):
+    super(TPUReplicateContext, self).to_control_flow_context_def(
+        context_def, export_scope)
+
+
+def stateful_random_rv_module_fn():
+  r = tf_v1.get_variable(
+      "rv_var123",
+      shape=[],
+      initializer=tf_v1.random_uniform_initializer(),
+      use_resource=True)
+  hub.add_signature(outputs=r.value())
+
+
+def stateful_rv_with_input_module_fn():
+  x = tf_v1.placeholder(dtype=tf.float32, name="x")
+  # Add a placeholder/variable that doesn't go to an output.
+  y = tf_v1.placeholder(dtype=tf.float32, name="y")
+  r = tf_v1.get_variable(
+      "rv_var123",
+      shape=[],
+      initializer=tf_v1.constant_initializer(10.0),
+      use_resource=True)
+  t = tf_v1.get_variable(
+      "rv_var456",
+      shape=[],
+      initializer=tf_v1.constant_initializer(10.0),
+      use_resource=True)
+  t.assign(y)
+  res = x + r
+  hub.add_signature(inputs={"x": x}, outputs=res)
+
+
+def control_dependency_module_fn():
+  const_op = tf.constant(1.0, name="dependency_op")
+  with tf.control_dependencies([const_op]):
+    res = tf.constant(3.0) + tf.constant(2.0)
+  hub.add_signature(inputs={}, outputs=res)
+
+
 def stateful_non_rv_module_fn():
   v = tf_v1.get_variable(
       "var123", shape=[],
@@ -409,13 +464,12 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
       self.assertEqual([v.name for v in m.variables], ["test_rv/rv_var123:0"])
 
       # Check that "shared_name" attributes are adapted correctly:
-      for op_prefix in ["test_rv", "test_rv_apply_default"]:
-        var_handle_op_name = op_prefix + "/rv_var123"
-        var_handle_op = tf_v1.get_default_graph().get_operation_by_name(
-            var_handle_op_name)
-        self.assertEqual(
-            var_handle_op.get_attr("shared_name"),
-            tf.compat.as_bytes(var_handle_op_name))
+      var_handle_op_name = "test_rv/rv_var123"
+      var_handle_op = tf_v1.get_default_graph().get_operation_by_name(
+          var_handle_op_name)
+      self.assertEqual(
+          var_handle_op.get_attr("shared_name"),
+          tf.compat.as_bytes(var_handle_op_name))
 
       export_path = os.path.join(self.get_temp_dir(), "resource-variables")
       with tf_v1.Session() as sess:
@@ -443,13 +497,12 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
                               [tf.compat.as_bytes("loc:@module/rv_var123")])
 
       # Check that "shared_name" attributes are adapted correctly:
-      for op_prefix in ["module", "module_apply_default"]:
-        var_handle_op_name = op_prefix + "/rv_var123"
-        var_handle_op = tf_v1.get_default_graph().get_operation_by_name(
-            var_handle_op_name)
-        self.assertEqual(
-            var_handle_op.get_attr("shared_name"),
-            tf.compat.as_bytes(var_handle_op_name))
+      var_handle_op_name = "module/rv_var123"
+      var_handle_op = tf_v1.get_default_graph().get_operation_by_name(
+          var_handle_op_name)
+      self.assertEqual(
+          var_handle_op.get_attr("shared_name"),
+          tf.compat.as_bytes(var_handle_op_name))
 
       # Create a saver for the whole graph.
       saver = tf_v1.train.Saver()
@@ -617,6 +670,148 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
         sess.run(train_op)
       got = sess.run(x)
       self.assertAllClose(got, [3.1, 3.2, 3.3])
+
+  # TODO(b/112575006): The following tests verify functionality of function call
+  # within a TPU context. Work to generalize this for all function calls is
+  # ongoing.
+  def testTPUModuleInitializeOnceWithDefun(self):
+    spec = hub.create_module_spec(stateful_random_rv_module_fn)
+
+    @function.Defun()
+    def import_computation():
+      context = TPUReplicateContext()
+      context.Enter()
+      m = hub.Module(spec, name="module_", trainable=True)
+      return [m(), m()]
+
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      x = import_computation()
+      sess.run(tf_v1.global_variables_initializer())
+      got = sess.run(x)
+      # Check the values are equal. If the initializer ran on each call,
+      # the values would be different.
+      self.assertEqual(got[0], got[1])
+
+  def testTPUModuleDoesntPruneControlDependencies(self):
+    spec = hub.create_module_spec(control_dependency_module_fn)
+
+    @function.Defun()
+    def import_computation():
+      context = TPUReplicateContext()
+      context.Enter()
+      m = hub.Module(spec, name="module_", trainable=True)
+      return m()
+
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      x = import_computation()
+      got = sess.run(x)
+      self.assertEqual(got, 5.0)
+      # If the op got pruned, the following get_operation_by_name should fail
+      # with a dependency error.
+      tf_v1.get_default_graph().get_operation_by_name("module_/dependency_op")
+
+  def testTPUModuleWithDefun(self):
+    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
+
+    @function.Defun()
+    def import_computation(first, second):
+      context = TPUReplicateContext()
+      context.Enter()
+      m = hub.Module(spec, name="module_", trainable=True)
+      return [m(first), m(second)]
+
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      x = import_computation(9.0, 6.0)
+      sess.run(tf_v1.global_variables_initializer())
+      got = sess.run(x)
+      self.assertEqual(got, (19.0, 16.0))
+
+  def testTPUModuleWithTFEDefun(self):
+    with tf_v1.Graph().as_default() as graph, tf_v1.Session() as sess:
+      spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
+
+      @function_eager.defun()
+      def import_computation(first, second):
+        context = TPUReplicateContext()
+        context.Enter()
+        m = hub.Module(spec, trainable=True)
+        return [m(first), m(second)]
+
+      x = import_computation(9.0, 6.0)
+      sess.run(tf_v1.global_variables_initializer())
+      got = sess.run(x)
+      self.assertEqual(got, [19.0, 16.0])
+
+  def testTPUModuleWithWrapFunc(self):
+    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
+
+    def import_computation(first, second):
+      context = TPUReplicateContext()
+      context.Enter()
+      m = hub.Module(spec, trainable=True)
+      return [m(first), m(second)]
+
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      x = tf_v1.wrap_function(
+          import_computation,
+          [tf.TensorSpec((), tf.float32),
+           tf.TensorSpec((), tf.float32)])
+      sess.run(tf_v1.global_variables_initializer())
+      got = sess.run(x(9.0, 6.0))
+      self.assertEqual(got, [19.0, 16.0])
+
+  # The following tests should all fail until b/112575006 is resolved.
+  def testModuleWithDefun(self):
+    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
+
+    @function.Defun()
+    def import_computation(first, second):
+      m = hub.Module(spec, name="module_", trainable=True)
+      return [m(first), m(second)]
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      # In the case where we don't handle the variables, they will not be
+      # hoisted so they are not handled properly.
+      with self.assertRaisesRegexp(
+          NotImplementedError,
+          "Using TF-Hub module within a TensorFlow defined function "
+          "is currently not supported."):
+        import_computation(9.0, 6.0)
+
+  def testModuleWithEagerDefun(self):
+    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
+
+    def import_computation(first, second):
+      # In the case where we don't handle the variables, they will not be
+      # hoisted so they are not handled properly.
+      with self.assertRaisesRegexp(
+          NotImplementedError,
+          "Using TF-Hub module within a TensorFlow defined function "
+          "is currently not supported."):
+        m = hub.Module(spec, trainable=True)
+        return [m(first), m(second)]
+
+    x = function_eager.defun(import_computation)
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      sess.run(x(9.0, 6.0))
+
+  def testModuleWithWrapFunc(self):
+    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
+
+    def import_computation(first, second):
+      m = hub.Module(spec, trainable=True)
+      return [m(first), m(second)]
+
+    # In the case where we don't handle the variables, they will not be
+    # hoisted so they are not handled properly.
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      with self.assertRaisesRegexp(
+          NotImplementedError,
+          "Using TF-Hub module within a TensorFlow defined function "
+          "is currently not supported."):
+        tf_v1.wrap_function(
+            import_computation,
+            [tf.TensorSpec((), tf.float32),
+             tf.TensorSpec((), tf.float32)])
 
   def _exportModulewithTrainedVariable(self):
     export_path = os.path.join(self.get_temp_dir(), "var-module")
