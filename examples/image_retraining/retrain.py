@@ -964,10 +964,32 @@ def export_model(module_spec, class_count, saved_model_dir):
     )
 
 
+def logging_level_verbosity(logging_level):
+    """Converts logging_level into TensorFlow logging verbosity value
+
+      Args:
+        logging_level: String value representing logging level: 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'
+      """
+    nameToLevel = {
+        'FATAL': tf.logging.FATAL,
+        'ERROR': tf.logging.ERROR,
+        'WARN': tf.logging.WARN,
+        'INFO': tf.logging.INFO,
+        'DEBUG': tf.logging.DEBUG
+    }
+
+    if logging_level in nameToLevel:
+        return nameToLevel[logging_level]
+
+    return None
+
+
 def main(_):
   # Needed to make sure the logging output is visible.
   # See https://github.com/tensorflow/tensorflow/issues/3047
-  tf.logging.set_verbosity(tf.logging.INFO)
+  logging_verbosity = logging_level_verbosity(FLAGS.logging_level)
+  if logging_verbosity:
+    tf.logging.set_verbosity(logging_verbosity)
 
   if not FLAGS.image_dir:
     tf.logging.error('Must set flag --image_dir.')
@@ -1309,5 +1331,11 @@ if __name__ == '__main__':
       type=str,
       default='',
       help='Where to save the exported graph.')
+  parser.add_argument(
+      '--logging_level',
+      type=str,
+      default='INFO',
+      choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
+      help='How much logging output should be produced.')
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
