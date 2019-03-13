@@ -493,6 +493,9 @@ class _ModuleImpl(module_impl.ModuleImpl):
       for k, v in self._state_map.items():
         feed_map[k] = apply_graph.capture(v)
       meta_graph_lib.prune_unused_nodes(meta_graph, signature_def)
+      # After we prune the metagraph def, we might need to prune away
+      # infeeds which no longer exist.
+      meta_graph_lib.prune_feed_map(meta_graph, infeed_map)
     elif apply_graph.building_function:
       raise NotImplementedError(
           "Using TF-Hub module within a TensorFlow defined function "

@@ -118,6 +118,17 @@ def prune_unused_nodes(meta_graph, signature_def):
   del graph
 
 
+def prune_feed_map(meta_graph, feed_map):
+  """Function to prune the feedmap of nodes which no longer exist."""
+  node_names = [x.name + ":0" for x in meta_graph.graph_def.node]
+  keys_to_delete = []
+  for k, _ in feed_map.items():
+    if k not in node_names:
+      keys_to_delete.append(k)
+  for k in keys_to_delete:
+    del feed_map[k]
+
+
 def filter_collections(meta_graph, collections):
   collections = frozenset(collections)
   for name in list(meta_graph.collection_def.keys()):

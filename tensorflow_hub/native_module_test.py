@@ -692,6 +692,24 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
       # the values would be different.
       self.assertEqual(got[0], got[1])
 
+  def testTPUPruneWithUnusedInput(self):
+    spec = hub.create_module_spec(unused_input_module_fn)
+
+    @function.Defun()
+    def import_computation(x):
+      context = TPUReplicateContext()
+      context.Enter()
+      m = hub.Module(spec, name="module_", trainable=True)
+      return m({
+          "x": tf.cast(x, dtype=tf.int64),
+          "unused": tf.constant(2, dtype=tf.int64)
+      })
+
+    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
+      x = import_computation(5)
+      got = sess.run(x)
+      self.assertEqual(got, 25)
+
   def testTPUModuleDoesntPruneControlDependencies(self):
     spec = hub.create_module_spec(control_dependency_module_fn)
 
