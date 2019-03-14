@@ -43,7 +43,7 @@ upper_tabs:
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb
         status: external
       - title: Image Classification
-        path: https://github.com/tensorflow/hub/blob/master/examples/colab/examples/colab/image_feature_vector.ipynb
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/image_feature_vector.ipynb
         status: external
       - title: Object Detection
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/object_detection.ipynb
