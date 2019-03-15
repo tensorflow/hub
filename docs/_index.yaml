@@ -22,7 +22,7 @@ landing_page:
           <li>Speed up training.</li>
         </ul>
         <div class="devsite-landing-row-item-buttons">
-          <a class="button button-primary tfo-button-primary" href="https://tfhub.dev">Browse modules on tfhub.dev</a>
+          <a class="button button-primary" href="https://tfhub.dev">Browse modules on tfhub.dev</a>
         </div>
       code_block: |
         <pre class = "prettyprint">
