@@ -81,7 +81,6 @@ class KerasLayer(tf.keras.layers.Layer):
       are pass into the Layer constructor.
   """
 
-  @tracking_base.no_automatic_dependency_tracking
   def __init__(self, handle, trainable=False, arguments=None, **kwargs):
     # Resolve the handle to a callable `func`.
     if callable(handle):
@@ -91,35 +90,24 @@ class KerasLayer(tf.keras.layers.Layer):
       if not callable(self._func):
         raise ValueError("Non-callable result from hub.load('%s')" %
                          str(handle))
-
-    # Set self._{non,}_trainable_weights and then call Layer.__init__.
-    # This together with @no_automatic_dependency_tracking above preserves
-    # func.trainable_variables independent of tf.Variable(..., trainable=...).
-    if hasattr(self._func, "trainable_variables"):
-      self._trainable_weights = [v for v in self._func.trainable_variables]
-      trainable_variables_set = set(self._func.trainable_variables)
-    else:
-      self._trainable_weights = []
-      trainable_variables_set = set()
-    if hasattr(self._func, "variables"):
-      self._non_trainable_weights = [v for v in self._func.variables
-                                     if v not in trainable_variables_set]
-    else:
-      self._non_trainable_weights = []
-
-    # TODO(b/124219898): We should be able to get the embedding dimension from
-    # the restored model.
+    # TODO(b/124219898): We should do shape inference on the callable.
     if "output_shape" in kwargs:
       self._output_shape = tuple(kwargs.pop("output_shape"))
 
+    # Initialize an empty layer, then add_weight() etc. as needed.
     super(KerasLayer, self).__init__(trainable=trainable, **kwargs)
 
-    # Prepare to call `func`.
-    self._func_fullargspec = tf_inspect.getfullargspec(self._func.__call__)
-    self._func_wants_training = (
-        "training" in self._func_fullargspec.args or
-        "training" in self._func_fullargspec.kwonlyargs)
-    self._arguments = arguments or {}
+    # Add trainable and non-trainable weights from the callable.
+    if hasattr(self._func, "trainable_variables"):
+      for v in self._func.trainable_variables:
+        self._add_existing_weight(v, trainable=True)
+      trainable_variables = set(self._func.trainable_variables)
+    else:
+      trainable_variables = set()
+    if hasattr(self._func, "variables"):
+      for v in self._func.variables:
+        if v not in trainable_variables:
+          self._add_existing_weight(v, trainable=False)
 
     # Forward the callable's regularization losses (if any).
     if hasattr(self._func, "regularization_losses"):
@@ -129,6 +117,19 @@ class KerasLayer(tf.keras.layers.Layer):
               "hub.KerasLayer(obj) expects obj.regularization_losses to be an "
               "iterable of callables, each returning a scalar loss term.")
         self.add_loss(l)  # Supports callables.
+
+    # Prepare to call `func`.
+    self._func_fullargspec = tf_inspect.getfullargspec(self._func.__call__)
+    self._func_wants_training = (
+        "training" in self._func_fullargspec.args or
+        "training" in self._func_fullargspec.kwonlyargs)
+    self._arguments = arguments or {}
+
+  def _add_existing_weight(self, weight, trainable=None):
+    """Calls add_weight() to register but not create an existing weight."""
+    if trainable is None: trainable = weight.trainable
+    self.add_weight(name=weight.name, shape=weight.shape, dtype=weight.dtype,
+                    trainable=trainable, getter=lambda *_, **__: weight)
 
   def call(self, inputs, training=None):
     # We basically want to call this...
