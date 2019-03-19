@@ -96,6 +96,32 @@ class KerasLayerTest(tf.test.TestCase):
     self.assertEqual([10, 1],
                      layer.compute_output_shape(tuple([10, 1])).as_list())
 
+  def testGetConfigFromConfig(self):
+    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
+    _save_half_plus_one_model(export_dir)
+    layer = hub.KerasLayer(export_dir)
+    in_value = np.array([[10.0]], dtype=np.float32)
+    result = layer(in_value).numpy()
+
+    config = layer.get_config()
+    new_layer = hub.KerasLayer.from_config(config)
+    new_result = new_layer(in_value).numpy()
+    self.assertEqual(result, new_result)
+
+  def testSaveModelConfig(self):
+    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
+    _save_half_plus_one_model(export_dir)
+
+    model = tf.keras.Sequential([hub.KerasLayer(export_dir)])
+    in_value = np.array([[10.]], dtype=np.float32)
+    result = model(in_value).numpy()
+
+    json_string = model.to_json()
+    new_model = tf.keras.models.model_from_json(
+        json_string, custom_objects={"KerasLayer": hub.KerasLayer})
+    new_result = new_model(in_value).numpy()
+    self.assertEqual(result, new_result)
+
 
 if __name__ == "__main__":
   # The file under test is not imported if TensorFlow is too old.

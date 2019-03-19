@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import functools
 
+import six
 import tensorflow as tf
 
 from tensorflow_hub import module_v2
@@ -82,6 +83,11 @@ class KerasLayer(tf.keras.layers.Layer):
   """
 
   def __init__(self, handle, trainable=False, arguments=None, **kwargs):
+    # Note: for compatibility with keras-model serialization this layer is
+    # json-serializable. If you add or change arguments here, please also update
+    # the `get_config` method.
+    self._handle = handle
+
     # Resolve the handle to a callable `func`.
     if callable(handle):
       self._func = handle
@@ -123,7 +129,8 @@ class KerasLayer(tf.keras.layers.Layer):
     self._func_wants_training = (
         "training" in self._func_fullargspec.args or
         "training" in self._func_fullargspec.kwonlyargs)
-    self._arguments = arguments or {}
+    if arguments is not None:
+      self._arguments = arguments
 
   def _add_existing_weight(self, weight, trainable=None):
     """Calls add_weight() to register but not create an existing weight."""
@@ -133,7 +140,10 @@ class KerasLayer(tf.keras.layers.Layer):
 
   def call(self, inputs, training=None):
     # We basically want to call this...
-    f = functools.partial(self._func, inputs, **self._arguments)
+    kwargs = getattr(self, "_arguments", None)
+    if kwargs is None:
+      kwargs = {}
+    f = functools.partial(self._func, inputs, **kwargs)
     # ...but we may also have to pass a Python boolean for `training`.
     if not self._func_wants_training:
       result = f()
@@ -147,3 +157,31 @@ class KerasLayer(tf.keras.layers.Layer):
     if hasattr(self, "_output_shape"):
       result.set_shape((inputs.shape[0],) + self._output_shape)
     return result
+
+  def get_config(self):
+    config = super(KerasLayer, self).get_config()
+    if not isinstance(self._handle, six.string_types):
+      raise ValueError(
+          "Can only generate a valid config for `hub.KerasLayer(handle, ...)`"
+          "that uses a string `handle`.\n\n"
+          "Got `type(handle)`: {}".format(type(self._handle)))
+
+    config.update({
+        "handle": self._handle,
+    })
+
+    if hasattr(self, "_output_shape"):
+      config["output_shape"] = self._output_shape
+
+    if hasattr(self, "_arguments"):
+      # Raise clear errors for non-serializable arguments.
+      for key, value in self._arguments.items():
+        try:
+          json.dumps(value)
+        except TypeError as e:
+          raise ValueError(
+              "`hub.KerasLayer(..., arguments)` contains non json-serializable"
+              "values in key: {}".format(key))
+      config["arguments"] = self._arguments,
+
+    return config
