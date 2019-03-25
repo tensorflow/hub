@@ -356,7 +356,7 @@ def create_bottleneck_file(bottleneck_path, image_lists, label_name, index,
                               image_dir, category)
   if not tf.gfile.Exists(image_path):
     tf.logging.fatal('File does not exist %s', image_path)
-  image_data = tf.gfile.FastGFile(image_path, 'rb').read()
+  image_data = tf.gfile.GFile(image_path, 'rb').read()
   try:
     bottleneck_values = run_bottleneck_on_image(
         sess, image_data, jpeg_data_tensor, decoded_image_tensor,
@@ -578,7 +578,7 @@ def get_random_distorted_bottlenecks(
                                 category)
     if not tf.gfile.Exists(image_path):
       tf.logging.fatal('File does not exist %s', image_path)
-    jpeg_data = tf.gfile.FastGFile(image_path, 'rb').read()
+    jpeg_data = tf.gfile.GFile(image_path, 'rb').read()
     # Note that we materialize the distorted_image_data as a numpy array before
     # sending running inference on the image. This involves 2 memory copies and
     # might be optimized in other implementations.
@@ -905,7 +905,7 @@ def save_graph_to_file(graph_file_name, module_spec, class_count):
   output_graph_def = tf.graph_util.convert_variables_to_constants(
       sess, graph.as_graph_def(), [FLAGS.final_tensor_name])
 
-  with tf.gfile.FastGFile(graph_file_name, 'wb') as f:
+  with tf.gfile.GFile(graph_file_name, 'wb') as f:
     f.write(output_graph_def.SerializeToString())
 
 
@@ -1153,7 +1153,7 @@ def main(_):
     if wants_quantization:
       tf.logging.info('The model is instrumented for quantization with TF-Lite')
     save_graph_to_file(FLAGS.output_graph, module_spec, class_count)
-    with tf.gfile.FastGFile(FLAGS.output_labels, 'w') as f:
+    with tf.gfile.GFile(FLAGS.output_labels, 'w') as f:
       f.write('\n'.join(image_lists.keys()) + '\n')
 
     if FLAGS.saved_model_dir:
