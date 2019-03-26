@@ -983,7 +983,7 @@ def logging_level_verbosity(logging_verbosity):
     return name_to_level[logging_verbosity]
   except Exception as e:
     raise RuntimeError('Not supported logs verbosity (%s). Use one of %s.' %
-                       (str(e), [*name_to_level]))
+                       (str(e), [name_to_level]))
 
 
 def main(_):
