@@ -179,7 +179,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         sub_dir[:-1]
         # tf.gfile.Walk() returns sub-directory with trailing '/' when it is in
         # Google Cloud Storage, which confuses os.path.basename().
-        if sub_dir.startswith('gs://') else sub_dir)
+        if sub_dir.endswith('/') else sub_dir)
 
     if dir_name == image_dir:
       continue
