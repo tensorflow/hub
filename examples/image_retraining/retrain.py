@@ -176,10 +176,9 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
                             for ext in ['JPEG', 'JPG', 'jpeg', 'jpg', 'png']))
     file_list = []
     dir_name = os.path.basename(
-        sub_dir[:-1]
         # tf.gfile.Walk() returns sub-directory with trailing '/' when it is in
         # Google Cloud Storage, which confuses os.path.basename().
-        if sub_dir.endswith('/') else sub_dir)
+        sub_dir[:-1] if sub_dir.endswith('/') else sub_dir)
 
     if dir_name == image_dir:
       continue
