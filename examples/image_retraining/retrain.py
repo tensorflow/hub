@@ -177,8 +177,8 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     file_list = []
     dir_name = os.path.basename(
         sub_dir[:-1]
-        # GCS returns sub-directory with training '/',
-        # which confuses os.path.basename()
+        # tf.gfile.Walk() returns sub-directory with trailing '/' when it is in
+        # Google Cloud Storage, which confuses os.path.basename().
         if sub_dir.startswith('gs://') else sub_dir)
 
     if dir_name == image_dir:
