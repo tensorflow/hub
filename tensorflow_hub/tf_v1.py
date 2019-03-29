@@ -27,7 +27,8 @@ from __future__ import print_function
 # pylint: disable=unused-import
 try:
   from tensorflow.compat.v1 import *  # pylint: disable=wildcard-import
-  from tensorflow_estimator import estimator
+  # The previous line also gets us tensorflow.compat.v1.estimator.
+  # Be sure not to import from tensorflow_estimator without version selection.
 except ImportError:
   from tensorflow import add_to_collection
   from tensorflow import app
