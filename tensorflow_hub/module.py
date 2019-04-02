@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import contextlib
 
+import os
 import six
 import tensorflow as tf
 
@@ -27,6 +28,21 @@ from tensorflow_hub import module_spec
 from tensorflow_hub import registry
 from tensorflow_hub import tensor_info
 from tensorflow_hub import tf_v1
+
+
+def check_tfhub_cache_dir():
+
+  # The case not using custom `TFHUB_CACHE_DIR`
+  if 'TFHUB_CACHE_DIR' not in os.environ.keys():
+    return True
+
+  tfhub_cache_dir = os.environ.get('TFHUB_CACHE_DIR')
+
+  # The case using local directory
+  if not tfhub_cache_dir.startswith('gs://'):
+    return True
+
+  return tf.gfile.IsDirectory(tfhub_cache_dir)
 
 
 def as_module_spec(spec):
@@ -57,6 +73,12 @@ def load_module_spec(path):
     ValueError: on unexpected values in the module spec.
     tf.OpError: on file handling exceptions.
   """
+  is_valid_dir = check_tfhub_cache_dir()
+  if not is_valid_dir:
+    raise ValueError(
+      "Your `TFHUB_CACHE_DIR`: {} is not valid. "
+      "You don't have a permission to the GCS bucket or the bucket doesn't exist.".format(
+        os.environ.get('TFHUB_CACHE_DIR')))
   path = registry.resolver(path)
   return registry.loader(path)
 
