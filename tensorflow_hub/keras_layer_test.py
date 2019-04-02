@@ -123,6 +123,8 @@ class KerasLayerTest(tf.test.TestCase):
     self.assertEqual(result, new_result)
 
   def testGetConfigFromConfigWithHParams(self):
+    if tf.__version__ == "2.0.0-alpha0":
+      self.skipTest("b/127938157 broke use of default hparams")
     export_dir = os.path.join(self.get_temp_dir(), "with-hparams")
     _save_model_with_hparams(export_dir)
     layer = hub.KerasLayer(export_dir, arguments=dict(a=10.))  # Leave b=0.
