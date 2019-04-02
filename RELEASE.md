@@ -13,9 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version (0.5.0-dev)
-  * Under development.
-
 # Release 0.4.0
   * `hub.KerasLayer` (for Hub/TF2 modules) can be used in graph mode
      and can be converted to/from a Keras config.
