@@ -52,6 +52,20 @@ def _save_half_plus_one_model(export_dir):
   tf.saved_model.save(obj, export_dir)
 
 
+def _save_model_with_hparams(export_dir):
+  """Writes a Hub-style SavedModel to compute y = ax + b with hparams a, b."""
+  @tf.function(input_signature=[
+      tf.TensorSpec(shape=(None, 1), dtype=tf.float32),
+      tf.TensorSpec(shape=(), dtype=tf.float32),
+      tf.TensorSpec(shape=(), dtype=tf.float32)])
+  def call_fn(x, a=1., b=0.):
+    return tf.add(tf.multiply(a, x), b)
+
+  obj = tf.train.Checkpoint()
+  obj.__call__ = call_fn
+  tf.saved_model.save(obj, export_dir)
+
+
 class KerasLayerTest(tf.test.TestCase):
 
   def testHalfPlusOneExample(self):
@@ -107,6 +121,20 @@ class KerasLayerTest(tf.test.TestCase):
     new_layer = hub.KerasLayer.from_config(config)
     new_result = new_layer(in_value).numpy()
     self.assertEqual(result, new_result)
+
+  def testGetConfigFromConfigWithHParams(self):
+    export_dir = os.path.join(self.get_temp_dir(), "with-hparams")
+    _save_model_with_hparams(export_dir)
+    layer = hub.KerasLayer(export_dir, arguments=dict(a=10.))  # Leave b=0.
+    in_value = np.array([[1.], [2.], [3.]], dtype=np.float32)
+    expected_result = np.array([[10.], [20.], [30.]], dtype=np.float32)
+    result = layer(in_value).numpy()
+    self.assertAllEqual(expected_result, result)
+
+    config = layer.get_config()
+    new_layer = hub.KerasLayer.from_config(config)
+    new_result = new_layer(in_value).numpy()
+    self.assertAllEqual(result, new_result)
 
   def testSaveModelConfig(self):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")

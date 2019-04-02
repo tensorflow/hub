@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import functools
+import json
 
 import six
 import tensorflow as tf
@@ -73,10 +74,12 @@ class KerasLayer(tf.keras.layers.Layer):
   Args:
     handle: a callable object (subject to the conventions above), or a
       Python string for which hub.load() returns such a callable.
+      A string is required to save the Keras config of this Layer.
     trainable: Boolean controlling whether the trainable variables of the
       callable are reported as trainable variables of this layer.
     arguments: optionally, a dict with additional keyword arguments passed
-      to the callable.
+      to the callable. These must be JSON-serializable to save the Keras config
+      of this layer.
     **kwargs: 'output_shape': A tuple with the (possibly partial) output
       shape of the callable *without* leading batch size. Other arguments
       are pass into the Layer constructor.
@@ -182,6 +185,6 @@ class KerasLayer(tf.keras.layers.Layer):
           raise ValueError(
               "`hub.KerasLayer(..., arguments)` contains non json-serializable"
               "values in key: {}".format(key))
-      config["arguments"] = self._arguments,
+      config["arguments"] = self._arguments
 
     return config
