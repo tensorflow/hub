@@ -14,7 +14,7 @@ limitations under the License.
 =============================================================================-->
 # Creating the TensorFlow Hub pip package using Linux
 
-This requires Python, Bazel and Git. (And TensorFlow for testing the package.)
+This requires Python, Bazel (0.18.1 or Similar) and Git. (And TensorFlow for testing the package.)
 
 ### Activate virtualenv
 
