@@ -26,20 +26,19 @@ landing_page:
         </div>
       code_block: |
         <pre class = "prettyprint">
-        import tensorflow as tf
-        import tensorflow_hub as hub
+          !pip install "tensorflow_hub==0.4.0"
+          !pip install "tf-nightly"
 
-        with tf.Graph().as_default():
-          module_url = "https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1"
-          embed = hub.Module(module_url)
+          import tensorflow as tf
+          import tensorflow_hub as hub
+
+          tf.enable_eager_execution()
+
+          module_url = "https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1"
+          embed = hub.KerasLayer(module_url)
           embeddings = embed(["A long sentence.", "single-word",
                               "http://example.com"])
-
-          with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            sess.run(tf.tables_initializer())
-
-            print(sess.run(embeddings))
+          print(embeddings.shape)  #(3,128)
         </pre>
 
   - classname: devsite-landing-row-cards
