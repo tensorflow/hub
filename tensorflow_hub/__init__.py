@@ -53,8 +53,8 @@ try:
   from tensorflow_hub.keras_layer import KerasLayer
 except ImportError:
   if LooseVersion(tf.__version__) < LooseVersion("1.14.0"):
-    logging.warning("Some hub symbols are not available "
-                    "because TensorFlow version is less than 1.14")
+    logging.info("hub.KerasLayer is not available "
+                 "because TensorFlow version is less than 1.14")
   else:
     raise  # This is unexpected and indicates a problem.
 
