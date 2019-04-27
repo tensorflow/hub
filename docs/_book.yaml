@@ -22,40 +22,55 @@ upper_tabs:
       - heading: Key Concepts
       - title: Using a Module
         path: /hub/basics
-      - title: Creating a New Module
+      - title: Creating a new Module
         path: /hub/creating
       - title: Fine-Tuning
         path: /hub/fine_tuning
       - title: Hosting a Module
         path: /hub/hosting
       - heading: Tutorials
-      - title: Image Retraining
+      - title: Image retraining
         path: /hub/tutorials/image_retraining
-      - title: Text Classification
+      - title: Text classification
         path: /hub/tutorials/text_classification_with_tf_hub
-      - title: Action Recognition
+      - title: Action recognition
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/action_recognition_with_tf_hub.ipynb
         status: external
-      - title: Semantic Similarity
-        path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_similarity_with_tf_hub_universal_encoder.ipynb
+      - title: BigGAN image generation
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/biggan_generation_with_tf_hub.ipynb
         status: external
-      - title: Kaggle Text Classification
-        path: https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb
+      - title: Multilingual universal sentence encoder
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder.ipynb
         status: external
-      - title: Image Classification
+      - title: Image transfer learning
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/image_feature_vector.ipynb
         status: external
-      - title: Object Detection
+      - title: Object detection
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/object_detection.ipynb
         status: external
-      - title: Image Feature Matching
+      - title: Semantic similarity
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_similarity_with_tf_hub_universal_encoder.ipynb
+        status: external
+      - title: Semantic similarity lite
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_similarity_with_tf_hub_universal_encoder_lite.ipynb
+        status: external
+      - title: Text classification
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub.ipynb
+        status: external
+      - title: Text classification - kaggle
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb
+        status: external
+      - title: Image transfer learning - TF2
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb
+        status: external
+      - title: Text classification - TF2
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb
+        status: external
+      - title: Image feature matching
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_delf_module.ipynb
         status: external
-      - title: Image Generation
+      - title: Image generation
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_generative_image_module.ipynb
-        status: external
-      - title: BigGAN Image Generation
-        path: https://github.com/tensorflow/hub/blob/master/examples/colab/biggan_generation_with_tf_hub.ipynb
         status: external
       - heading: Common Signatures
       - title: Overview

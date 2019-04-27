@@ -14,10 +14,13 @@
 # ==============================================================================
 workspace(name = "org_tensorflow_hub")
 
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 git_repository(
     name = "protobuf_bzl",
-    # v3.6.0
-    commit = "ab8edf1dbe2237b4717869eaab11a2998541ad8d",
+    # v3.6.1.3
+    commit = "66dc42d891a4fc8e9190c524fd67961688a37bbe",
     remote = "https://github.com/google/protobuf.git",
 )
 bind(
@@ -36,15 +39,15 @@ bind(
     name = "protoc",
     actual = "@protobuf_bzl//:protoc",
 )
-# Using protobuf version 3.6.0
+# Using protobuf version 3.6.1.3
 http_archive(
     name = "com_google_protobuf",
-    strip_prefix = "protobuf-3.6.0",
-    urls = ["https://github.com/google/protobuf/archive/v3.6.0.zip"],
+    strip_prefix = "protobuf-3.6.1.3",
+    urls = ["https://github.com/google/protobuf/archive/v3.6.1.3.zip"],
 )
 
 # required by protobuf_python
-new_http_archive(
+http_archive(
     name = "six_archive",
     build_file = "@protobuf_bzl//:six.BUILD",
     sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",

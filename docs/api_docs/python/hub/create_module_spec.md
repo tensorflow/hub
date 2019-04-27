@@ -55,7 +55,7 @@ Module.__init__().
 * <b>`module_fn`</b>: a function to build a graph for the Module.
 * <b>`tags_and_args`</b>: Optional list of tuples (tags, kwargs) of tags and keyword
     args used to define graph variants. If omitted, it is interpreted as
-    [set(), {}], meaning `module_fn` is called once with no args.
+    [(set(), {})], meaning `module_fn` is called once with no args.
 * <b>`drop_collections`</b>: list of collection to drop.
 
 

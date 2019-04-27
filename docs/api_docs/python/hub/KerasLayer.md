@@ -8,6 +8,7 @@
 <meta itemprop="property" content="input_mask"/>
 <meta itemprop="property" content="input_shape"/>
 <meta itemprop="property" content="losses"/>
+<meta itemprop="property" content="metrics"/>
 <meta itemprop="property" content="name"/>
 <meta itemprop="property" content="non_trainable_variables"/>
 <meta itemprop="property" content="non_trainable_weights"/>
@@ -86,10 +87,12 @@ hub.KerasLayer(
 
 * <b>`handle`</b>: a callable object (subject to the conventions above), or a
     Python string for which hub.load() returns such a callable.
+    A string is required to save the Keras config of this Layer.
 * <b>`trainable`</b>: Boolean controlling whether the trainable variables of the
     callable are reported as trainable variables of this layer.
 * <b>`arguments`</b>: optionally, a dict with additional keyword arguments passed
-    to the callable.
+    to the callable. These must be JSON-serializable to save the Keras config
+    of this layer.
 * <b>`**kwargs`</b>: 'output_shape': A tuple with the (possibly partial) output
     shape of the callable *without* leading batch size. Other arguments
     are pass into the Layer constructor.
@@ -194,6 +197,10 @@ propagate gradients back to the corresponding variables.
 #### Returns:
 
 A list of tensors.
+
+<h3 id="metrics"><code>metrics</code></h3>
+
+
 
 <h3 id="name"><code>name</code></h3>
 
@@ -493,20 +500,7 @@ A layer instance.
 get_config()
 ```
 
-Returns the config of the layer.
 
-A layer config is a Python dictionary (serializable)
-containing the configuration of a layer.
-The same layer can be reinstantiated later
-(without its trained weights) from this configuration.
-
-The config of a layer does not include connectivity
-information, nor the layer class name. These are handled
-by `Network` (one layer of abstraction above).
-
-#### Returns:
-
-Python dictionary.
 
 <h3 id="get_input_at"><code>get_input_at</code></h3>
 
