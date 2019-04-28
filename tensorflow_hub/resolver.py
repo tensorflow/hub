@@ -383,8 +383,8 @@ def atomic_download(handle,
           # Lock file will be deleted in the finally-clause.
           return module_dir
         break  # Proceed to downloading the module.
-      except tf.errors.NotFoundError as e:
-        raise e
+      except tf.errors.NotFoundError:
+        raise
       except tf.errors.OpError:
         pass
 
