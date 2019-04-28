@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import mock
 import os
 import re
 import socket
@@ -314,6 +315,27 @@ class ResolverTest(tf.test.TestCase):
     with self.assertRaisesRegexp(ValueError, "is invalid"):
       resolver._merge_relative_path("gs://module-cache", "hello/../../bla")
 
+  def testNotFoundBucket(self):
+    """
+    When trying to use not existing GCS bucket,
+    `tf_util.atomic_write_string_to_file` would raise `tf.error.NotFoundError`.
+    In such case, `resolver.atomic_download` must not ignoring `tf.error.NotFoundError`,
+    though it ignore other errors arise from network connection and retry infinitely.
+    """
+    module_dir = ""
+    def dummy_download_fn(handle, tmp_dir):
+      del handle, tmp_dir
+      return
+
+    # Replace `tf_utils.atomic_write_string_to_file` with a mock raising `tf.error.NotFoundError`
+    with mock.patch("tensorflow_hub.tf_utils.atomic_write_string_to_file") as mock_:
+      mock_.side_effect = tf.errors.NotFoundError(None, None, "Boom!")
+      try:
+        resolver.atomic_download("module", dummy_download_fn, module_dir)
+        # `resolver.atomic_download` must raise `tf.errors.NotFoundError` in the patch context.
+        assert False
+      except Exception as e:
+        self.assertEqual(type(e), tf.errors.NotFoundError)
 
 if __name__ == "__main__":
   tf.test.main()
