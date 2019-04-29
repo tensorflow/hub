@@ -319,7 +319,7 @@ class ResolverTest(tf.test.TestCase):
     """
     When trying to use not existing GCS bucket,
     `tf_util.atomic_write_string_to_file` would raise `tf.error.NotFoundError`.
-    In such case, `resolver.atomic_download` must not ignoring `tf.error.NotFoundError`,
+    In such case, `resolver.atomic_download` must not ignore `tf.error.NotFoundError`,
     though it ignore other errors arise from network connection and retry infinitely.
     """
     module_dir = ""
