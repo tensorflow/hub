@@ -200,14 +200,7 @@ class End2EndTest(tf.test.TestCase):
     os.chdir(os.path.dirname(full_module_path))
     server_port = test_utils.start_http_server()
     handle = "http://localhost:%d/half_plus_two_v1.tar.gz" % server_port
-    try:
-      hub.load(handle)
-      self.fail("Loading v1 modules not support. Failure expected.")
-    except NotImplementedError as e:
-      self.assertEqual(str(e),
-                       "TF Hub module '%s' is stored using TF 1.x "
-                       "format. Loading of the module using hub.load() is not "
-                       "supported." % handle)
+    hub.load(handle)
 
 
 if __name__ == "__main__":

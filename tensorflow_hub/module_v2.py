@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""TensorFlow Hub Module API for Tensorflow 2.0"""
+"""TensorFlow Hub Module API for Tensorflow 2.0."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow_hub import native_module
 from tensorflow_hub import registry
 from tensorflow_hub import tf_v1
 
@@ -40,12 +39,12 @@ def resolve(handle):
   return registry.resolver(handle)
 
 
-def load(handle):
+def load(handle, tags=None):
   """Loads a module from a handle.
 
-  Currently this method only works with Tensorflow 2.x and can only load modules
-  created by calling tensorflow.saved_model.save(). The method works in both
-  eager and graph modes.
+  Currently this method is fully supported only with Tensorflow 2.x and with
+  modules created by calling tensorflow.saved_model.save(). The method works in
+  both eager and graph modes.
 
   Depending on the type of handle used, the call may involve downloading a
   Tensorflow Hub module to a local cache location specified by the
@@ -63,6 +62,8 @@ def load(handle):
 
   Args:
     handle: (string) the Module handle to resolve.
+    tags: A set of strings specifying the graph variant to use, if loading from
+      a v1 module.
 
   Returns:
     A trackable object (see tf.saved_model.load() documentation for details).
@@ -73,11 +74,7 @@ def load(handle):
   """
   if hasattr(tf_v1.saved_model, "load_v2"):
     module_handle = resolve(handle)
-    if tf_v1.gfile.Exists(native_module.get_module_proto_path(module_handle)):
-      raise NotImplementedError("TF Hub module '%s' is stored using TF 1.x "
-                                "format. Loading of the module using "
-                                "hub.load() is not supported." % handle)
-    return tf_v1.saved_model.load_v2(module_handle)
+    return tf_v1.saved_model.load_v2(module_handle, tags=tags)
   else:
     raise NotImplementedError("hub.load() is not implemented for TF < 1.14.x, "
-                              "Current version: %s", tf.__version__)
+                              "Current version: %s" % tf.__version__)
