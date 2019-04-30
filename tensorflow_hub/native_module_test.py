@@ -778,59 +778,6 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
       got = sess.run(x(9.0, 6.0))
       self.assertEqual(got, [19.0, 16.0])
 
-  # The following tests should all fail until b/112575006 is resolved.
-  def testModuleWithDefun(self):
-    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
-
-    @function.Defun()
-    def import_computation(first, second):
-      m = hub.Module(spec, name="module_", trainable=True)
-      return [m(first), m(second)]
-    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
-      # In the case where we don't handle the variables, they will not be
-      # hoisted so they are not handled properly.
-      with self.assertRaisesRegexp(
-          NotImplementedError,
-          "Using TF-Hub module within a TensorFlow defined function "
-          "is currently not supported."):
-        import_computation(9.0, 6.0)
-
-  def testModuleWithEagerDefun(self):
-    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
-
-    def import_computation(first, second):
-      # In the case where we don't handle the variables, they will not be
-      # hoisted so they are not handled properly.
-      with self.assertRaisesRegexp(
-          NotImplementedError,
-          "Using TF-Hub module within a TensorFlow defined function "
-          "is currently not supported."):
-        m = hub.Module(spec, trainable=True)
-        return [m(first), m(second)]
-
-    x = function_eager.defun(import_computation)
-    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
-      sess.run(x(9.0, 6.0))
-
-  def testModuleWithWrapFunc(self):
-    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
-
-    def import_computation(first, second):
-      m = hub.Module(spec, trainable=True)
-      return [m(first), m(second)]
-
-    # In the case where we don't handle the variables, they will not be
-    # hoisted so they are not handled properly.
-    with tf_v1.Graph().as_default(), tf_v1.Session() as sess:
-      with self.assertRaisesRegexp(
-          NotImplementedError,
-          "Using TF-Hub module within a TensorFlow defined function "
-          "is currently not supported."):
-        tf_v1.wrap_function(
-            import_computation,
-            [tf.TensorSpec((), tf.float32),
-             tf.TensorSpec((), tf.float32)])
-
   def _exportModulewithTrainedVariable(self):
     export_path = os.path.join(self.get_temp_dir(), "var-module")
     with tf.Graph().as_default():
@@ -1763,6 +1710,32 @@ class TFHubExportSpecTest(tf.test.TestCase):
       spec.export(export_path,
                   checkpoint_path=checkpoint_path,
                   name_transform_fn=lambda x: "block/" + x)
+
+
+class TFHubUsageWithEager(tf.test.TestCase):
+
+  def testWrapFunction(self):
+    if not tf.executing_eagerly():
+      self.skipTest("Test requires eager.")
+
+    spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
+
+    initializers = []
+    def use_module(x, y):
+      m = hub.Module(spec, name="module_", trainable=True)
+      initializers.append(tf_v1.initializers.global_variables())
+      return [m(x), m(y)]
+
+    input_signature = [
+        tf.TensorSpec((), tf.float32),
+        tf.TensorSpec((), tf.float32),
+    ]
+
+    f = tf_v1.wrap_function(use_module, input_signature)
+    f.prune([], initializers)()
+    self.assertAllEqual(
+        [x.numpy() for x in f(9.0, 6.0)],
+        [19.0, 16.0])
 
 
 if __name__ == "__main__":

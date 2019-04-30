@@ -210,6 +210,10 @@ class Module(object):
     - Add constant tensors to ASSET_FILEPATHS, even if those are not needed
       directly needed for the signature.
 
+    Note: `hub.Module` implementation depends on graph pruning that happens
+    usually during `session.run` as so it can lead to errors when used inside
+    function graphs that execute all its ops (e.g. `tf.data.Dataset.map`).
+
     Args:
       inputs: Inputs to the signature. A dict from input names to tensor
         values. If the signature only expects one input, one may pass

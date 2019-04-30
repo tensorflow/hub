@@ -381,13 +381,21 @@ class _ModuleImpl(module_impl.ModuleImpl):
     register_ops_if_needed({
         op.name for op in self._meta_graph.meta_info_def.stripped_op_list.op})
 
-    # Use an init scope to clear dependencies and lift state ops outside of
-    # function-building graphs. Modules can be constructed from deep inside
+    if _is_tpu_graph_function():
+      # TODO(b/129142908): Hub should not use `tf.init_scope` since that makes
+      # it incompatible with tf.compat.v1.wrap_function. For now the only use
+      # case where hub used it was for tpu compatibility. This should be cleaned
+      # up at an early convinience.
+      scope_func = tf.init_scope
+    else:
+      scope_func = lambda: tf.control_dependencies(None)
+
+    # Clear dependencies so modules can be constructed from deep inside
     # functions that have dependencies active. Note that the dependencies
     # would be active when applying the Module signature, just not active
     # when creating the Module state. This use case has showed up in some
     # TPU training code.
-    with tf.init_scope():
+    with scope_func():
       self._init_state(name)
 
   def _init_state(self, name):
@@ -489,7 +497,7 @@ class _ModuleImpl(module_impl.ModuleImpl):
     # TODO(b/112575006): The following adds functionality of function call
     # within a TPU context. Work to generalize this for all function calls is
     # ongoing.
-    if self._is_tpu_graph_function():
+    if _is_tpu_graph_function():
       for k, v in self._state_map.items():
         feed_map[k] = apply_graph.capture(v)
       meta_graph_lib.prune_unused_nodes(meta_graph, signature_def)
@@ -497,9 +505,15 @@ class _ModuleImpl(module_impl.ModuleImpl):
       # infeeds which no longer exist.
       meta_graph_lib.prune_feed_map(meta_graph, infeed_map)
     elif apply_graph.building_function:
-      raise NotImplementedError(
-          "Using TF-Hub module within a TensorFlow defined function "
-          "is currently not supported.")
+      # Log a warning if a user is using a hub module in function graph.
+      # This is only expected to work if the function graph is pruned and
+      # not all nodes are executed.
+      #
+      # E.g. it could work with "tf.compat.v1.wrap_function", but it will not
+      # work with defun, Dataset.map_fn, etc...
+      logging.warning("Using `hub.Module` while building a function: %s. This "
+                      "can lead to errors if the function is not pruned.",
+                      apply_graph.name)
 
     # As state ops in the apply graph are unused, replace them with Placeholders
     # so that in a heirarchical instantiation, apply_graph state ops are
@@ -536,7 +550,7 @@ class _ModuleImpl(module_impl.ModuleImpl):
     meta_graph_lib.filter_collections(meta_graph, import_collections)
     meta_graph_lib.prefix_shared_name_attributes(meta_graph,
                                                  absolute_scope_name)
-    if len(meta_graph.collection_def) and self._is_tpu_graph_function():
+    if len(meta_graph.collection_def) and _is_tpu_graph_function():
       raise NotImplementedError(
           "Applying modules with collections inside TPU functions is not "
           "supported.")
@@ -559,12 +573,6 @@ class _ModuleImpl(module_impl.ModuleImpl):
                 name, import_scope=absolute_scope_name))
 
     return tensor_info.build_output_map(signature_def.outputs, get_tensor)
-
-  def _is_tpu_graph_function(self):
-    apply_graph = tf_v1.get_default_graph()
-    return (apply_graph.building_function and
-            type(apply_graph._get_control_flow_context()).__name__.endswith(  # pylint: disable=protected-access
-                "TPUReplicateContext"))
 
   def export(self, path, session):
     """See `Module.export`."""
@@ -1091,3 +1099,10 @@ def find_signature_inputs_from_multivalued_ops(inputs):
         "colocation constraints have to be rewritten.\nAffected inputs: %s" %
         ", ".join("%s='%s'" % pair for pair in warnings))
   return None
+
+
+def _is_tpu_graph_function():
+  graph = tf_v1.get_default_graph()
+  return (graph.building_function and
+          type(graph._get_control_flow_context()).__name__.endswith(  # pylint: disable=protected-access
+              "TPUReplicateContext"))
