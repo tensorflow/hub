@@ -30,7 +30,7 @@ function main() {
   fi
 
   DEST=$1
-  TMPDIR=$(mktemp -d -t --suffix _tensorflow_hub_pip_pkg)
+  TMPDIR=$(mktemp -d)
   RUNFILES="bazel-bin/tensorflow_hub/pip_package/build_pip_package.runfiles/org_tensorflow_hub"
 
   echo $(date) : "=== Using tmpdir: ${TMPDIR}"
