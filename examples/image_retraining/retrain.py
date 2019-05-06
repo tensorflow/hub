@@ -369,7 +369,7 @@ def create_bottleneck_file(bottleneck_path, image_lists, label_name, index,
     raise RuntimeError('Error during processing file %s (%s)' % (image_path,
                                                                  str(e)))
   bottleneck_string = ','.join(str(x) for x in bottleneck_values)
-  with open(bottleneck_path, 'w') as bottleneck_file:
+  with tf.gfile.GFile(bottleneck_path, 'w') as bottleneck_file:
     bottleneck_file.write(bottleneck_string)
 
 
@@ -413,7 +413,7 @@ def get_or_create_bottleneck(sess, image_lists, label_name, index, image_dir,
                            image_dir, category, sess, jpeg_data_tensor,
                            decoded_image_tensor, resized_input_tensor,
                            bottleneck_tensor)
-  with open(bottleneck_path, 'r') as bottleneck_file:
+  with tf.gfile.GFile(bottleneck_path, 'r') as bottleneck_file:
     bottleneck_string = bottleneck_file.read()
   did_hit_error = False
   try:
@@ -426,7 +426,7 @@ def get_or_create_bottleneck(sess, image_lists, label_name, index, image_dir,
                            image_dir, category, sess, jpeg_data_tensor,
                            decoded_image_tensor, resized_input_tensor,
                            bottleneck_tensor)
-    with open(bottleneck_path, 'r') as bottleneck_file:
+    with tf.gfile.GFile(bottleneck_path, 'r') as bottleneck_file:
       bottleneck_string = bottleneck_file.read()
     # Allow exceptions to propagate here, since they shouldn't happen after a
     # fresh creation
