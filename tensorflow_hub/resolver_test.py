@@ -18,6 +18,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+try:
+  import mock as mock
+except ImportError:
+  import unittest.mock as mock
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+
 import os
 import re
 import socket
@@ -314,6 +321,26 @@ class ResolverTest(tf.test.TestCase):
     with self.assertRaisesRegexp(ValueError, "is invalid"):
       resolver._merge_relative_path("gs://module-cache", "hello/../../bla")
 
+  def testNotFoundGCSBucket(self):
+    # When trying to use not existing GCS bucket, test that
+    # tf_util.atomic_write_string_to_file raises tf.error.NotFoundError.
+    # Other errors that may arise from bad network connectivity are ignored by
+    # resolver.atomic_download and retried infinitely.
+    module_dir = ""
+    def dummy_download_fn(handle, tmp_dir):
+      del handle, tmp_dir
+      return
+
+    # Simulate missing GCS bucket by raising NotFoundError in
+    # atomic_write_string_to_file.
+    with mock.patch(
+        "tensorflow_hub.tf_utils.atomic_write_string_to_file") as mock_:
+      mock_.side_effect = tf.errors.NotFoundError(None, None, "Test")
+      try:
+        resolver.atomic_download("module", dummy_download_fn, module_dir)
+        assert False
+      except tf.errors.NotFoundError as e:
+        self.assertEqual("Test", e.message)
 
 if __name__ == "__main__":
   tf.test.main()
