@@ -1648,7 +1648,7 @@ class TFHubModuleWithAttachedMessages(tf.test.TestCase):
 class TFHubOpsTest(tf.test.TestCase):
 
   def testRegisterLinkedOpsError(self):
-    with self.assertRaisesRegexp(RuntimeError, "non-existent-op"):
+    with self.assertRaisesRegexp(tf.errors.NotFoundError, "non-existent-op"):
       native_module.register_ops_if_needed({"non-existent-op"})
 
 

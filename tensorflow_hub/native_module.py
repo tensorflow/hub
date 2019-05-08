@@ -785,8 +785,8 @@ def register_ops_if_needed(graph_ops):
     graph_ops: set with graph op names to register.
 
   Raises:
-    RuntimeError: if `graph_ops` contains ops that are not in either python or
-      c++ registry.
+    tf.errors.NotFoundError: if `graph_ops` contains ops that are not in either
+    python or c++ registry.
   """
   missing_ops = graph_ops - set(op_def_registry.get_registered_ops().keys())
 
@@ -816,7 +816,7 @@ def register_ops_if_needed(graph_ops):
   # This allows the test to exercise all the calls into TensorFlow
   # without having to write a C + python test.
   if not missing_ops <= set(cpp_registry_ops.keys()):
-    raise RuntimeError(
+    raise tf.errors.NotFoundError(None, None,
         "Graph ops missing from the python registry (%s) are also absent from "
         "the c++ registry."
         % missing_ops.difference(set(cpp_registry_ops.keys())))

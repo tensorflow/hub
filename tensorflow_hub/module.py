@@ -142,6 +142,7 @@ class Module(object):
       RuntimeError: explaning the reason why it failed to instantiate the
         Module.
       ValueError: if the requested graph variant does not exists.
+      tf.errors.NotFoundError: if the requested graph contains unknown ops.
     """
     self._graph = tf_v1.get_default_graph()
     self._spec = as_module_spec(spec)
