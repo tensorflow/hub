@@ -23,7 +23,7 @@ have to help control the training process.
 This tutorial uses [TensorFlow Hub](../index.md) to ingest
 pre-trained pieces of models, or *modules* as they are called. For starters,
 we will use the [image feature extraction
-module](https://tfhub.dev/google/imagenet/inception_v3/feature_vector/1)
+module](https://tfhub.dev/google/imagenet/inception_v3/feature_vector/3)
 with the Inception V3 architecture trained on ImageNet,
 and [come back later](#other_architectures) to further options, including
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)/PNASNet, as well as
@@ -369,9 +369,9 @@ TensorFlow Hub module](https://tfhub.dev/s?module-type=image-feature-vector).
 On the one hand, that list shows more recent, powerful architectures, such as
 [NASNet](https://research.googleblog.com/2017/11/automl-for-large-scale-image.html)
 (notably
-[`nasnet_large`](https://tfhub.dev/google/imagenet/nasnet_large/feature_vector/1)
+[`nasnet_large`](https://tfhub.dev/google/imagenet/nasnet_large/feature_vector/3)
 and
-[`pnasnet_large`](https://tfhub.dev/google/imagenet/pnasnet_large/feature_vector/2)),
+[`pnasnet_large`](https://tfhub.dev/google/imagenet/pnasnet_large/feature_vector/3)),
 which could give you some extra precision.
 
 On the other hand, if you intend to deploy your model on mobile devices or other
@@ -384,7 +384,7 @@ V1](https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.ht
 or
 [V2](https://research.googleblog.com/2018/04/mobilenetv2-next-generation-of-on.html)
 architectures, or also
-[`nasnet_mobile`](https://tfhub.dev/google/imagenet/nasnet_mobile/feature_vector/1).
+[`nasnet_mobile`](https://tfhub.dev/google/imagenet/nasnet_mobile/feature_vector/3).
 
 Training with a different module is easy: Just pass the `--tfhub_module`
 flag with the module URL, for example:
@@ -392,7 +392,7 @@ flag with the module URL, for example:
 ```sh
 python retrain.py \
     --image_dir ~/flower_photos \
-    --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/2
+    --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/3
 ```
 
 This will create a 9 MB model file in `/tmp/output_graph.pb` with a model that
