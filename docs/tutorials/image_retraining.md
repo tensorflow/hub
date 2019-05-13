@@ -435,4 +435,4 @@ For more information on deploying the retrained model to a mobile device, see
 the [codelab version](https://codelabs.developers.google.com/codelabs/tensorflow-for-poets/#0)
 of this tutorial, especially [part 2](https://codelabs.developers.google.com/codelabs/tensorflow-for-poets-2-tflite/#0), which describes
 [TensorFlow Lite](https://www.tensorflow.org/mobile/tflite/) and the additional
-optimizations it offers (including quantization of model weights).
+optimizations it offers (including quantization of model weights). To convert the model to TensorFlow.js, you need to use version 0.8.5 of `tensorflowjs-converter` as of https://stackoverflow.com/a/56084489/1587329.
