@@ -136,7 +136,7 @@ FLAGS = None
 MAX_NUM_IMAGES_PER_CLASS = 2 ** 27 - 1  # ~134M
 
 # The location where variable checkpoints will be stored.
-CHECKPOINT_NAME = '/tmp/_retrain_checkpoint'
+CHECKPOINT_NAME = './tmp/_retrain_checkpoint'
 
 # A module is understood as instrumented for quantization with TF-Lite
 # if it contains any of these ops.
