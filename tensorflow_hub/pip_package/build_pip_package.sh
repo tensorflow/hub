@@ -58,14 +58,6 @@ function main() {
   cp "LICENSE" "${TMPDIR}/LICENSE.txt"
   cp -R "${RUNFILES}/tensorflow_hub" "${TMPDIR}"
 
-  # If we're dealing with a nightly build we need to make sure that the
-  # version changes on a daily basis. This hack edits the setup.py file
-  # accordingly.
-  if [[ "${PROJECT_NAME}" -eq "tf-hub-nightly" ]]; then
-    POSTFIX=".dev$(date +%Y%m%d%H%M)"
-    sed -i -E "s/version=__version__/version=(__version__ + '${POSTFIX}')/" ${TMPDIR}/setup.py
-  fi
-
   pushd ${TMPDIR}
   rm -f MANIFEST
 

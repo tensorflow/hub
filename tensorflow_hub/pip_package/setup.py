@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from datetime import datetime
 from setuptools import find_packages
 from setuptools import setup
 
@@ -40,9 +41,15 @@ if '--project_name' in sys.argv:
   sys.argv.remove('--project_name')
   sys.argv.pop(project_name_idx)
 
+# If we're dealing with a nightly build we need to make sure that the
+# version changes for every release.
+version = __version__
+if project_name == 'tf-hub-nightly':
+  version += '.dev' + datetime.now().strftime('%Y%m%d%H%M')
+
 setup(
     name=project_name,  # Automatic: tensorflow_hub, etc. Case insensitive.
-    version=__version__.replace('-', ''),
+    version=version.replace('-', ''),
     description=('TensorFlow Hub is a library to foster the publication, '
                  'discovery, and consumption of reusable parts of machine '
                  'learning models.'),
