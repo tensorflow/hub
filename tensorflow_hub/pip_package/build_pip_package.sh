@@ -20,16 +20,27 @@ set -e
 set -o pipefail
 
 die() {
-  printf >&2 '%s\n' "$1"
+  printf >&2 '%s %s\n' "$1" "$2"
   exit 1
+}
+
+function usage() {
+  echo "Usage:"
+  echo "$0 dstdir [project_name]"
 }
 
 function main() {
   if [ $# -lt 1 ] ; then
-    die "ERROR: no destination dir provided"
+    echo "ERROR: no destination dir provided"
+    usage
+    exit 1
+  fi
+  DEST=$1
+  PROJECT_NAME='tensorflow-hub'
+  if [[ ! -z $2 ]]; then
+    PROJECT_NAME=$2
   fi
 
-  DEST=$1
   TMPDIR=$(mktemp -d)
   RUNFILES="bazel-bin/tensorflow_hub/pip_package/build_pip_package.runfiles/org_tensorflow_hub"
 
@@ -47,11 +58,20 @@ function main() {
   cp "LICENSE" "${TMPDIR}/LICENSE.txt"
   cp -R "${RUNFILES}/tensorflow_hub" "${TMPDIR}"
 
+  # If we're dealing with a nightly build we need to make sure that the
+  # version changes on a daily basis. This hack edits the setup.py file
+  # accordingly.
+  if [[ "${PROJECT_NAME}" -eq "tf-hub-nightly" ]]; then
+    POSTFIX=".dev$(date +%Y%m%d%H%M)"
+    sed -i -E "s/version=__version__/version=(__version__ + '${POSTFIX}')/" ${TMPDIR}/setup.py
+  fi
+
   pushd ${TMPDIR}
   rm -f MANIFEST
 
+
   echo $(date) : "=== Building universal python wheel in $PWD"
-  python setup.py bdist_wheel --universal >/dev/null
+  python setup.py bdist_wheel --universal --project_name $PROJECT_NAME >/dev/null
   mkdir -p ${DEST}
   cp dist/* ${DEST}
   popd

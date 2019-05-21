@@ -20,6 +20,8 @@ from __future__ import print_function
 from setuptools import find_packages
 from setuptools import setup
 
+import sys
+
 # Can't import the module during setup.py.
 # Use execfile to find __version__.
 with open("tensorflow_hub/version.py") as in_file:
@@ -31,9 +33,15 @@ REQUIRED_PACKAGES = [
     'protobuf >= 3.4.0',
 ]
 
+project_name = 'tensorflow-hub'
+if '--project_name' in sys.argv:
+  project_name_idx = sys.argv.index('--project_name')
+  project_name = sys.argv[project_name_idx + 1]
+  sys.argv.remove('--project_name')
+  sys.argv.pop(project_name_idx)
 
 setup(
-    name='tensorflow-hub',  # Automatic: tensorflow_hub, etc. Case insensitive.
+    name=project_name,  # Automatic: tensorflow_hub, etc. Case insensitive.
     version=__version__.replace('-', ''),
     description=('TensorFlow Hub is a library to foster the publication, '
                  'discovery, and consumption of reusable parts of machine '
