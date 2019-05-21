@@ -135,9 +135,6 @@ FLAGS = None
 
 MAX_NUM_IMAGES_PER_CLASS = 2 ** 27 - 1  # ~134M
 
-# The location where variable checkpoints will be stored.
-CHECKPOINT_NAME = '/tmp/_retrain_checkpoint'
-
 # A module is understood as instrumented for quantization with TF-Lite
 # if it contains any of these ops.
 FAKE_QUANT_OPS = ('FakeQuantWithMinMaxVars',
@@ -892,7 +889,7 @@ def build_eval_session(module_spec, class_count):
 
     # Now we need to restore the values from the training graph to the eval
     # graph.
-    tf.train.Saver().restore(eval_sess, CHECKPOINT_NAME)
+    tf.train.Saver().restore(eval_sess, FLAGS.checkpoints_dir)
 
     evaluation_step, prediction = add_evaluation_step(final_tensor,
                                                       ground_truth_input)
@@ -1134,7 +1131,7 @@ def main(_):
           and i > 0):
         # If we want to do an intermediate save, save a checkpoint of the train
         # graph, to restore into the eval graph.
-        train_saver.save(sess, CHECKPOINT_NAME)
+        train_saver.save(sess, FLAGS.checkpoints_dir)
         intermediate_file_name = (FLAGS.intermediate_output_graphs_dir +
                                   'intermediate_' + str(i) + '.pb')
         tf.logging.info('Save intermediate result to : ' +
@@ -1143,7 +1140,7 @@ def main(_):
                            class_count)
 
     # After training is complete, force one last save of the train checkpoint.
-    train_saver.save(sess, CHECKPOINT_NAME)
+    train_saver.save(sess, FLAGS.checkpoints_dir)
 
     # We've completed all our training, so run a final test evaluation on
     # some new images we haven't used before.
@@ -1342,5 +1339,11 @@ if __name__ == '__main__':
       default='INFO',
       choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
       help='How much logging output should be produced.')
+  parser.add_argument(
+      '--checkpoints_dir',
+      type=str,
+      default='/tmp/_retrain_checkpoint',
+      help='Where to save checkpoints files.'
+  )
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
