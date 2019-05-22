@@ -24,6 +24,7 @@ import tensorflow_hub as hub
 from tensorflow_hub import tf_v1
 
 # pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.feature_column import feature_column_lib
 from tensorflow.python.ops.lookup_ops import HashTable
 from tensorflow.python.ops.lookup_ops import KeyValueTensorInitializer
 # pylint: enable=g-direct-tensorflow-import
@@ -67,7 +68,11 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
 
   def testVariableShape(self):
     text_column = hub.text_embedding_column("text", self.spec, trainable=False)
-    self.assertEqual(text_column._variable_shape, [4])
+    self.assertEqual(text_column.variable_shape, [4])
+
+  def testParents(self):
+    text_column = hub.text_embedding_column("text", self.spec, trainable=False)
+    self.assertEqual(["text"], text_column.parents)
 
   def testMakeParseExampleSpec(self):
     text_column = hub.text_embedding_column("text", self.spec, trainable=False)
@@ -89,6 +94,23 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(input_layer)
+        self.assertAllEqual(output, [[1, 2, 3, 4, 1, 2, 3, 4],
+                                     [5, 5, 5, 5, 0, 0, 0, 0]])
+
+  def testDenseFeatures(self):
+    features = {
+        "text_a": ["hello world", "pair-programming"],
+        "text_b": ["hello world", "oov token"],
+    }
+    feature_columns = [
+        hub.text_embedding_column("text_a", self.spec, trainable=False),
+        hub.text_embedding_column("text_b", self.spec, trainable=False),
+    ]
+    with tf.Graph().as_default():
+      feature_layer = feature_column_lib.DenseFeatures(feature_columns)
+      feature_layer_out = feature_layer(features)
+      with tf_v1.train.MonitoredSession() as sess:
+        output = sess.run(feature_layer_out)
         self.assertAllEqual(output, [[1, 2, 3, 4, 1, 2, 3, 4],
                                      [5, 5, 5, 5, 0, 0, 0, 0]])
 
@@ -174,7 +196,11 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
 
   def testVariableShape(self):
     image_column = hub.image_embedding_column("image", self.spec)
-    self.assertEqual(image_column._variable_shape, [3])
+    self.assertEqual(image_column.variable_shape, [3])
+
+  def testParents(self):
+    image_column = hub.image_embedding_column("image", self.spec)
+    self.assertEqual(["image"], image_column.parents)
 
   def testMakeParseExampleSpec(self):
     image_column = hub.image_embedding_column("image", self.spec)
@@ -198,6 +224,25 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
       input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(input_layer)
+        self.assertAllClose(output, [[0.5, 0.7, 0.9, 0.3, 0.3, 0.3],
+                                     [0.8, 0.9, 1.0, 0.4, 0.4, 0.4]])
+
+  def testDenseFeatures(self):
+    features = {
+        "image_a": [[[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]],
+                    [[[0.7, 0.7, 0.7], [0.1, 0.2, 0.3]]]],
+        "image_b": [[[[0.1, 0.2, 0.1], [0.2, 0.1, 0.2]]],
+                    [[[0.1, 0.2, 0.3], [0.3, 0.2, 0.1]]]],
+    }
+    feature_columns = [
+        hub.image_embedding_column("image_a", self.spec),
+        hub.image_embedding_column("image_b", self.spec),
+    ]
+    with tf.Graph().as_default():
+      feature_layer = feature_column_lib.DenseFeatures(feature_columns)
+      feature_layer_out = feature_layer(features)
+      with tf_v1.train.MonitoredSession() as sess:
+        output = sess.run(feature_layer_out)
         self.assertAllClose(output, [[0.5, 0.7, 0.9, 0.3, 0.3, 0.3],
                                      [0.8, 0.9, 1.0, 0.4, 0.4, 0.4]])
 

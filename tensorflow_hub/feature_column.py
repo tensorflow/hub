@@ -27,9 +27,25 @@ from tensorflow_hub import tf_v1
 
 # TODO(b/73987364): It is not possible to extend feature columns without
 # depending on TensorFlow internal implementation details.
+# pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.feature_column import feature_column
+from tensorflow.python.feature_column import feature_column_lib
+# pylint: enable=g-direct-tensorflow-import
+
+# Older versions of TensorFlow do not have feature columns v2, so only inherit
+# from it if this version does.
+if hasattr(feature_column_lib, "DenseColumn"):
+  # Use feature columns v2 if available.
+  class DenseFeatureColumn(feature_column._DenseColumn,  # pylint: disable=protected-access
+                           feature_column_lib.DenseColumn):
+    pass
+else:
+  class DenseFeatureColumn(feature_column._DenseColumn):  # pylint: disable=protected-access
+    pass
 
 
+# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
+# could however break checkpoint compatibility.
 def text_embedding_column(key, module_spec, trainable=False):
   """Uses a Module to construct a dense representation from a text feature.
 
@@ -125,10 +141,19 @@ def _check_module_is_text_embedding(module_spec):
 
 
 class _TextEmbeddingColumn(
-    feature_column._DenseColumn,  # pylint: disable=protected-access
+    DenseFeatureColumn,
     collections.namedtuple("_ModuleEmbeddingColumn",
                            ("key", "module_spec", "trainable"))):
   """Returned by text_embedding_column(). Do not use directly."""
+
+  @property
+  def _is_v2_column(self):
+    return True
+
+  @property
+  def parents(self):
+    """See 'FeatureColumn` base class."""
+    return [self.key]
 
   @property
   def name(self):
@@ -141,24 +166,49 @@ class _TextEmbeddingColumn(
     """Returns intermediate representation (usually a `Tensor`)."""
     return inputs.get(self.key)
 
+  def transform_feature(self, transformation_cache, state_manager):
+    return transformation_cache.get(self.key, state_manager)
+
   @property
   def _parse_example_spec(self):
+    """Returns a `tf.Example` parsing spec as dict."""
+    return self.parse_example_spec
+
+  @property
+  def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
     return {self.key: tf_v1.FixedLenFeature([1], tf.string)}
 
   @property
   def _variable_shape(self):
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
+    return self.variable_shape
+
+  @property
+  def variable_shape(self):
+    """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
+
+  def _get_dense_tensor_for_input_tensor(self, input_tensor, trainable):
+    text_batch = tf.reshape(input_tensor, shape=[-1])
+    m = module.Module(self.module_spec, trainable=self.trainable and trainable)
+    return m(text_batch)
 
   def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
     """Returns a `Tensor`."""
     del weight_collections
-    text_batch = tf.reshape(inputs.get(self), shape=[-1])
-    m = module.Module(self.module_spec, trainable=self.trainable and trainable)
-    return m(text_batch)
+    input_tensor = inputs.get(self)
+    return self._get_dense_tensor_for_input_tensor(input_tensor,
+                                                   self.trainable and trainable)
+
+  def get_dense_tensor(self, transformation_cache, state_manager):
+    """Returns a `Tensor`."""
+    input_tensor = transformation_cache.get(self, state_manager)
+    return self._get_dense_tensor_for_input_tensor(input_tensor, self.trainable)
 
 
+# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
+# could however break checkpoint compatibility.
 def image_embedding_column(key, module_spec):
   """Uses a Module to get a dense 1-D representation from the pixels of images.
 
@@ -245,10 +295,19 @@ def _check_module_is_image_embedding(module_spec):
     raise ValueError("Module is not usable as image embedding: %r" % issues)
 
 
-class _ImageEmbeddingColumn(
-    feature_column._DenseColumn,  # pylint: disable=protected-access
-    collections.namedtuple("_ImageEmbeddingColumn", ("key", "module_spec"))):
+class _ImageEmbeddingColumn(DenseFeatureColumn,
+                            collections.namedtuple("_ImageEmbeddingColumn",
+                                                   ("key", "module_spec"))):
   """Returned by image_embedding_column(). Do not use directly."""
+
+  @property
+  def _is_v2_column(self):
+    return True
+
+  @property
+  def parents(self):
+    """See 'FeatureColumn` base class."""
+    return [self.key]
 
   @property
   def name(self):
@@ -261,8 +320,16 @@ class _ImageEmbeddingColumn(
     """Returns intermediate representation (usually a `Tensor`)."""
     return inputs.get(self.key)
 
+  def transform_feature(self, transformation_cache, state_manager):
+    return transformation_cache.get(self.key, state_manager)
+
   @property
   def _parse_example_spec(self):
+    """Returns a `tf.Example` parsing spec as dict."""
+    return self.parse_example_spec
+
+  @property
+  def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
     height, width = image_util.get_expected_image_size(self.module_spec)
     input_shape = [height, width, 3]
@@ -271,11 +338,22 @@ class _ImageEmbeddingColumn(
   @property
   def _variable_shape(self):
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
+    return self.variable_shape
+
+  @property
+  def variable_shape(self):
+    """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
 
-  def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
-    """Returns a `Tensor` to represent this feature in the input_layer()."""
-    del weight_collections, trainable  # Unused.
+  def _get_dense_tensor_for_images(self, images):
     m = module.Module(self.module_spec, trainable=False)
-    images = inputs.get(self)
     return m({"images": images})
+
+  def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
+    del weight_collections, trainable  # Unused.
+    images = inputs.get(self)
+    return self._get_dense_tensor_for_images(images)
+
+  def get_dense_tensor(self, transformation_cache, state_manager):
+    images = transformation_cache.get(self, state_manager)
+    return self._get_dense_tensor_for_images(images)
