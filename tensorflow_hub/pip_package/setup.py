@@ -45,7 +45,7 @@ if '--project_name' in sys.argv:
 # version changes for every release.
 version = __version__
 if project_name == 'tf-hub-nightly':
-  version += '.dev' + datetime.now().strftime('%Y%m%d%H%M')
+  version += datetime.now().strftime('%Y%m%d%H%M')
 
 setup(
     name=project_name,  # Automatic: tensorflow_hub, etc. Case insensitive.
