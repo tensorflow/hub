@@ -48,7 +48,8 @@ class KerasLayer(tf.keras.layers.Layer):
 
   The callable is invoked with a single positional argument set to one tensor
   or a list of tensors containing the inputs to the layer. If the callable
-  accepts a `training` argument, a Python boolean is passed for it.
+  accepts a `training` argument, a Python boolean is passed for it. It is True
+  if this layer is marked trainable *and* called for training.
 
   If present, the following attributes of callable are understood to have
   special meanings:
@@ -75,8 +76,7 @@ class KerasLayer(tf.keras.layers.Layer):
     handle: a callable object (subject to the conventions above), or a
       Python string for which hub.load() returns such a callable.
       A string is required to save the Keras config of this Layer.
-    trainable: Boolean controlling whether the trainable variables of the
-      callable are reported as trainable variables of this layer.
+    trainable: Boolean controlling whether this layer is trainable.
     arguments: optionally, a dict with additional keyword arguments passed
       to the callable. These must be JSON-serializable to save the Keras config
       of this layer.
@@ -147,12 +147,19 @@ class KerasLayer(tf.keras.layers.Layer):
     if kwargs is None:
       kwargs = {}
     f = functools.partial(self._func, inputs, **kwargs)
-    # ...but we may also have to pass a Python boolean for `training`.
+    # ...but we may also have to pass a Python boolean for `training`, which
+    # is the logical "and" of this layer's trainability and what the surrounding
+    # model is doing (analogous to tf.keras.layers.BatchNormalization in TF2).
+    # For the latter, we have to look in two places: the `training` argument,
+    # or else Keras' global `learning_phase`, which might actually be a tensor.
     if not self._func_wants_training:
       result = f()
     else:
-      if training is None:
-        training = tf.keras.backend.learning_phase()  # Could be a tensor.
+      if self.trainable:
+        if training is None:
+          training = tf.keras.backend.learning_phase()
+      else:
+        training = False
       result = smart_cond.smart_cond(training,
                                      lambda: f(training=True),
                                      lambda: f(training=False))

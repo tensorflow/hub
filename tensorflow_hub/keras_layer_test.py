@@ -52,6 +52,33 @@ def _save_half_plus_one_model(export_dir):
   tf.saved_model.save(obj, export_dir)
 
 
+def _save_batch_norm_model(export_dir):
+  """Writes a Hub-style SavedModel."""
+  inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+  bn = tf.keras.layers.BatchNormalization(momentum=0.8)
+  outp = bn(inp)
+  model = tf.keras.Model(inp, outp)
+
+  @tf.function
+  def call_fn(inputs, training=False):
+    return model(inputs, training=training)
+  for training in (True, False):
+    call_fn.get_concrete_function(tf.TensorSpec((None, 1), tf.float32),
+                                  training=training)
+
+  obj = tf.train.Checkpoint()
+  obj.__call__ = call_fn
+  # Test assertions pick up variables by their position here.
+  obj.trainable_variables = [bn.beta, bn.gamma]
+  assert set(obj.trainable_variables) == set(model.trainable_variables)
+  obj.variables = [bn.beta, bn.gamma, bn.moving_mean, bn.moving_variance]
+  assert set(obj.variables) == set(
+      model.trainable_variables + model.non_trainable_variables)
+  obj.regularization_losses = []
+  assert set(model.losses) == set()
+  tf.saved_model.save(obj, export_dir)
+
+
 def _save_model_with_hparams(export_dir):
   """Writes a Hub-style SavedModel to compute y = ax + b with hparams a, b."""
   @tf.function(input_signature=[
@@ -102,6 +129,67 @@ class KerasLayerTest(tf.test.TestCase):
                         atol=0.0, rtol=0.03)
     self.assertAllClose(model.losses, np.array([0.01], dtype=np.float32),
                         atol=0.0, rtol=0.06)
+
+  def testBatchNormRetraining(self):
+    """Tests imported batch norm with trainable=True."""
+    export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
+    _save_batch_norm_model(export_dir)
+    inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+    imported = hub.KerasLayer(export_dir, trainable=True)
+    var_beta, var_gamma, var_mean, var_variance = imported.variables
+    outp = imported(inp)
+    model = tf.keras.Model(inp, outp)
+    # Retrain the imported batch norm layer on a fixed batch of inputs,
+    # which has mean 12.0 and some variance of a less obvious value.
+    # The module learns scale and offset parameters that achieve the
+    # mapping x --> 2*x for the observed mean and variance.
+    model.compile(tf.keras.optimizers.SGD(0.1),
+                  "mean_squared_error", run_eagerly=True)
+    x = [[11.], [12.], [13.]]
+    y = [[2*xi[0]] for xi in x]
+    model.fit(np.array(x), np.array(y), batch_size=len(x), epochs=100)
+    self.assertAllClose(var_mean.numpy(), np.array([12.0]))
+    self.assertAllClose(var_beta.numpy(), np.array([24.0]))
+    self.assertAllClose(model(np.array(x, np.float32)), np.array(y))
+    # Evaluating the model operates batch norm in inference mode:
+    # - Batch statistics are ignored in favor of aggregated statistics,
+    #   computing x --> 2*x independent of input distribution.
+    # - Update ops are not run, so this doesn't change over time.
+    for _ in range(100):
+      self.assertAllClose(model(np.array([[10.], [20.], [30.]], np.float32)),
+                          np.array([[20.], [40.], [60.]]))
+    self.assertAllClose(var_mean.numpy(), np.array([12.0]))
+    self.assertAllClose(var_beta.numpy(), np.array([24.0]))
+
+  def testBatchNormFreezing(self):
+    """Tests imported batch norm with trainable=False."""
+    export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
+    _save_batch_norm_model(export_dir)
+    inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+    imported = hub.KerasLayer(export_dir, trainable=False)
+    var_beta, var_gamma, var_mean, var_variance = imported.variables
+    dense = tf.keras.layers.Dense(
+        units=1,
+        kernel_initializer=tf.keras.initializers.Constant([[1.5]]),
+        use_bias=False)
+    outp = dense(imported(inp))
+    model = tf.keras.Model(inp, outp)
+    # Training the model to x --> 2*x leaves the batch norm layer entirely
+    # unchanged (both trained beta&gamma and aggregated mean&variance).
+    self.assertAllClose(var_beta.numpy(), np.array([0.0]))
+    self.assertAllClose(var_gamma.numpy(), np.array([1.0]))
+    self.assertAllClose(var_mean.numpy(), np.array([0.0]))
+    self.assertAllClose(var_variance.numpy(), np.array([1.0]))
+    model.compile(tf.keras.optimizers.SGD(0.1),
+                  "mean_squared_error", run_eagerly=True)
+    x = [[1.], [2.], [3.]]
+    y = [[2*xi[0]] for xi in x]
+    model.fit(np.array(x), np.array(y), batch_size=len(x), epochs=20)
+    self.assertAllClose(var_beta.numpy(), np.array([0.0]))
+    self.assertAllClose(var_gamma.numpy(), np.array([1.0]))
+    self.assertAllClose(var_mean.numpy(), np.array([0.0]))
+    self.assertAllClose(var_variance.numpy(), np.array([1.0]))
+    self.assertAllClose(model(np.array(x, np.float32)), np.array(y))
 
   def testComputeOutputShape(self):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
