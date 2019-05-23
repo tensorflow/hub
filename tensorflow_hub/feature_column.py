@@ -21,6 +21,7 @@ from __future__ import print_function
 import collections
 
 import tensorflow as tf
+import six
 from tensorflow_hub import image_util
 from tensorflow_hub import module
 from tensorflow_hub import tf_v1
@@ -159,7 +160,9 @@ class _TextEmbeddingColumn(
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      self._name = "{}_hub_module_embedding".format(self.key)
+      key_name = self.key if isinstance(self.key,
+                                        six.string_types) else self.key.name
+      self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 
   def _transform_feature(self, inputs):
