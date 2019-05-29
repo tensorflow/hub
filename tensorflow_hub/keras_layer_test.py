@@ -93,9 +93,10 @@ def _save_model_with_hparams(export_dir):
   tf.saved_model.save(obj, export_dir)
 
 
-class KerasLayerTest(tf.test.TestCase):
+class KerasTest(tf.test.TestCase):
+  """Tests KerasLayer in an all-Keras environment."""
 
-  def testHalfPlusOneExample(self):
+  def testHalfPlusOneRetraining(self):
     # Import the half-plus-one model into a consumer model.
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _save_half_plus_one_model(export_dir)
@@ -258,6 +259,100 @@ class KerasLayerTest(tf.test.TestCase):
         json_string, custom_objects={"KerasLayer": hub.KerasLayer})
     new_result = new_model(in_value).numpy()
     self.assertEqual(result, new_result)
+
+
+class EstimatorTest(tf.test.TestCase):
+  """Tests use of KerasLayer in an Estimator's model_fn."""
+
+  def _half_plus_one_model_fn(self, features, labels, mode, params):
+    inp = features  # This estimator takes a single feature, not a dict.
+    imported = hub.KerasLayer(params["hub_module"],
+                              trainable=params["hub_trainable"])
+    model = tf.keras.Sequential([imported])
+    outp = model(inp, training=(mode == tf.estimator.ModeKeys.TRAIN))
+    regularization_loss = tf.add_n(model.losses or [0.0])
+    predictions = dict(output=outp, regularization_loss=regularization_loss)
+
+    total_loss = None
+    if mode in (tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL):
+      total_loss = tf.add(
+          tf.compat.v1.losses.mean_squared_error(
+              labels, outp,
+              # For consistency with the analogous Keras test above,
+              # make sure to compute the mean and not the sum.
+              reduction=tf.compat.v1.losses.Reduction.SUM_OVER_NONZERO_WEIGHTS),
+          regularization_loss)
+
+    train_op = None
+    if mode == tf.estimator.ModeKeys.TRAIN:
+      optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.002)
+      train_op = optimizer.minimize(
+          total_loss, var_list=model.trainable_variables,
+          global_step=tf.compat.v1.train.get_or_create_global_step())
+
+    return tf.estimator.EstimatorSpec(
+        mode=mode, predictions=predictions, loss=total_loss, train_op=train_op)
+
+  def testHalfPlusOneRetraining(self):
+    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
+    _save_half_plus_one_model(export_dir)
+    estimator = tf.estimator.Estimator(
+        model_fn=self._half_plus_one_model_fn,
+        params=dict(hub_module=export_dir, hub_trainable=True))
+
+    # The consumer model computes y = x/2 + 1 as expected.
+    predictions = next(estimator.predict(
+        tf.compat.v1.estimator.inputs.numpy_input_fn(
+            np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
+            shuffle=False),
+        yield_single_examples=False))
+    self.assertAllEqual(predictions["output"],
+                        np.array([[1.], [5.], [6.], [7.]], dtype=np.float32))
+    self.assertAllEqual(predictions["regularization_loss"],
+                        np.array(0.0025, dtype=np.float32))
+
+    # Retrain on y = x/2 + 6 for x near 10.
+    # (Console output should show loss below 0.2.)
+    x = [[9.], [10.], [11.]] * 10
+    y = [[xi[0]/2. + 6] for xi in x]
+    estimator.train(
+        tf.compat.v1.estimator.inputs.numpy_input_fn(
+            np.array(x, dtype=np.float32),
+            np.array(y, dtype=np.float32),
+            num_epochs=None, shuffle=True),
+        steps=10)
+    # The bias is non-trainable and has to stay at 1.0.
+    # To compensate, the kernel weight will grow to almost 1.0.
+    predictions = next(estimator.predict(
+        tf.compat.v1.estimator.inputs.numpy_input_fn(
+            np.array([[0.], [10.]], dtype=np.float32), shuffle=False),
+        yield_single_examples=False))
+    self.assertAllEqual(predictions["output"][0],
+                        np.array([1.], dtype=np.float32))
+    self.assertAllClose(predictions["output"][1],
+                        np.array([11.], dtype=np.float32),
+                        atol=0.0, rtol=0.03)
+    self.assertAllClose(predictions["regularization_loss"],
+                        np.array(0.01, dtype=np.float32),
+                        atol=0.0, rtol=0.06)
+
+  def testHalfPlusOneFrozen(self):
+    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
+    _save_half_plus_one_model(export_dir)
+    estimator = tf.estimator.Estimator(
+        model_fn=self._half_plus_one_model_fn,
+        params=dict(hub_module=export_dir, hub_trainable=False))
+
+    # The consumer model computes y = x/2 + 1 as expected.
+    predictions = next(estimator.predict(
+        tf.compat.v1.estimator.inputs.numpy_input_fn(
+            np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
+            shuffle=False),
+        yield_single_examples=False))
+    self.assertAllEqual(predictions["output"],
+                        np.array([[1.], [5.], [6.], [7.]], dtype=np.float32))
+    self.assertAllEqual(predictions["regularization_loss"],
+                        np.array(0.0, dtype=np.float32))
 
 
 if __name__ == "__main__":

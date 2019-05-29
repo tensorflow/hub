@@ -171,6 +171,7 @@ class KerasLayer(tf.keras.layers.Layer):
     if hasattr(self, "_output_shape"):
       result.set_shape((inputs.shape[0],) + self._output_shape)
     return result
+    # TODO(b/133796635): Add to TRAINABLE_VARIABLES if in graph mode?
 
   def get_config(self):
     config = super(KerasLayer, self).get_config()
