@@ -55,10 +55,10 @@ class KerasLayer(tf.keras.layers.Layer):
   special meanings:
     variables: a list of all tf.Variable objects that the callable depends on.
     trainable_variables: those elements of `variables` that are reported
-      as trainable variables of this Keras Layer.
+      as trainable variables of this Keras Layer when the layer is trainable.
     regularization_losses: a list of callables to be added as losses of this
-      Keras Layer. Each one must accept zero arguments and return a scalar
-      tensor.
+      Keras Layer when the layer is trainable. Each one must accept zero
+      arguments and return a scalar tensor.
 
   Note: to work-around missing shape inference functionalities from functions
   created from FunctionDefs, in many cases one has to pass an 'output_shape'
@@ -125,7 +125,7 @@ class KerasLayer(tf.keras.layers.Layer):
           raise ValueError(
               "hub.KerasLayer(obj) expects obj.regularization_losses to be an "
               "iterable of callables, each returning a scalar loss term.")
-        self.add_loss(l)  # Supports callables.
+        self.add_loss(self._call_loss_if_trainable(l))  # Supports callables.
 
     # Prepare to call `func`.
     self._func_fullargspec = tf_inspect.getfullargspec(self._func.__call__)
@@ -140,6 +140,10 @@ class KerasLayer(tf.keras.layers.Layer):
     if trainable is None: trainable = weight.trainable
     self.add_weight(name=weight.name, shape=weight.shape, dtype=weight.dtype,
                     trainable=trainable, getter=lambda *_, **__: weight)
+
+  def _call_loss_if_trainable(self, loss):
+    """Returns `loss` conditioned on whether this layer is trainable."""
+    return lambda: loss() if self.trainable else None
 
   def call(self, inputs, training=None):
     # We basically want to call this...

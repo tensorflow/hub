@@ -130,6 +130,25 @@ class KerasLayerTest(tf.test.TestCase):
     self.assertAllClose(model.losses, np.array([0.01], dtype=np.float32),
                         atol=0.0, rtol=0.06)
 
+  def testRegularizationLoss(self):
+    # Import the half-plus-one model into a consumer model.
+    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
+    _save_half_plus_one_model(export_dir)
+    inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+    imported = hub.KerasLayer(export_dir, trainable=False)
+    outp = imported(inp)
+    model = tf.keras.Model(inp, outp)
+    # When untrainable, the layer does not contribute regularization losses.
+    self.assertAllEqual(model.losses, np.array([], dtype=np.float32))
+    # When trainable (even set after the fact), the layer forwards its losses.
+    imported.trainable = True
+    self.assertAllEqual(model.losses, np.array([0.0025], dtype=np.float32))
+    # This can be toggled repeatedly.
+    imported.trainable = False
+    self.assertAllEqual(model.losses, np.array([], dtype=np.float32))
+    imported.trainable = True
+    self.assertAllEqual(model.losses, np.array([0.0025], dtype=np.float32))
+
   def testBatchNormRetraining(self):
     """Tests imported batch norm with trainable=True."""
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
