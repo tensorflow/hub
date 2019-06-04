@@ -889,7 +889,7 @@ def build_eval_session(module_spec, class_count):
 
     # Now we need to restore the values from the training graph to the eval
     # graph.
-    tf.train.Saver().restore(eval_sess, FLAGS.checkpoints_dir)
+    tf.train.Saver().restore(eval_sess, FLAGS.checkpoint_path)
 
     evaluation_step, prediction = add_evaluation_step(final_tensor,
                                                       ground_truth_input)
@@ -1131,7 +1131,7 @@ def main(_):
           and i > 0):
         # If we want to do an intermediate save, save a checkpoint of the train
         # graph, to restore into the eval graph.
-        train_saver.save(sess, FLAGS.checkpoints_dir)
+        train_saver.save(sess, FLAGS.checkpoint_path)
         intermediate_file_name = (FLAGS.intermediate_output_graphs_dir +
                                   'intermediate_' + str(i) + '.pb')
         tf.logging.info('Save intermediate result to : ' +
@@ -1140,7 +1140,7 @@ def main(_):
                            class_count)
 
     # After training is complete, force one last save of the train checkpoint.
-    train_saver.save(sess, FLAGS.checkpoints_dir)
+    train_saver.save(sess, FLAGS.checkpoint_path)
 
     # We've completed all our training, so run a final test evaluation on
     # some new images we haven't used before.
@@ -1340,10 +1340,10 @@ if __name__ == '__main__':
       choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
       help='How much logging output should be produced.')
   parser.add_argument(
-      '--checkpoints_dir',
+      '--checkpoint_path',
       type=str,
       default='/tmp/_retrain_checkpoint',
-      help='Where to save checkpoints files.'
+      help='Where to save checkpoint files.'
   )
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
