@@ -270,17 +270,16 @@ class EstimatorTest(tf.test.TestCase):
                               trainable=params["hub_trainable"])
     model = tf.keras.Sequential([imported])
     outp = model(inp, training=(mode == tf.estimator.ModeKeys.TRAIN))
-    regularization_loss = tf.add_n(model.losses or [0.0])
+    # https://www.tensorflow.org/alpha/guide/migration_guide#using_a_custom_model_fn
+    # recommends model.get_losses_for() instead of model.losses.
+    model_losses = model.get_losses_for(None) + model.get_losses_for(inp)
+    regularization_loss = tf.add_n(model_losses or [0.0])
     predictions = dict(output=outp, regularization_loss=regularization_loss)
 
     total_loss = None
     if mode in (tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL):
       total_loss = tf.add(
-          tf.compat.v1.losses.mean_squared_error(
-              labels, outp,
-              # For consistency with the analogous Keras test above,
-              # make sure to compute the mean and not the sum.
-              reduction=tf.compat.v1.losses.Reduction.SUM_OVER_NONZERO_WEIGHTS),
+          tf.compat.v1.losses.mean_squared_error(labels, outp),
           regularization_loss)
 
     train_op = None
@@ -319,7 +318,7 @@ class EstimatorTest(tf.test.TestCase):
         tf.compat.v1.estimator.inputs.numpy_input_fn(
             np.array(x, dtype=np.float32),
             np.array(y, dtype=np.float32),
-            num_epochs=None, shuffle=True),
+            batch_size=len(x), num_epochs=None, shuffle=False),
         steps=10)
     # The bias is non-trainable and has to stay at 1.0.
     # To compensate, the kernel weight will grow to almost 1.0.
@@ -353,6 +352,113 @@ class EstimatorTest(tf.test.TestCase):
                         np.array([[1.], [5.], [6.], [7.]], dtype=np.float32))
     self.assertAllEqual(predictions["regularization_loss"],
                         np.array(0.0, dtype=np.float32))
+
+  def _batch_norm_model_fn(self, features, labels, mode, params):
+    inp = features  # This estimator takes a single feature, not a dict.
+    imported = hub.KerasLayer(params["hub_module"])
+    var_beta, var_gamma, var_mean, var_variance = imported.variables
+    if params["train_batch_norm"]:
+      imported.trainable = True
+      model = tf.keras.Sequential([imported])
+    else:
+      imported.trainable = False
+      # When not training the batch norm layer, we train this instead:
+      dense = tf.keras.layers.Dense(
+          units=1,
+          kernel_initializer=tf.keras.initializers.Constant([[1.5]]),
+          use_bias=False)
+      model = tf.keras.Sequential([imported, dense])
+    outp = model(inp, training=(mode == tf.estimator.ModeKeys.TRAIN))
+    predictions = dict(output=outp,
+                       beta=var_beta.value(), gamma=var_gamma.value(),
+                       mean=var_mean.value(), variance=var_variance.value())
+
+    # https://www.tensorflow.org/alpha/guide/migration_guide#using_a_custom_model_fn
+    # recommends model.get_updates_for() instead of model.updates.
+    update_ops = model.get_updates_for(None) + model.get_updates_for(inp)
+
+    loss = None
+    if mode in (tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL):
+      loss = tf.compat.v1.losses.mean_squared_error(labels, outp)
+
+    train_op = None
+    if mode == tf.estimator.ModeKeys.TRAIN:
+      optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.1)
+      with tf.control_dependencies(update_ops):
+        train_op = optimizer.minimize(
+            loss, var_list=model.trainable_variables,
+            global_step=tf.compat.v1.train.get_or_create_global_step())
+
+    return tf.estimator.EstimatorSpec(
+        mode=mode, predictions=predictions, loss=loss, train_op=train_op)
+
+  def testBatchNormRetraining(self):
+    """Tests imported batch norm with trainable=True."""
+    export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
+    _save_batch_norm_model(export_dir)
+    estimator = tf.estimator.Estimator(
+        model_fn=self._batch_norm_model_fn,
+        params=dict(hub_module=export_dir, train_batch_norm=True))
+
+    # Retrain the imported batch norm layer on a fixed batch of inputs,
+    # which has mean 12.0 and some variance of a less obvious value.
+    # The module learns scale and offset parameters that achieve the
+    # mapping x --> 2*x for the observed mean and variance.
+    x = [[11.], [12.], [13.]]
+    y = [[2*xi[0]] for xi in x]
+    train_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+        np.array(x, dtype=np.float32),
+        np.array(y, dtype=np.float32),
+        batch_size=len(x), num_epochs=None, shuffle=False)
+    estimator.train(train_input_fn, steps=100)
+    predictions = next(estimator.predict(train_input_fn,
+                                         yield_single_examples=False))
+    self.assertAllClose(predictions["mean"], np.array([12.0]))
+    self.assertAllClose(predictions["beta"], np.array([24.0]))
+    self.assertAllClose(predictions["output"], np.array(y))
+
+    # Evaluating the model operates batch norm in inference mode:
+    # - Batch statistics are ignored in favor of aggregated statistics,
+    #   computing x --> 2*x independent of input distribution.
+    # - Update ops are not run, so this doesn't change over time.
+    predict_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+        np.array([[10.], [20.], [30.]], dtype=np.float32),
+        batch_size=3, num_epochs=100, shuffle=False)
+    for predictions in estimator.predict(predict_input_fn,
+                                         yield_single_examples=False):
+      self.assertAllClose(predictions["output"],
+                          np.array([[20.], [40.], [60.]]))
+    self.assertAllClose(predictions["mean"], np.array([12.0]))
+    self.assertAllClose(predictions["beta"], np.array([24.0]))
+
+  def testBatchNormFreezing(self):
+    """Tests imported batch norm with trainable=False."""
+    export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
+    _save_batch_norm_model(export_dir)
+    estimator = tf.estimator.Estimator(
+        model_fn=self._batch_norm_model_fn,
+        params=dict(hub_module=export_dir, train_batch_norm=False))
+    x = [[1.], [2.], [3.]]
+    y = [[2*xi[0]] for xi in x]
+    input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+        np.array(x, dtype=np.float32),
+        np.array(y, dtype=np.float32),
+        batch_size=len(x), num_epochs=None, shuffle=False)
+    predictions = next(estimator.predict(input_fn, yield_single_examples=False))
+    self.assertAllClose(predictions["beta"], np.array([0.0]))
+    self.assertAllClose(predictions["gamma"], np.array([1.0]))
+    self.assertAllClose(predictions["mean"], np.array([0.0]))
+    self.assertAllClose(predictions["variance"], np.array([1.0]))
+
+    # Training the model to x --> 2*x leaves the batch norm layer entirely
+    # unchanged (both trained beta&gamma and aggregated mean&variance).
+    estimator.train(input_fn, steps=20)
+    predictions = next(estimator.predict(input_fn, yield_single_examples=False))
+    self.assertAllClose(predictions["beta"], np.array([0.0]))
+    self.assertAllClose(predictions["gamma"], np.array([1.0]))
+    self.assertAllClose(predictions["mean"], np.array([0.0]))
+    self.assertAllClose(predictions["variance"], np.array([1.0]))
+    self.assertAllClose(predictions["output"], np.array(y))
 
 
 if __name__ == "__main__":

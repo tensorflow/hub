@@ -72,6 +72,12 @@ class KerasLayer(tf.keras.layers.Layer):
       dtype=tf.string)    # Expects a tf.string input tensor.
   ```
 
+  Note: This layer can be used inside the model_fn of a TF2 Estimator. See
+  https://www.tensorflow.org/alpha/guide/migration_guide#using_a_custom_model_fn
+  for guidance on how to pick up trainable variables, losses and updates
+  explicitly from Keras objects instead of relying on graph collections.
+  This layer class does not support graph collections.
+
   Args:
     handle: a callable object (subject to the conventions above), or a
       Python string for which hub.load() returns such a callable.
@@ -171,7 +177,6 @@ class KerasLayer(tf.keras.layers.Layer):
     if hasattr(self, "_output_shape"):
       result.set_shape((inputs.shape[0],) + self._output_shape)
     return result
-    # TODO(b/133796635): Add to TRAINABLE_VARIABLES if in graph mode?
 
   def get_config(self):
     config = super(KerasLayer, self).get_config()
