@@ -1068,6 +1068,10 @@ def main(_):
     # when exporting models.
     train_saver = tf.train.Saver()
 
+   #Restore from previous checkpoint if required 
+    if(FLAGS.restore_checkpoint):
+        train_saver.restore(sess, tf.train.latest_checkpoint(FLAGS.checkpoint_path))
+
     # Run the training for as many cycles as requested on the command line.
     for i in range(FLAGS.how_many_training_steps):
       # Get a batch of input bottleneck values, either calculated fresh every
@@ -1344,6 +1348,12 @@ if __name__ == '__main__':
       type=str,
       default='/tmp/_retrain_checkpoint',
       help='Where to save checkpoint files.'
+  )
+  parser.add_argument(
+      '--restore_checkpoint',
+      default=False,
+      action='store_true',
+      help='Whether to restore the model from a previous checkpoint.'
   )
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
