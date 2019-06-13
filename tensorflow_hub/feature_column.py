@@ -20,30 +20,33 @@ from __future__ import print_function
 
 import collections
 
-import tensorflow as tf
 import six
+import tensorflow as tf
 from tensorflow_hub import image_util
 from tensorflow_hub import module
+from tensorflow_hub import tf_utils
 from tensorflow_hub import tf_v1
 
 # TODO(b/73987364): It is not possible to extend feature columns without
 # depending on TensorFlow internal implementation details.
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.feature_column import feature_column
-from tensorflow.python.feature_column import feature_column_lib
+from tensorflow.python.feature_column import feature_column_v2
 # pylint: enable=g-direct-tensorflow-import
 
-# Older versions of TensorFlow do not have feature columns v2, so only inherit
-# from it if this version does.
-if hasattr(feature_column_lib, "DenseColumn"):
+
+if tf_utils.fc2_implements_resources():
+
   # Use feature columns v2 if available.
   class DenseFeatureColumn(
       feature_column._DenseColumn,  # pylint: disable=protected-access
-      feature_column_lib.DenseColumn):
+      feature_column_v2.DenseColumn):
     pass
 else:
   class DenseFeatureColumn(feature_column._DenseColumn):  # pylint: disable=protected-access
     pass
+
+_MODULE_RESOURCE_STRING = "module"
 
 
 # TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
@@ -146,7 +149,7 @@ class _TextEmbeddingColumn(
 
   @property
   def _is_v2_column(self):
-    return True
+    return tf_utils.fc2_implements_resources()
 
   @property
   def parents(self):
@@ -161,6 +164,15 @@ class _TextEmbeddingColumn(
                                         six.string_types) else self.key.name
       self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
+
+  def create_state(self, state_manager):
+    """Imports the module along with all variables."""
+    # Note: state_manager._trainable is not public but is the pattern used
+    # to propagate the "trainable" state that used to be received via
+    # self._get_dense_tensor.
+    trainable = self.trainable and state_manager._trainable  # pylint: disable=protected-access
+    m = module.Module(self.module_spec, trainable=trainable)
+    state_manager.add_resource(self, _MODULE_RESOURCE_STRING, m)
 
   def _transform_feature(self, inputs):
     """Returns intermediate representation (usually a `Tensor`)."""
@@ -189,22 +201,23 @@ class _TextEmbeddingColumn(
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
 
-  def _get_dense_tensor_for_input_tensor(self, input_tensor, trainable):
+  def _get_dense_tensor_for_input_tensor(self, input_tensor, text_module):
     text_batch = tf.reshape(input_tensor, shape=[-1])
-    m = module.Module(self.module_spec, trainable=self.trainable and trainable)
-    return m(text_batch)
+    return text_module(text_batch)
 
   def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
     """Returns a `Tensor`."""
     del weight_collections
     input_tensor = inputs.get(self)
-    return self._get_dense_tensor_for_input_tensor(input_tensor,
-                                                   self.trainable and trainable)
+    text_module = module.Module(
+        self.module_spec, trainable=self.trainable and trainable)
+    return self._get_dense_tensor_for_input_tensor(input_tensor, text_module)
 
   def get_dense_tensor(self, transformation_cache, state_manager):
     """Returns a `Tensor`."""
     input_tensor = transformation_cache.get(self, state_manager)
-    return self._get_dense_tensor_for_input_tensor(input_tensor, self.trainable)
+    text_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
+    return self._get_dense_tensor_for_input_tensor(input_tensor, text_module)
 
 
 # TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
@@ -302,7 +315,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
 
   @property
   def _is_v2_column(self):
-    return True
+    return tf_utils.fc2_implements_resources()
 
   @property
   def parents(self):
@@ -315,6 +328,12 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     if not hasattr(self, "_name"):
       self._name = "{}_hub_module_embedding".format(self.key)
     return self._name
+
+  def create_state(self, state_manager):
+    """Imports the module along with all variables."""
+    # Module is not trainable by default.
+    m = module.Module(self.module_spec)
+    state_manager.add_resource(self, _MODULE_RESOURCE_STRING, m)
 
   def _transform_feature(self, inputs):
     """Returns intermediate representation (usually a `Tensor`)."""
@@ -345,18 +364,19 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
 
-  def _get_dense_tensor_for_images(self, images):
-    m = module.Module(self.module_spec, trainable=False)
-    return m({"images": images})
+  def _get_dense_tensor_for_images(self, images, image_module):
+    return image_module({"images": images})
 
   def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
     del weight_collections, trainable  # Unused.
     images = inputs.get(self)
-    return self._get_dense_tensor_for_images(images)
+    image_module = module.Module(self.module_spec)
+    return self._get_dense_tensor_for_images(images, image_module)
 
   def get_dense_tensor(self, transformation_cache, state_manager):
     images = transformation_cache.get(self, state_manager)
-    return self._get_dense_tensor_for_images(images)
+    image_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
+    return self._get_dense_tensor_for_images(images, image_module)
 
 
 def sparse_text_embedding_column(key,

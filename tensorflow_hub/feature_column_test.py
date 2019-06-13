@@ -18,13 +18,20 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+try:
+  import mock as mock
+except ImportError:
+  import unittest.mock as mock
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
 from tensorflow_hub import tf_v1
 
 # pylint: disable=g-direct-tensorflow-import
-from tensorflow.python.feature_column import feature_column_lib
+from tensorflow.python.feature_column import feature_column_v2
 from tensorflow.python.ops.lookup_ops import HashTable
 from tensorflow.python.ops.lookup_ops import KeyValueTensorInitializer
 # pylint: enable=g-direct-tensorflow-import
@@ -56,6 +63,26 @@ def text_module_fn():
 def invalid_text_module_fn():
   text = tf_v1.placeholder(tf.string, shape=[10])
   hub.add_signature(inputs=text, outputs=tf.zeros([10, 3]))
+
+
+class CommonColumnTest(tf.test.TestCase):
+
+  def setUp(self):
+    self.spec = hub.create_module_spec(text_module_fn)
+
+  @mock.patch.object(feature_column_v2._StateManagerImpl, "add_resource")
+  def testFeatureColumnsWithResources(self, mock_add_resource):
+    feature_column = hub.text_embedding_column("text_a", self.spec)
+    if not isinstance(feature_column, feature_column_v2.FeatureColumn):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    self.assertTrue(feature_column_v2.is_feature_column_v2([feature_column]))
+
+  @mock.patch.object(feature_column_v2._StateManagerImpl, "add_resource")
+  def testFeatureColumnsWithNoResources(self, mock_add_resource):
+    mock_add_resource.side_effect = NotImplementedError
+    feature_column = hub.text_embedding_column("text_a", self.spec)
+    self.assertFalse(feature_column_v2.is_feature_column_v2([feature_column]))
 
 
 class TextEmbeddingColumnTest(tf.test.TestCase):
@@ -102,13 +129,47 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         hub.text_embedding_column("text_a", self.spec, trainable=False),
         hub.text_embedding_column("text_b", self.spec, trainable=False),
     ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
     with tf.Graph().as_default():
-      feature_layer = feature_column_lib.DenseFeatures(feature_columns)
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(feature_layer_out)
         self.assertAllEqual(
             output, [[1, 2, 3, 4, 1, 2, 3, 4], [5, 5, 5, 5, 0, 0, 0, 0]])
+
+  def testDenseFeatures_shareAcrossApplication(self):
+    features = {
+        "text": ["hello world", "pair-programming"],
+    }
+    feature_columns = [
+        hub.text_embedding_column("text", self.spec, trainable=True),
+    ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    with tf.Graph().as_default():
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer_out_1 = feature_layer(features)
+      feature_layer_out_2 = feature_layer(features)
+
+      # We define loss only on the first layer. Since layers should have shared
+      # weights, we expect the second layer will change too.
+      loss = feature_layer_out_1 - tf.constant(0.005)
+      optimizer = tf_v1.train.GradientDescentOptimizer(learning_rate=0.7)
+      train_op = optimizer.minimize(loss)
+
+      with tf_v1.train.MonitoredSession() as sess:
+        before_update_1 = sess.run(feature_layer_out_1)
+        sess.run(train_op)
+        after_update_1 = sess.run(feature_layer_out_1)
+        after_update_2 = sess.run(feature_layer_out_2)
+
+        self.assertAllEqual(before_update_1, [[1, 2, 3, 4],
+                                              [5, 5, 5, 5]])
+        self.assertAllEqual(after_update_1, after_update_2)
 
   def testWorksWithCannedEstimator(self):
     comment_embedding_column = hub.text_embedding_column(
@@ -175,7 +236,8 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
 def image_module_fn():
   """Maps 1x2 images to sums of each color channel."""
   images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 1, 2, 3])
-  sum_channels = tf.reduce_sum(images, axis=[1, 2])
+  weight = tf_v1.get_variable(name="weight", initializer=1.0, dtype=tf.float32)
+  sum_channels = tf.reduce_sum(images, axis=[1, 2]) * weight
   hub.add_signature(inputs={"images": images}, outputs=sum_channels)
 
 
@@ -235,14 +297,47 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
         hub.image_embedding_column("image_a", self.spec),
         hub.image_embedding_column("image_b", self.spec),
     ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
     with tf.Graph().as_default():
-      feature_layer = feature_column_lib.DenseFeatures(feature_columns)
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(feature_layer_out)
         self.assertAllClose(
             output,
             [[0.5, 0.7, 0.9, 0.3, 0.3, 0.3], [0.8, 0.9, 1.0, 0.4, 0.4, 0.4]])
+
+  def testDenseFeatures_shareAcrossApplication(self):
+    features = {
+        "image": [[[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]],
+                  [[[0.7, 0.7, 0.7], [0.1, 0.2, 0.3]]]],
+    }
+    feature_columns = [
+        hub.image_embedding_column("image", self.spec),
+    ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    with tf.Graph().as_default():
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      global_vars_before = tf.global_variables()
+      feature_layer_out_1 = feature_layer(features)
+      global_vars_middle = tf.global_variables()
+      feature_layer_out_2 = feature_layer(features)
+      global_vars_after = tf.global_variables()
+
+      self.assertLen(global_vars_before, 0)
+      self.assertLen(global_vars_middle, 1)
+      self.assertLen(global_vars_after, 1)
+
+      with tf_v1.train.MonitoredSession() as sess:
+        output_1 = sess.run(feature_layer_out_1)
+        output_2 = sess.run(feature_layer_out_2)
+
+        self.assertAllClose(output_1, [[0.5, 0.7, 0.9], [0.8, 0.9, 1.0]])
+        self.assertAllEqual(output_1, output_2)
 
   def testWorksWithCannedEstimator(self):
     image_column = hub.image_embedding_column("image", self.spec)
