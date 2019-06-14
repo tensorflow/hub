@@ -27,6 +27,12 @@ import tensorflow as tf
 
 from tensorflow_hub import tf_v1
 
+# TODO(b/73987364): It is not possible to extend feature columns without
+# depending on TensorFlow internal implementation details.
+# pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.feature_column import feature_column_v2
+# pylint: enable=g-direct-tensorflow-import
+
 
 def read_file_to_string(filename):
   """Returns the entire contents of a file to a string.
@@ -202,3 +208,18 @@ def absolute_path(path):
   represents an absolute Tensorflow filesystem location (e.g. <fs type>://).
   """
   return path if "://" in str(path) else os.path.abspath(path)
+
+
+def fc2_implements_resources():
+  """Returns true if imported TF version implements resources for FCv2."""
+  if not hasattr(feature_column_v2, "DenseColumn"):
+    return False
+  if not hasattr(feature_column_v2, "_StateManagerImpl"):
+    return False
+  state_manager = feature_column_v2._StateManagerImpl(  # pylint: disable=protected-access
+      layer=None, trainable=False)
+  try:
+    state_manager.add_resource("COLUMN_DUMMY", "RESOURCE_DUMMY", True)
+  except NotImplementedError:
+    return False
+  return True

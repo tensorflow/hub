@@ -18,12 +18,20 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+try:
+  import mock as mock
+except ImportError:
+  import unittest.mock as mock
+# pylint:disable=g-import-not-at-top,g-statement-before-imports
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
 from tensorflow_hub import tf_v1
 
 # pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.feature_column import feature_column_v2
 from tensorflow.python.ops.lookup_ops import HashTable
 from tensorflow.python.ops.lookup_ops import KeyValueTensorInitializer
 # pylint: enable=g-direct-tensorflow-import
@@ -41,13 +49,10 @@ def text_module_fn():
   table = HashTable(tbl_init, 0)
 
   weights_initializer = tf.cast(
-      tf.constant(list([item[1] for item in embeddings])),
-      tf.float32)
+      tf.constant(list([item[1] for item in embeddings])), tf.float32)
 
   weights = tf_v1.get_variable(
-      "weights",
-      dtype=tf.float32,
-      initializer=weights_initializer)
+      "weights", dtype=tf.float32, initializer=weights_initializer)
 
   text_tensor = tf_v1.placeholder(dtype=tf.string, name="text", shape=[None])
   indices_tensor = table.lookup(text_tensor)
@@ -60,6 +65,26 @@ def invalid_text_module_fn():
   hub.add_signature(inputs=text, outputs=tf.zeros([10, 3]))
 
 
+class CommonColumnTest(tf.test.TestCase):
+
+  def setUp(self):
+    self.spec = hub.create_module_spec(text_module_fn)
+
+  @mock.patch.object(feature_column_v2._StateManagerImpl, "add_resource")
+  def testFeatureColumnsWithResources(self, mock_add_resource):
+    feature_column = hub.text_embedding_column("text_a", self.spec)
+    if not isinstance(feature_column, feature_column_v2.FeatureColumn):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    self.assertTrue(feature_column_v2.is_feature_column_v2([feature_column]))
+
+  @mock.patch.object(feature_column_v2._StateManagerImpl, "add_resource")
+  def testFeatureColumnsWithNoResources(self, mock_add_resource):
+    mock_add_resource.side_effect = NotImplementedError
+    feature_column = hub.text_embedding_column("text_a", self.spec)
+    self.assertFalse(feature_column_v2.is_feature_column_v2([feature_column]))
+
+
 class TextEmbeddingColumnTest(tf.test.TestCase):
 
   def setUp(self):
@@ -69,12 +94,15 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     text_column = hub.text_embedding_column("text", self.spec, trainable=False)
     self.assertEqual(text_column._variable_shape, [4])
 
+  def testParents(self):
+    text_column = hub.text_embedding_column("text", self.spec, trainable=False)
+    self.assertEqual(["text"], text_column.parents)
+
   def testMakeParseExampleSpec(self):
     text_column = hub.text_embedding_column("text", self.spec, trainable=False)
     parsing_spec = tf_v1.feature_column.make_parse_example_spec([text_column])
-    self.assertEqual(parsing_spec, {
-        "text": tf_v1.FixedLenFeature([1], dtype=tf.string)
-    })
+    self.assertEqual(parsing_spec,
+                     {"text": tf_v1.FixedLenFeature([1], dtype=tf.string)})
 
   def testInputLayer(self):
     features = {
@@ -89,8 +117,59 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(input_layer)
-        self.assertAllEqual(output, [[1, 2, 3, 4, 1, 2, 3, 4],
-                                     [5, 5, 5, 5, 0, 0, 0, 0]])
+        self.assertAllEqual(
+            output, [[1, 2, 3, 4, 1, 2, 3, 4], [5, 5, 5, 5, 0, 0, 0, 0]])
+
+  def testDenseFeatures(self):
+    features = {
+        "text_a": ["hello world", "pair-programming"],
+        "text_b": ["hello world", "oov token"],
+    }
+    feature_columns = [
+        hub.text_embedding_column("text_a", self.spec, trainable=False),
+        hub.text_embedding_column("text_b", self.spec, trainable=False),
+    ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    with tf.Graph().as_default():
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer_out = feature_layer(features)
+      with tf_v1.train.MonitoredSession() as sess:
+        output = sess.run(feature_layer_out)
+        self.assertAllEqual(
+            output, [[1, 2, 3, 4, 1, 2, 3, 4], [5, 5, 5, 5, 0, 0, 0, 0]])
+
+  def testDenseFeatures_shareAcrossApplication(self):
+    features = {
+        "text": ["hello world", "pair-programming"],
+    }
+    feature_columns = [
+        hub.text_embedding_column("text", self.spec, trainable=True),
+    ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    with tf.Graph().as_default():
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer_out_1 = feature_layer(features)
+      feature_layer_out_2 = feature_layer(features)
+
+      # We define loss only on the first layer. Since layers should have shared
+      # weights, we expect the second layer will change too.
+      loss = feature_layer_out_1 - tf.constant(0.005)
+      optimizer = tf_v1.train.GradientDescentOptimizer(learning_rate=0.7)
+      train_op = optimizer.minimize(loss)
+
+      with tf_v1.train.MonitoredSession() as sess:
+        before_update_1 = sess.run(feature_layer_out_1)
+        sess.run(train_op)
+        after_update_1 = sess.run(feature_layer_out_1)
+        after_update_2 = sess.run(feature_layer_out_2)
+
+        self.assertAllEqual(before_update_1, [[1, 2, 3, 4],
+                                              [5, 5, 5, 5]])
+        self.assertAllEqual(after_update_1, after_update_2)
 
   def testWorksWithCannedEstimator(self):
     comment_embedding_column = hub.text_embedding_column(
@@ -157,7 +236,8 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
 def image_module_fn():
   """Maps 1x2 images to sums of each color channel."""
   images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 1, 2, 3])
-  sum_channels = tf.reduce_sum(images, axis=[1, 2])
+  weight = tf_v1.get_variable(name="weight", initializer=1.0, dtype=tf.float32)
+  sum_channels = tf.reduce_sum(images, axis=[1, 2]) * weight
   hub.add_signature(inputs={"images": images}, outputs=sum_channels)
 
 
@@ -174,14 +254,18 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
 
   def testVariableShape(self):
     image_column = hub.image_embedding_column("image", self.spec)
-    self.assertEqual(image_column._variable_shape, [3])
+    self.assertEqual(image_column.variable_shape, [3])
+
+  def testParents(self):
+    image_column = hub.image_embedding_column("image", self.spec)
+    self.assertEqual(["image"], image_column.parents)
 
   def testMakeParseExampleSpec(self):
     image_column = hub.image_embedding_column("image", self.spec)
     parsing_spec = tf_v1.feature_column.make_parse_example_spec([image_column])
-    self.assertEqual(parsing_spec, {
-        "image": tf_v1.FixedLenFeature([1, 2, 3], dtype=tf.float32)
-    })
+    self.assertEqual(
+        parsing_spec,
+        {"image": tf_v1.FixedLenFeature([1, 2, 3], dtype=tf.float32)})
 
   def testInputLayer(self):
     features = {
@@ -198,8 +282,62 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
       input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(input_layer)
-        self.assertAllClose(output, [[0.5, 0.7, 0.9, 0.3, 0.3, 0.3],
-                                     [0.8, 0.9, 1.0, 0.4, 0.4, 0.4]])
+        self.assertAllClose(
+            output,
+            [[0.5, 0.7, 0.9, 0.3, 0.3, 0.3], [0.8, 0.9, 1.0, 0.4, 0.4, 0.4]])
+
+  def testDenseFeatures(self):
+    features = {
+        "image_a": [[[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]],
+                    [[[0.7, 0.7, 0.7], [0.1, 0.2, 0.3]]]],
+        "image_b": [[[[0.1, 0.2, 0.1], [0.2, 0.1, 0.2]]],
+                    [[[0.1, 0.2, 0.3], [0.3, 0.2, 0.1]]]],
+    }
+    feature_columns = [
+        hub.image_embedding_column("image_a", self.spec),
+        hub.image_embedding_column("image_b", self.spec),
+    ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    with tf.Graph().as_default():
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer_out = feature_layer(features)
+      with tf_v1.train.MonitoredSession() as sess:
+        output = sess.run(feature_layer_out)
+        self.assertAllClose(
+            output,
+            [[0.5, 0.7, 0.9, 0.3, 0.3, 0.3], [0.8, 0.9, 1.0, 0.4, 0.4, 0.4]])
+
+  def testDenseFeatures_shareAcrossApplication(self):
+    features = {
+        "image": [[[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]],
+                  [[[0.7, 0.7, 0.7], [0.1, 0.2, 0.3]]]],
+    }
+    feature_columns = [
+        hub.image_embedding_column("image", self.spec),
+    ]
+    if not feature_column_v2.is_feature_column_v2(feature_columns):
+      self.skipTest("Resources not implemented in the state manager of feature "
+                    "column v2.")
+    with tf.Graph().as_default():
+      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      global_vars_before = tf.global_variables()
+      feature_layer_out_1 = feature_layer(features)
+      global_vars_middle = tf.global_variables()
+      feature_layer_out_2 = feature_layer(features)
+      global_vars_after = tf.global_variables()
+
+      self.assertLen(global_vars_before, 0)
+      self.assertLen(global_vars_middle, 1)
+      self.assertLen(global_vars_after, 1)
+
+      with tf_v1.train.MonitoredSession() as sess:
+        output_1 = sess.run(feature_layer_out_1)
+        output_2 = sess.run(feature_layer_out_2)
+
+        self.assertAllClose(output_1, [[0.5, 0.7, 0.9], [0.8, 0.9, 1.0]])
+        self.assertAllEqual(output_1, output_2)
 
   def testWorksWithCannedEstimator(self):
     image_column = hub.image_embedding_column("image", self.spec)
@@ -214,10 +352,12 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     # This only tests that estimator apis are working with the feature
     # column without throwing exceptions.
     features = {
-        "image": np.array(
-            [[[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]],
-             [[[0.7, 0.7, 0.7], [0.1, 0.2, 0.3]]]], dtype=np.float32),
-        "number": np.array([[20], [1]]),
+        "image":
+            np.array([[[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]],
+                      [[[0.7, 0.7, 0.7], [0.1, 0.2, 0.3]]]],
+                     dtype=np.float32),
+        "number":
+            np.array([[20], [1]]),
     }
     labels = np.array([[1], [0]])
     if hasattr(tf.compat, "v1"):
@@ -228,6 +368,138 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
     estimator.predict(input_fn)
+
+
+class SparseTextEmbeddingColumnTest(tf.test.TestCase):
+
+  def setUp(self):
+    self.spec = hub.create_module_spec(text_module_fn)
+
+  def testVariableShape(self):
+    text_column = hub.sparse_text_embedding_column(
+        "text", self.spec, combiner="mean", default_value=None, trainable=False)
+    self.assertEqual(text_column._variable_shape, [4])
+
+  def testMakeParseExampleSpec(self):
+    text_column = hub.sparse_text_embedding_column(
+        "text", self.spec, combiner="mean", default_value=None, trainable=False)
+    parsing_spec = tf_v1.feature_column.make_parse_example_spec([text_column])
+    self.assertEqual(parsing_spec, {"text": tf_v1.VarLenFeature(tf.string)})
+
+  def testInputLayer(self):
+    with tf.Graph().as_default():
+      text_a = tf.SparseTensor(
+          values=["hello world", "pair-programming", "hello world"],
+          indices=[[0, 0], [0, 1], [1, 0]],
+          dense_shape=[2, 2])
+      text_b = tf.SparseTensor(
+          values=["hello world", "oov token"],
+          indices=[[0, 0], [0, 1]],
+          dense_shape=[2, 3])
+
+      features = {
+          "text_a": text_a,
+          "text_b": text_b,
+      }
+      feature_columns = [
+          hub.sparse_text_embedding_column(
+              "text_a",
+              self.spec,
+              combiner="mean",
+              default_value="__UNKNOWN__",
+              trainable=False),
+          hub.sparse_text_embedding_column(
+              "text_b",
+              self.spec,
+              combiner="mean",
+              default_value="__UNKNOWN__",
+              trainable=False),
+      ]
+      input_layer = tf_v1.feature_column.input_layer(features, feature_columns)
+      with tf_v1.train.MonitoredSession() as sess:
+        output = sess.run(input_layer)
+        self.assertAllEqual(
+            output,
+            [[3, 3.5, 4, 4.5, 0.5, 1, 1.5, 2], [1, 2, 3, 4, 0, 0, 0, 0]])
+        # ([1, 2, 3, 4] + [5, 5, 5, 5])/2 extend ([1, 2, 3, 4] + [0, 0, 0, 0])/2
+        # [1, 2, 3, 4] extend [0, 0, 0, 0]
+
+  def testTrainableEmbeddingColumn(self):
+    feature_columns = [
+        hub.sparse_text_embedding_column(
+            "text",
+            self.spec,
+            combiner="mean",
+            default_value=None,
+            trainable=True),
+    ]
+
+    with tf.Graph().as_default():
+      text = tf.SparseTensor(
+          values=["hello world", "pair-programming"],
+          indices=[[0, 0], [1, 0]],
+          dense_shape=[2, 2])
+
+      target = [[1, 1, 1, 1], [4, 3, 2, 1]]
+      input_layer = tf_v1.feature_column.input_layer({"text": text},
+                                                     feature_columns)
+
+      loss = tf_v1.losses.mean_squared_error(input_layer, target)
+      optimizer = tf_v1.train.GradientDescentOptimizer(learning_rate=0.97)
+      train_op = optimizer.minimize(loss)
+
+      with tf_v1.train.MonitoredSession() as sess:
+        self.assertAllEqual(sess.run(input_layer), [[1, 2, 3, 4], [5, 5, 5, 5]])
+        for _ in range(10):
+          sess.run(train_op)
+        self.assertAllClose(sess.run(input_layer), target, atol=0.5)
+
+  def testEmptySparseTensorBatch(self):
+    feature_columns = [
+        hub.sparse_text_embedding_column(
+            "text",
+            self.spec,
+            combiner="mean",
+            default_value="default",
+            trainable=True),
+    ]
+
+    with tf.Graph().as_default():
+      text = tf.SparseTensor(
+          values=tf_v1.constant([], dtype=tf_v1.string, shape=[0]),
+          indices=tf_v1.constant([], dtype=tf_v1.int64, shape=[0, 2]),
+          dense_shape=[3, 0])
+
+      input_layer = tf_v1.feature_column.input_layer({"text": text},
+                                                     feature_columns)
+
+      with tf_v1.train.MonitoredSession() as sess:
+        embeddings = sess.run(input_layer)
+        self.assertAllEqual(embeddings,
+                            [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+
+  def testEmptySparseTensorRow(self):
+    feature_columns = [
+        hub.sparse_text_embedding_column(
+            "text",
+            self.spec,
+            combiner="mean",
+            default_value="default",
+            trainable=True),
+    ]
+
+    with tf.Graph().as_default():
+      text = tf.SparseTensor(
+          values=tf_v1.constant(["hello world"], dtype=tf_v1.string, shape=[1]),
+          indices=tf_v1.constant([[0, 0]], dtype=tf_v1.int64, shape=[1, 2]),
+          dense_shape=[2, 1])
+
+      input_layer = tf_v1.feature_column.input_layer({"text": text},
+                                                     feature_columns)
+
+      with tf_v1.train.MonitoredSession() as sess:
+        embeddings = sess.run(input_layer)
+        self.assertAllEqual(embeddings, [[1, 2, 3, 4], [0, 0, 0, 0]])
 
 
 if __name__ == "__main__":

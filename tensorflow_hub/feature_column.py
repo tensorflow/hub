@@ -20,16 +20,37 @@ from __future__ import print_function
 
 import collections
 
+import six
 import tensorflow as tf
 from tensorflow_hub import image_util
 from tensorflow_hub import module
+from tensorflow_hub import tf_utils
 from tensorflow_hub import tf_v1
 
 # TODO(b/73987364): It is not possible to extend feature columns without
 # depending on TensorFlow internal implementation details.
+# pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.feature_column import feature_column
+from tensorflow.python.feature_column import feature_column_v2
+# pylint: enable=g-direct-tensorflow-import
 
 
+if tf_utils.fc2_implements_resources():
+
+  # Use feature columns v2 if available.
+  class DenseFeatureColumn(
+      feature_column._DenseColumn,  # pylint: disable=protected-access
+      feature_column_v2.DenseColumn):
+    pass
+else:
+  class DenseFeatureColumn(feature_column._DenseColumn):  # pylint: disable=protected-access
+    pass
+
+_MODULE_RESOURCE_STRING = "module"
+
+
+# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
+# could however break checkpoint compatibility.
 def text_embedding_column(key, module_spec, trainable=False):
   """Uses a Module to construct a dense representation from a text feature.
 
@@ -63,10 +84,10 @@ def text_embedding_column(key, module_spec, trainable=False):
     key: A string or `_FeatureColumn` identifying the text feature.
     module_spec: A ModuleSpec defining the Module to instantiate or a path where
       to load a ModuleSpec via `load_module_spec`
-    trainable: Whether or not the Module is trainable. False by default,
-      meaning the pre-trained weights are frozen. This is different from the
-      ordinary tf.feature_column.embedding_column(), but that one is intended
-      for training from scratch.
+    trainable: Whether or not the Module is trainable. False by default, meaning
+      the pre-trained weights are frozen. This is different from the ordinary
+      tf.feature_column.embedding_column(), but that one is intended for
+      training from scratch.
 
   Returns:
     `_DenseColumn` that converts from text input.
@@ -76,8 +97,8 @@ def text_embedding_column(key, module_spec, trainable=False):
   """
   module_spec = module.as_module_spec(module_spec)
   _check_module_is_text_embedding(module_spec)
-  return _TextEmbeddingColumn(key=key, module_spec=module_spec,
-                              trainable=trainable)
+  return _TextEmbeddingColumn(
+      key=key, module_spec=module_spec, trainable=trainable)
 
 
 def _check_module_is_text_embedding(module_spec):
@@ -101,10 +122,8 @@ def _check_module_is_text_embedding(module_spec):
     input_shape = input_info.get_shape()
     if not (input_info.dtype == tf.string and input_shape.ndims == 1 and
             input_shape.as_list() == [None]):
-      issues.append(
-          "Module default signature must have only one input "
-          "tf.Tensor(shape=(?,), dtype=string)"
-      )
+      issues.append("Module default signature must have only one input "
+                    "tf.Tensor(shape=(?,), dtype=string)")
 
   # Find issues with signature outputs.
   output_info_dict = module_spec.get_output_info_dict()
@@ -115,50 +134,94 @@ def _check_module_is_text_embedding(module_spec):
     output_shape = output_info.get_shape()
     if not (output_info.dtype == tf.float32 and output_shape.ndims == 2 and
             not output_shape.as_list()[0] and output_shape.as_list()[1]):
-      issues.append(
-          "Module default signature must have a 'default' output of "
-          "tf.Tensor(shape=(?,K), dtype=float32)."
-      )
+      issues.append("Module default signature must have a 'default' output of "
+                    "tf.Tensor(shape=(?,K), dtype=float32).")
 
   if issues:
     raise ValueError("Module is not a text-embedding: %r" % issues)
 
 
 class _TextEmbeddingColumn(
-    feature_column._DenseColumn,  # pylint: disable=protected-access
+    DenseFeatureColumn,
     collections.namedtuple("_ModuleEmbeddingColumn",
                            ("key", "module_spec", "trainable"))):
   """Returned by text_embedding_column(). Do not use directly."""
 
   @property
+  def _is_v2_column(self):
+    return tf_utils.fc2_implements_resources()
+
+  @property
+  def parents(self):
+    """See 'FeatureColumn` base class."""
+    return [self.key]
+
+  @property
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      self._name = "{}_hub_module_embedding".format(self.key)
+      key_name = self.key if isinstance(self.key,
+                                        six.string_types) else self.key.name
+      self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
+
+  def create_state(self, state_manager):
+    """Imports the module along with all variables."""
+    # Note: state_manager._trainable is not public but is the pattern used
+    # to propagate the "trainable" state that used to be received via
+    # self._get_dense_tensor.
+    trainable = self.trainable and state_manager._trainable  # pylint: disable=protected-access
+    m = module.Module(self.module_spec, trainable=trainable)
+    state_manager.add_resource(self, _MODULE_RESOURCE_STRING, m)
 
   def _transform_feature(self, inputs):
     """Returns intermediate representation (usually a `Tensor`)."""
     return inputs.get(self.key)
 
+  def transform_feature(self, transformation_cache, state_manager):
+    return transformation_cache.get(self.key, state_manager)
+
   @property
   def _parse_example_spec(self):
+    """Returns a `tf.Example` parsing spec as dict."""
+    return self.parse_example_spec
+
+  @property
+  def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
     return {self.key: tf_v1.FixedLenFeature([1], tf.string)}
 
   @property
   def _variable_shape(self):
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
+    return self.variable_shape
+
+  @property
+  def variable_shape(self):
+    """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
+
+  def _get_dense_tensor_for_input_tensor(self, input_tensor, text_module):
+    text_batch = tf.reshape(input_tensor, shape=[-1])
+    return text_module(text_batch)
 
   def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
     """Returns a `Tensor`."""
     del weight_collections
-    text_batch = tf.reshape(inputs.get(self), shape=[-1])
-    m = module.Module(self.module_spec, trainable=self.trainable and trainable)
-    return m(text_batch)
+    input_tensor = inputs.get(self)
+    text_module = module.Module(
+        self.module_spec, trainable=self.trainable and trainable)
+    return self._get_dense_tensor_for_input_tensor(input_tensor, text_module)
+
+  def get_dense_tensor(self, transformation_cache, state_manager):
+    """Returns a `Tensor`."""
+    input_tensor = transformation_cache.get(self, state_manager)
+    text_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
+    return self._get_dense_tensor_for_input_tensor(input_tensor, text_module)
 
 
+# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
+# could however break checkpoint compatibility.
 def image_embedding_column(key, module_spec):
   """Uses a Module to get a dense 1-D representation from the pixels of images.
 
@@ -245,16 +308,158 @@ def _check_module_is_image_embedding(module_spec):
     raise ValueError("Module is not usable as image embedding: %r" % issues)
 
 
-class _ImageEmbeddingColumn(
-    feature_column._DenseColumn,  # pylint: disable=protected-access
-    collections.namedtuple("_ImageEmbeddingColumn", ("key", "module_spec"))):
+class _ImageEmbeddingColumn(DenseFeatureColumn,
+                            collections.namedtuple("_ImageEmbeddingColumn",
+                                                   ("key", "module_spec"))):
   """Returned by image_embedding_column(). Do not use directly."""
+
+  @property
+  def _is_v2_column(self):
+    return tf_utils.fc2_implements_resources()
+
+  @property
+  def parents(self):
+    """See 'FeatureColumn` base class."""
+    return [self.key]
 
   @property
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
       self._name = "{}_hub_module_embedding".format(self.key)
+    return self._name
+
+  def create_state(self, state_manager):
+    """Imports the module along with all variables."""
+    # Module is not trainable by default.
+    m = module.Module(self.module_spec)
+    state_manager.add_resource(self, _MODULE_RESOURCE_STRING, m)
+
+  def _transform_feature(self, inputs):
+    """Returns intermediate representation (usually a `Tensor`)."""
+    return inputs.get(self.key)
+
+  def transform_feature(self, transformation_cache, state_manager):
+    return transformation_cache.get(self.key, state_manager)
+
+  @property
+  def _parse_example_spec(self):
+    """Returns a `tf.Example` parsing spec as dict."""
+    return self.parse_example_spec
+
+  @property
+  def parse_example_spec(self):
+    """Returns a `tf.Example` parsing spec as dict."""
+    height, width = image_util.get_expected_image_size(self.module_spec)
+    input_shape = [height, width, 3]
+    return {self.key: tf_v1.FixedLenFeature(input_shape, tf.float32)}
+
+  @property
+  def _variable_shape(self):
+    """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
+    return self.variable_shape
+
+  @property
+  def variable_shape(self):
+    """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
+    return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
+
+  def _get_dense_tensor_for_images(self, images, image_module):
+    return image_module({"images": images})
+
+  def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
+    del weight_collections, trainable  # Unused.
+    images = inputs.get(self)
+    image_module = module.Module(self.module_spec)
+    return self._get_dense_tensor_for_images(images, image_module)
+
+  def get_dense_tensor(self, transformation_cache, state_manager):
+    images = transformation_cache.get(self, state_manager)
+    image_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
+    return self._get_dense_tensor_for_images(images, image_module)
+
+
+def sparse_text_embedding_column(key,
+                                 module_spec,
+                                 combiner,
+                                 default_value,
+                                 trainable=False):
+  """Uses a Module to construct dense representations from sparse text features.
+
+  The input to this feature column is a batch of multiple strings with
+  arbitrary size, assuming the input is a SparseTensor.
+
+  This type of feature column is typically suited for modules that operate on
+  pre-tokenized text to produce token level embeddings which are combined with
+  the combiner into a text embedding. The combiner always treats the tokens as a
+  bag of words rather than a sequence.
+
+  The output (i.e., transformed input layer) is a DenseTensor, with shape
+  [batch_size, num_embedding_dim].
+
+  For Example:
+
+  ```python
+    comment = sparse_text_embedding_column("comment", "/tmp/text_module")
+    feature_columns = [comment, ...]
+    ...
+    features = {
+      "comment": tf.SparseTensor(indices=[[0, 0], [1, 2]],
+                                 values=['sparse', 'embedding'],
+                                 dense_shape=[3, 4]),
+      ...
+    }
+    estimator = tf.estimator.DNNClassifier(hidden_units, feature_columns)
+  ```
+
+  Args:
+    key: A string or `_FeatureColumn` identifying the text feature.
+    module_spec: A string handle or a `_ModuleSpec` identifying the module.
+    combiner: a string specifying reducing op for embeddings in the same
+      Example. Currently, 'mean', 'sqrtn', 'sum' are supported. Using
+      combiner=None is undefined.
+    default_value: default value for Examples where the text feature is empty.
+      Note, it's recommended to have default_value consistent OOV tokens, in
+      case there was special handling of OOV in the text module. If None, the
+      text feature is assumed be non-empty for each Example.
+    trainable: Whether or not the Module is trainable. False by default, meaning
+      the pre-trained weights are frozen. This is different from the ordinary
+      tf.feature_column.embedding_column(), but that one is intended for
+      training from scratch.
+
+  Returns:
+    `_DenseColumn` that converts from text input.
+
+  Raises:
+     ValueError: if module_spec is not suitable for use in this feature column.
+     ValueError: if combiner not in ('mean', 'sqrtn', 'sum').
+  """
+  module_spec = module.as_module_spec(module_spec)
+  _check_module_is_text_embedding(module_spec)
+  if combiner not in ("mean", "sqrtn", "sum"):
+    raise ValueError("combiner must be 'mean', 'sqrtn' or 'sum': %r" % combiner)
+  return _SparseTextEmbeddingColumn(
+      key=key,
+      module_spec=module_spec,
+      trainable=trainable,
+      default_value=default_value,
+      combiner=combiner)
+
+
+class _SparseTextEmbeddingColumn(
+    feature_column._DenseColumn,  # pylint: disable=protected-access
+    collections.namedtuple(
+        "_ModuleEmbeddingColumn",
+        ("key", "combiner", "module_spec", "default_value", "trainable"))):
+  """Returned by sparse_text_embedding_column(). Do not use directly."""
+
+  @property
+  def name(self):
+    """Returns string. Used for variable_scope and naming."""
+    if not hasattr(self, "_name"):
+      key_name = self.key if isinstance(self.key,
+                                        six.string_types) else self.key.name
+      self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 
   def _transform_feature(self, inputs):
@@ -264,18 +469,33 @@ class _ImageEmbeddingColumn(
   @property
   def _parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
-    height, width = image_util.get_expected_image_size(self.module_spec)
-    input_shape = [height, width, 3]
-    return {self.key: tf_v1.FixedLenFeature(input_shape, tf.float32)}
+    return {self.key: tf_v1.VarLenFeature(tf.string)}
 
   @property
   def _variable_shape(self):
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
 
+  def _get_dense_tensor_for_inputs(self, text_batch, trainable):
+    m = module.Module(self.module_spec, trainable=self.trainable and trainable)
+
+    if self.default_value is not None:
+      text_batch = tf.sparse.fill_empty_rows(text_batch, self.default_value)[0]
+    embedded_tokens = m(text_batch.values)
+    embedding_ids = tf.SparseTensor(
+        indices=text_batch.indices,
+        values=tf.range(tf.shape(text_batch.indices)[0], dtype=tf.int32),
+        dense_shape=text_batch.dense_shape)
+
+    return tf.nn.embedding_lookup_sparse(
+        params=embedded_tokens,
+        sp_ids=embedding_ids,
+        sp_weights=None,
+        combiner=self.combiner)
+
   def _get_dense_tensor(self, inputs, weight_collections=None, trainable=None):
-    """Returns a `Tensor` to represent this feature in the input_layer()."""
-    del weight_collections, trainable  # Unused.
-    m = module.Module(self.module_spec, trainable=False)
-    images = inputs.get(self)
-    return m({"images": images})
+    """Returns a `Tensor`."""
+    del weight_collections
+    text_batch = inputs.get(self)
+    return self._get_dense_tensor_for_inputs(text_batch, self.trainable and
+                                             trainable)

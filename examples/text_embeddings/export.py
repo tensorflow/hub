@@ -267,7 +267,7 @@ if __name__ == "__main__":
   parser.add_argument(
       "--preprocess_text",
       type=bool,
-      default=False,
+      default=True,
       help="Whether to preprocess the input tensor by removing punctuation and "
       "splitting on spaces. Use this if input is a dense tensor of untokenized "
       "sentences.")

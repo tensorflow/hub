@@ -22,7 +22,6 @@ from absl import logging
 from distutils.version import LooseVersion
 import tensorflow as tf
 
-
 # pylint: disable=g-import-not-at-top
 # Only do imports after check TensorFlow version so the useful
 # error message is thrown instead of an obscure error of missing
@@ -30,6 +29,7 @@ import tensorflow as tf
 from tensorflow_hub.estimator import LatestModuleExporter
 from tensorflow_hub.estimator import register_module_for_export
 from tensorflow_hub.feature_column import image_embedding_column
+from tensorflow_hub.feature_column import sparse_text_embedding_column
 from tensorflow_hub.feature_column import text_embedding_column
 from tensorflow_hub.image_util import attach_image_module_info
 from tensorflow_hub.image_util import get_expected_image_size
@@ -63,12 +63,12 @@ _run()
 # pylint: enable=g-bad-import-order
 # pylint: enable=g-import-not-at-top
 
-
 # Used by doc generation script.
 _allowed_symbols = [
     "LatestModuleExporter",
     "register_module_for_export",
     "image_embedding_column",
+    "sparse_text_embedding_column",
     "text_embedding_column",
     "attach_image_module_info",
     "get_expected_image_size",

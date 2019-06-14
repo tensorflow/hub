@@ -17,8 +17,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from datetime import datetime
 from setuptools import find_packages
 from setuptools import setup
+
+import sys
 
 # Can't import the module during setup.py.
 # Use execfile to find __version__.
@@ -31,10 +34,22 @@ REQUIRED_PACKAGES = [
     'protobuf >= 3.4.0',
 ]
 
+project_name = 'tensorflow-hub'
+if '--project_name' in sys.argv:
+  project_name_idx = sys.argv.index('--project_name')
+  project_name = sys.argv[project_name_idx + 1]
+  sys.argv.remove('--project_name')
+  sys.argv.pop(project_name_idx)
+
+# If we're dealing with a nightly build we need to make sure that the
+# version changes for every release.
+version = __version__
+if project_name == 'tf-hub-nightly':
+  version += datetime.now().strftime('%Y%m%d%H%M')
 
 setup(
-    name='tensorflow-hub',  # Automatic: tensorflow_hub, etc. Case insensitive.
-    version=__version__.replace('-', ''),
+    name=project_name,  # Automatic: tensorflow_hub, etc. Case insensitive.
+    version=version.replace('-', ''),
     description=('TensorFlow Hub is a library to foster the publication, '
                  'discovery, and consumption of reusable parts of machine '
                  'learning models.'),
