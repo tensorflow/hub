@@ -129,6 +129,7 @@ class TextEmbeddingModel(tf.train.Checkpoint):
     self._pretrained_vectors.resize(
 	[self._pretrained_vectors.shape[0] + oov_buckets, 
 	self._pretrained_vectors.shape[1]])
+    self._pretrained_vectors[self._pretrained_vectors.shape[0]-oov_buckets:,:] = oovs
     self.embeddings = tf.Variable(self._pretrained_vectors)
     self.variables = [self.embeddings]
     self.trainable_variables = self.variables
