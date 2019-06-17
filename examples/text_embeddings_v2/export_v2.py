@@ -62,12 +62,14 @@ def parse_line(line):
   return token, values
 
 
-def load(file_path, parse_line_fn):
+def load(file_path, parse_line_fn, num_lines_to_ignore=0, num_lines_to_use=None):
   """Loads a text embedding into memory as a numpy matrix.
 
   Args:
     file_path: Path to the text embedding file.
     parse_line_fn: callback function to parse each file line.
+    num_lines_to_ignore: number of lines to ignore 
+    num_lines_to_use : number of lines to use. offset by num_lines_to_ignore if used together. 
 
   Returns:
     A tuple of (list of vocabulary tokens, numpy matrix of embedding vectors).
@@ -78,19 +80,21 @@ def load(file_path, parse_line_fn):
   vocabulary = []
   embeddings = []
   embeddings_dim = None
-  for line in tf.io.gfile.GFile(file_path):
-    token, embedding = parse_line_fn(line)
-    if not embeddings_dim:
-      embeddings_dim = len(embedding)
-    elif embeddings_dim != len(embedding):
-      raise ValueError(
-          "Inconsistent embedding dimension detected, %d != %d for token %s",
-          embeddings_dim, len(embedding), token)
-
-    vocabulary.append(token)
-    embeddings.append(embedding)
-
-  return vocabulary, np.array(embeddings)
+  with tf.io.gfile.GFile(file_path) as f:
+    for i,line in enumerate(f):
+        if i>=num_lines_to_ignore:
+            token,embedding=parse_line_fn(line)
+            if not embeddings_dim:
+                embeddings_dim = len(embedding)
+            elif embeddings_dim != len(embedding):
+                raise ValueError(
+                    "Inconsistent embedding dimension detected, %d != %d for token %s",
+                    embeddings_dim,len(embedding),token)
+            vocabulary.append(token)
+            embeddings.append(embedding)
+            if num_lines_to_use and i>=num_lines_to_ignore+num_lines_to_use-1:
+                break
+  return vocabulary,np.array(embeddings)
 
 
 def write_vocabulary_file(vocabulary):
@@ -110,9 +114,9 @@ class TextEmbeddingModel(tf.train.Checkpoint):
   sentence embedding.
   """
 
-  def __init__(self, vocab_file_path, oov_buckets):
+  def __init__(self, vocab_file_path, oov_buckets, num_lines_to_ignore=0, num_lines_to_use=None):
     super(TextEmbeddingModel, self).__init__()
-    self._vocabulary, self._pretrained_vectors = load(vocab_file_path,parse_line)
+    self._vocabulary, self._pretrained_vectors = load(vocab_file_path,parse_line,num_lines_to_ignore,num_lines_to_use)
     self._oov_buckets = oov_buckets
     # Make the vocabulary file a `TrackableAsset` to ensure it is saved along with the model.
     self._vocabulary_file = tracking.TrackableAsset(
@@ -125,7 +129,6 @@ class TextEmbeddingModel(tf.train.Checkpoint):
     self._pretrained_vectors.resize(
 	[self._pretrained_vectors.shape[0] + oov_buckets, 
 	self._pretrained_vectors.shape[1]])
-    self._pretrained_vectors[self._pretrained_vectors.shape[0]:,:] = oovs
     self.embeddings = tf.Variable(self._pretrained_vectors)
     self.variables = [self.embeddings]
     self.trainable_variables = self.variables
@@ -149,7 +152,6 @@ class TextEmbeddingModel(tf.train.Checkpoint):
 
   @tf.function(input_signature=[tf.TensorSpec([None], tf.dtypes.string)])
   def __call__(self, sentences):
-    
     token_ids, token_values, token_dense_shape = self._tokenize(sentences)
 
     return tf.nn.safe_embedding_lookup_sparse(
@@ -158,12 +160,13 @@ class TextEmbeddingModel(tf.train.Checkpoint):
         sparse_weights=None,
         combiner="sqrtn")
 
-def export_module_from_file(embedding_file,num_oov_buckets,export_path):
-    module = TextEmbeddingModel(embedding_file,num_oov_buckets)
+def export_module_from_file(embedding_file, num_oov_buckets, export_path, num_lines_to_ignore=0, num_lines_to_use=None):
+    module = TextEmbeddingModel(embedding_file, num_oov_buckets, num_lines_to_ignore, num_lines_to_use)
     tf.saved_model.save(module, export_path)
 
 def main(_):
-    export_module_from_file(FLAGS.embedding_file, FLAGS.num_oov_buckets, FLAGS.export_path)
+    export_module_from_file(FLAGS.embedding_file, FLAGS.num_oov_buckets, FLAGS.export_path, 
+                            FLAGS.num_lines_to_ignore, FLAGS.num_lines_to_use)
 
 
 if __name__ == "__main__":
@@ -183,5 +186,15 @@ if __name__ == "__main__":
       type=int,
       default="1",
       help="How many OOV buckets to add.")
+  parser.add_argument(
+      "--num_lines_to_ignore",
+      type=int,
+      default="0",
+      help="How many lines to ignore.")
+  parser.add_argument(
+      "--num_lines_to_use",
+      type=int,
+      default=None,
+      help="How many lines to use.")
   FLAGS, unparsed = parser.parse_known_args()
   app.run(main=main, argv=[sys.argv[0]] + unparsed)
