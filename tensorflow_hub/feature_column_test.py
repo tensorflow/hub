@@ -233,18 +233,28 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       hub.text_embedding_column("coment", spec, trainable=False)
 
 
-def image_module_fn():
-  """Maps 1x2 images to sums of each color channel."""
-  images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 1, 2, 3])
-  weight = tf_v1.get_variable(name="weight", initializer=1.0, dtype=tf.float32)
-  sum_channels = tf.reduce_sum(images, axis=[1, 2]) * weight
-  hub.add_signature(inputs={"images": images}, outputs=sum_channels)
+def create_image_module_fn(randomly_initialized=False):
+  def image_module_fn():
+    """Maps 1x2 images to sums of each color channel."""
+    images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 1, 2, 3])
+    if randomly_initialized:
+      initializer = tf_v1.random_uniform_initializer(
+          minval=-1, maxval=1, dtype=tf.float32)
+    else:
+      initializer = tf_v1.constant_initializer(1.0, dtype=tf.float32)
+    weight = tf_v1.get_variable(
+        name="weight", shape=[1], initializer=initializer)
+    sum_channels = tf.reduce_sum(images, axis=[1, 2]) * weight
+    hub.add_signature(inputs={"images": images}, outputs=sum_channels)
+  return image_module_fn
 
 
 class ImageEmbeddingColumnTest(tf.test.TestCase):
 
   def setUp(self):
-    self.spec = hub.create_module_spec(image_module_fn)
+    self.spec = hub.create_module_spec(create_image_module_fn())
+    self.randomly_initialized_spec = hub.create_module_spec(
+        create_image_module_fn(randomly_initialized=True))
 
   def testExpectedImageSize(self):
     image_column = hub.image_embedding_column("image", self.spec)
@@ -315,29 +325,21 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
                   [[[0.7, 0.7, 0.7], [0.1, 0.2, 0.3]]]],
     }
     feature_columns = [
-        hub.image_embedding_column("image", self.spec),
+        hub.image_embedding_column("image", self.randomly_initialized_spec),
     ]
     if not feature_column_v2.is_feature_column_v2(feature_columns):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
       feature_layer = feature_column_v2.DenseFeatures(feature_columns)
-      global_vars_before = tf.global_variables()
       feature_layer_out_1 = feature_layer(features)
-      global_vars_middle = tf.global_variables()
       feature_layer_out_2 = feature_layer(features)
-      global_vars_after = tf.global_variables()
-
-      self.assertLen(global_vars_before, 0)
-      self.assertLen(global_vars_middle, 1)
-      self.assertLen(global_vars_after, 1)
 
       with tf_v1.train.MonitoredSession() as sess:
         output_1 = sess.run(feature_layer_out_1)
         output_2 = sess.run(feature_layer_out_2)
 
-        self.assertAllClose(output_1, [[0.5, 0.7, 0.9], [0.8, 0.9, 1.0]])
-        self.assertAllEqual(output_1, output_2)
+        self.assertAllClose(output_1, output_2)
 
   def testWorksWithCannedEstimator(self):
     image_column = hub.image_embedding_column("image", self.spec)
