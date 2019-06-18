@@ -40,5 +40,7 @@ toc:
       path: /hub/api_docs/python/hub/register_module_for_export
     - title: resolve
       path: /hub/api_docs/python/hub/resolve
+    - title: sparse_text_embedding_column
+      path: /hub/api_docs/python/hub/sparse_text_embedding_column
     - title: text_embedding_column
       path: /hub/api_docs/python/hub/text_embedding_column

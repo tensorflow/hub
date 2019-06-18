@@ -19,4 +19,5 @@
 *  <a href="./hub/load_module_spec.md"><code>hub.load_module_spec</code></a>
 *  <a href="./hub/register_module_for_export.md"><code>hub.register_module_for_export</code></a>
 *  <a href="./hub/resolve.md"><code>hub.resolve</code></a>
+*  <a href="./hub/sparse_text_embedding_column.md"><code>hub.sparse_text_embedding_column</code></a>
 *  <a href="./hub/text_embedding_column.md"><code>hub.text_embedding_column</code></a>

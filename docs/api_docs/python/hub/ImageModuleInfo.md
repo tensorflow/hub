@@ -13,10 +13,6 @@
 
 
 
-This is an alias for a Python built-in.
-
-
-
 ## Child Classes
 [`class InputSize`](../hub/ImageModuleInfo/InputSize.md)
 

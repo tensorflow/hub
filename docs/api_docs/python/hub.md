@@ -46,6 +46,8 @@ TensorFlow Hub Library.
 
 [`resolve(...)`](./hub/resolve.md): Resolves a module handle into a path.
 
+[`sparse_text_embedding_column(...)`](./hub/sparse_text_embedding_column.md): Uses a Module to construct dense representations from sparse text features.
+
 [`text_embedding_column(...)`](./hub/text_embedding_column.md): Uses a Module to construct a dense representation from a text feature.
 
 ## Other Members

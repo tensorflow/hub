@@ -6,14 +6,17 @@
 # hub.load
 
 ``` python
-hub.load(handle)
+hub.load(
+    handle,
+    tags=None
+)
 ```
 
 Loads a module from a handle.
 
-Currently this method only works with Tensorflow 2.x and can only load modules
-created by calling tensorflow.saved_model.save(). The method works in both
-eager and graph modes.
+Currently this method is fully supported only with Tensorflow 2.x and with
+modules created by calling tensorflow.saved_model.save(). The method works in
+both eager and graph modes.
 
 Depending on the type of handle used, the call may involve downloading a
 Tensorflow Hub module to a local cache location specified by the
@@ -32,6 +35,8 @@ Currently, three types of module handles are supported:
 #### Args:
 
 * <b>`handle`</b>: (string) the Module handle to resolve.
+* <b>`tags`</b>: A set of strings specifying the graph variant to use, if loading from
+    a v1 module.
 
 
 #### Returns:

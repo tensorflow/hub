@@ -46,10 +46,10 @@ Example:
 * <b>`key`</b>: A string or `_FeatureColumn` identifying the text feature.
 * <b>`module_spec`</b>: A ModuleSpec defining the Module to instantiate or a path where
     to load a ModuleSpec via `load_module_spec`
-* <b>`trainable`</b>: Whether or not the Module is trainable. False by default,
-    meaning the pre-trained weights are frozen. This is different from the
-    ordinary tf.feature_column.embedding_column(), but that one is intended
-    for training from scratch.
+* <b>`trainable`</b>: Whether or not the Module is trainable. False by default, meaning
+    the pre-trained weights are frozen. This is different from the ordinary
+    tf.feature_column.embedding_column(), but that one is intended for
+    training from scratch.
 
 
 #### Returns:

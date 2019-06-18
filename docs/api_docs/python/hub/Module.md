@@ -94,6 +94,7 @@ on `name`. During this call a Module will:
 * <b>`RuntimeError`</b>: explaning the reason why it failed to instantiate the
     Module.
 * <b>`ValueError`</b>: if the requested graph variant does not exists.
+* <b>`tf.errors.NotFoundError`</b>: if the requested graph contains unknown ops.
 
 
 
@@ -179,6 +180,10 @@ During this call a Module will:
 
 - Add constant tensors to ASSET_FILEPATHS, even if those are not needed
   directly needed for the signature.
+
+Note: <a href="../hub/Module.md"><code>hub.Module</code></a> implementation depends on graph pruning that happens
+usually during `session.run` as so it can lead to errors when used inside
+function graphs that execute all its ops (e.g. `tf.data.Dataset.map`).
 
 #### Args:
 
