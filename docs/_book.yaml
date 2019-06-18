@@ -17,6 +17,7 @@ upper_tabs:
         path: /hub/overview
       - title: Installation
         path: /hub/installation
+      - title: Build from source
       - title: Common issues
         path: /hub/common_issues
       - heading: Key Concepts

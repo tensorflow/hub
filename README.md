@@ -25,6 +25,7 @@ that can be reused on new tasks.
 
 *   [Introduction](https://www.tensorflow.org/hub/)
 *   [Installation](docs/installation.md)
+*   [Build from source](docs/build_from_source.md)
 *   [Common issues](docs/common_issues.md)
 *   Tutorials:
     *   [Image Retraining](https://www.tensorflow.org/tutorials/image_retraining)
