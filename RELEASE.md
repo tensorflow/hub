@@ -13,8 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version (0.5.0-dev)
-  * Under development.
+# Release 0.5.0
+  * Fixes in `hub.KerasLayer` related with regularizers, config serialization
+    and usage with `tf.estimator`.
+  * Updates to feature columns to be compatible with feature columns V2 apis and
+    add `hub.sparse_text_embedding_column` for bag of words features.
+  * Made `hub.Module` usable within `tf.compat.v1.wrap_function`.
 
 # Release 0.4.0
   * `hub.KerasLayer` (for Hub/TF2 modules) can be used in graph mode
