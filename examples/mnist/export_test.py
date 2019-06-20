@@ -10,7 +10,7 @@ from export import train_and_export
 
 TMPDIR = tempfile.mkdtemp()
 model = None
-TEST_DATA_DIR = "E1_TFHub_Sample_Deploy/test_data"
+TEST_DATA_DIR = "examples/mnist/test_data"
 
 def load_model(path):
   global model

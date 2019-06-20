@@ -1,0 +1,15 @@
+# Compiled Bytes
+__pycache__/
+*.py[cod]
+
+# VIM Temporary Files
+.*.swp
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints
+
+# Virtualenv
+env/
+
+# Bazel Folders and Symlinks
+bazel-*

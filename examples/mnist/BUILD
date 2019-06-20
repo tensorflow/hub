@@ -11,17 +11,10 @@ py_library(
     srcs = ["export.py"],
     srcs_version = "PY2AND3",
     deps = [
-        ":expect_numpy_installed",
-        "//external:tensorflow_hub",
+        "//tensorflow_hub:expect_numpy_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub",
     ],
-)
-
-py_library(
-    name = "expect_numpy_installed",
-)
-
-py_library(
-    name = "expect_tensorflow_installed",
 )
 
 py_test(
@@ -31,9 +24,9 @@ py_test(
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
-        ":expect_numpy_installed",
-        ":expect_tensorflow_installed",
+        "//tensorflow_hub:expect_numpy_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
         ":export_lib",
-        "//external:tensorflow_hub",
+        "//tensorflow_hub",
     ],
 )
