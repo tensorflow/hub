@@ -7,7 +7,7 @@ from absl.testing import absltest
 import export
 
 model = None
-TEST_DATA_DIR = "examples/mnist_v2/test_data"
+TEST_DATA_DIR = "examples/mnist_export_v2/test_data"
 
 def load_model(path):
   global model

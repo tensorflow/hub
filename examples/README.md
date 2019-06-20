@@ -50,5 +50,5 @@ with word embeddings.
 
 Simple example of how to create a TensorFlow Hub Module.
 
-#### [`mnist`](mnist)
+#### [`mnist`](mnist_export_v2)
 TF 2.0 Sample exporter for MNIST Classifier as Tensorflow Hub Module.
