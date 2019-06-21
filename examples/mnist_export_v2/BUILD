@@ -23,9 +23,9 @@ py_test(
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
+        ":export_lib",
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
-        ":export_lib",
         "//tensorflow_hub",
     ],
 )

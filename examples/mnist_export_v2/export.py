@@ -5,6 +5,7 @@ import tensorflow_hub as hub
 import argparse
 
 """Exporter for TF-Hub Modules in SavedModel v2.0 format.
+
 The module has as a single signature, accepting a batch of images with shape [None, 28, 28, 1] and returning a prediction vector.
 In this example, we are loading the MNIST Dataset from TFDS and training a simple digit classifier.
 """
