@@ -68,8 +68,8 @@ def load(file_path, parse_line_fn, num_lines_to_ignore=0, num_lines_to_use=None)
   Args:
     file_path: Path to the text embedding file.
     parse_line_fn: callback function to parse each file line.
-    num_lines_to_ignore: number of lines to ignore 
-    num_lines_to_use : number of lines to use. offset by num_lines_to_ignore if used together. 
+    num_lines_to_ignore: number of lines to ignore. 
+    num_lines_to_use : number of lines to use. Offset by num_lines_to_ignore if used together. 
 
   Returns:
     A tuple of (list of vocabulary tokens, numpy matrix of embedding vectors).
@@ -81,8 +81,8 @@ def load(file_path, parse_line_fn, num_lines_to_ignore=0, num_lines_to_use=None)
   embeddings = []
   embeddings_dim = None
   with tf.io.gfile.GFile(file_path) as f:
-    for i,line in enumerate(f):
-        if i>=num_lines_to_ignore:
+    for index,line in enumerate(f):
+        if index >= num_lines_to_ignore:
             token,embedding=parse_line_fn(line)
             if not embeddings_dim:
                 embeddings_dim = len(embedding)
@@ -92,9 +92,9 @@ def load(file_path, parse_line_fn, num_lines_to_ignore=0, num_lines_to_use=None)
                     embeddings_dim,len(embedding),token)
             vocabulary.append(token)
             embeddings.append(embedding)
-            if num_lines_to_use and i>=num_lines_to_ignore+num_lines_to_use-1:
+            if num_lines_to_use and index >= num_lines_to_ignore+num_lines_to_use-1:
                 break
-  return vocabulary,np.array(embeddings)
+  return vocabulary, np.array(embeddings)
 
 
 def write_vocabulary_file(vocabulary):
@@ -116,7 +116,10 @@ class TextEmbeddingModel(tf.train.Checkpoint):
 
   def __init__(self, vocab_file_path, oov_buckets, num_lines_to_ignore=0, num_lines_to_use=None):
     super(TextEmbeddingModel, self).__init__()
-    self._vocabulary, self._pretrained_vectors = load(vocab_file_path,parse_line,num_lines_to_ignore,num_lines_to_use)
+    self._vocabulary, self._pretrained_vectors = load(vocab_file_path, 
+													  parse_line, 
+													  num_lines_to_ignore,
+													  num_lines_to_use)
     self._oov_buckets = oov_buckets
     # Make the vocabulary file a `TrackableAsset` to ensure it is saved along with the model.
     self._vocabulary_file = tracking.TrackableAsset(
@@ -161,8 +164,12 @@ class TextEmbeddingModel(tf.train.Checkpoint):
         sparse_weights=None,
         combiner="sqrtn")
 
-def export_module_from_file(embedding_file, num_oov_buckets, export_path, num_lines_to_ignore=0, num_lines_to_use=None):
-    module = TextEmbeddingModel(embedding_file, num_oov_buckets, num_lines_to_ignore, num_lines_to_use)
+def export_module_from_file(embedding_file,export_path, num_oov_buckets=1,  
+							num_lines_to_ignore=0, num_lines_to_use=None):
+    module = TextEmbeddingModel(embedding_file, 
+	                            num_oov_buckets, 
+								num_lines_to_ignore, 
+								num_lines_to_use)
     tf.saved_model.save(module, export_path)
 
 def main(_):
