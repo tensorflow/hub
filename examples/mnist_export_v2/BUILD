@@ -20,7 +20,6 @@ py_library(
 py_test(
     name = "export_test",
     srcs = ["export_test.py"],
-    data = glob(["test_data/*.jpg"]),
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
