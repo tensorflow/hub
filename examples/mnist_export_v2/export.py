@@ -43,12 +43,12 @@ class MNIST(tf.keras.models.Model):
 def train_step(model, loss_fn, optimizer_fn, metric, image, label):
     """ Perform one training step for the model.
       Args:
-        model: Keras model to train.
-        loss_fn: Loss function to use.
+        model       : Keras model to train.
+        loss_fn     : Loss function to use.
         optimizer_fn: Optimizer function to use.
-        metric: keras.metric to use.
-        image: Tensor of training images of shape [batch_size, 28, 28, 1].
-        label: Tensor of class labels of shape [batch_size, ]
+        metric      : keras.metric to use.
+        image       : Tensor of training images of shape [batch_size, 28, 28, 1].
+        label       : Tensor of class labels of shape [batch_size, ]
     """
     with tf.GradientTape() as tape:
         preds = model(image)
@@ -65,24 +65,31 @@ def train_and_export(
         batch_size=32,
         learning_rate=1e-3,
         epoch=10,
+        dataset=None,
         export_path="/tmp/tfhub_modules/mnist/digits/1"):
     """
       Trains and export the model as SavedModel 2.0.
       Args:
-        data_dir (str): Directory where to store datasets from TFDS (With proper authentication, cloud bucket supported).
-        buffer_size (int): Size of buffer to use while shuffling.
-        batch_size (int): Size of each training batch.
-        learning_rate (float): Learning rate to use for the optimizer.
-        export_path (str): Path to export the trained model.
+        data_dir (str)           : Directory where to store datasets from TFDS.
+                                   (With proper authentication, cloud bucket supported).
+        buffer_size (int)        : Size of buffer to use while shuffling.
+        batch_size (int)         : Size of each training batch.
+        learning_rate (float)    : Learning rate to use for the optimizer.
+        epoch (int)              : Number of Epochs to train for.
+        dataset (tf.data.Dataset): Dataset object if data_dir is not provided.
+        export_path (str)        : Path to export the trained model.
     """
     model = MNIST()
-    train = tfds.load(
-        "mnist",
-        split="train",
-        data_dir=data_dir,
-        batch_size=batch_size).shuffle(
-        buffer_size,
-        reshuffle_each_iteration=True)
+    if not dataset:
+        train = tfds.load(
+            "mnist",
+            split="train",
+            data_dir=data_dir,
+            batch_size=batch_size).shuffle(
+            buffer_size,
+            reshuffle_each_iteration=True)
+    else:
+        train = dataset
     optimizer_fn = tf.optimizers.Adam(learning_rate=learning_rate)
     loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metric = tf.keras.metrics.Mean()
