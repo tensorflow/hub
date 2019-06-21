@@ -164,12 +164,10 @@ class TextEmbeddingModel(tf.train.Checkpoint):
         sparse_weights=None,
         combiner="sqrtn")
 
-def export_module_from_file(embedding_file,export_path, num_oov_buckets=1,  
-							num_lines_to_ignore=0, num_lines_to_use=None):
-    module = TextEmbeddingModel(embedding_file, 
-	                            num_oov_buckets, 
-								num_lines_to_ignore, 
-								num_lines_to_use)
+def export_module_from_file(embedding_file, export_path, num_oov_buckets=1,  
+			    num_lines_to_ignore=0, num_lines_to_use=None):
+    module = TextEmbeddingModel(embedding_file, num_oov_buckets, 
+				num_lines_to_ignore, num_lines_to_use)
     tf.saved_model.save(module, export_path)
 
 def main(_):
