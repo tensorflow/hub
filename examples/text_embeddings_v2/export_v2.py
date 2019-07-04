@@ -62,8 +62,8 @@ def parse_line(line):
   return token, values
 
 
-def load(file_path, parse_line_fn, num_lines_to_ignore=0,
-         num_lines_to_use=None):
+def load(file_path, parse_line_fn, num_lines_to_ignore,
+         num_lines_to_use):
   """Loads a text embedding into memory as a numpy matrix.
 
   Args:
@@ -176,10 +176,10 @@ class TextEmbeddingModel(tf.train.Checkpoint):
 
 
 def export_module_from_file(embedding_file,
+                            num_oov_buckets,
                             export_path,
-                            num_oov_buckets=1,
-                            num_lines_to_ignore=0,
-                            num_lines_to_use=None):
+                            num_lines_to_ignore,
+                            num_lines_to_use):
   module = TextEmbeddingModel(embedding_file, num_oov_buckets,
                               num_lines_to_ignore, num_lines_to_use)
   tf.saved_model.save(module, export_path)
