@@ -57,3 +57,7 @@ Example tool to generate a text embedding module in TF2 format.
 
 #### [`mnist`](mnist_export_v2)
 Example tool to train and export a simple MNIST classifier in TF2 format.
+
+#### [`tpu_retraining`](image_retraining_tpu_v2)
+Shows how to train an image classifier based on any TensorFlow Hub module that
+computes image feature vectors using TensorFlow 2.0 and Cloud TPUs.
