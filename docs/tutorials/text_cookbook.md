@@ -5,14 +5,12 @@ domain with TensorFlow Hub. It is a starting place for anybody who wants to
 solve typical ML problems using pre-trained ML components rather than starting
 from scratch.
 
-[TOC]
-
 ## Classification tasks
 
 When we want to predict a class for a given example, for example **sentiment**,
 **toxicity**, **article category**, or any other characteristic.
 
-![Text Classification Graphic](https://www.gstatic.com/aihub/tfhub/universal-sentence-encoder/example-classification.png){height="150"}
+![Text Classification Graphic](https://www.gstatic.com/aihub/tfhub/universal-sentence-encoder/example-classification.png)
 
 The tutorials below are solving the same task from different perspectives and
 using different tools.
@@ -53,7 +51,7 @@ including downloading the data and submitting the results.
 When we want to find out which sentences correlate with each other in zero-shot
 setup (no training examples).
 
-![Semantic Similarity Graphic](https://www.gstatic.com/aihub/tfhub/universal-sentence-encoder/example-similarity.png){height="150"}
+![Semantic Similarity Graphic](https://www.gstatic.com/aihub/tfhub/universal-sentence-encoder/example-similarity.png)
 
 ### Basic
 [Semantic similarity](https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_similarity_with_tf_hub_universal_encoder.ipynb) - shows how to use the sentence encoder module to compute sentence
