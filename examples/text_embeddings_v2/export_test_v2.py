@@ -42,7 +42,9 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
 
   def testEmbeddingLoaded(self):
     vocabulary, embeddings = export_v2.load(self._embedding_file_path,
-                                            export_v2.parse_line)
+                                            export_v2.parse_line,
+                                            num_lines_to_ignore=0,
+                                            num_lines_to_use=None)
     self.assertEqual((3,), np.shape(vocabulary))
     self.assertEqual((3, 3), np.shape(embeddings))
 
@@ -50,7 +52,9 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
     export_v2.export_module_from_file(
         embedding_file=self._embedding_file_path,
         export_path=self.get_temp_dir(),
-        num_oov_buckets=1)
+        num_oov_buckets=1,
+        num_lines_to_ignore=0,
+        num_lines_to_use=None)
     hub_module = hub.load(self.get_temp_dir())
     tokens = tf.constant(["cat", "cat cat", "lizard. dog", "cat? dog", ""])
     embeddings = hub_module(tokens)
@@ -64,7 +68,9 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
     export_v2.export_module_from_file(
         embedding_file=self._embedding_file_path,
         export_path=self.get_temp_dir(),
-        num_oov_buckets=1)
+        num_oov_buckets=1,
+        num_lines_to_ignore=0,
+        num_lines_to_use=None)
     hub_module = hub.load(self.get_temp_dir())
     tokens = tf.constant(["", "", ""])
     embeddings = hub_module(tokens)
@@ -76,7 +82,9 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
     export_v2.export_module_from_file(
         embedding_file=self._embedding_file_path,
         export_path=self.get_temp_dir(),
-        num_oov_buckets=1)
+        num_oov_buckets=1,
+        num_lines_to_ignore=0,
+        num_lines_to_use=None)
     hub_module = hub.load(self.get_temp_dir())
     tokens = tf.constant(["", "cat dog"])
     embeddings = hub_module(tokens)
@@ -88,7 +96,8 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
         embedding_file=self._embedding_file_path,
         export_path=self.get_temp_dir(),
         num_oov_buckets=1,
-        num_lines_to_ignore=1)
+        num_lines_to_ignore=1,
+        num_lines_to_use=None)
     hub_module = hub.load(self.get_temp_dir())
     tokens = tf.constant(["cat", "dog", "mouse"])
     embeddings = hub_module(tokens)
@@ -101,6 +110,7 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
         embedding_file=self._embedding_file_path,
         export_path=self.get_temp_dir(),
         num_oov_buckets=1,
+        num_lines_to_ignore=0,
         num_lines_to_use=2)
     hub_module = hub.load(self.get_temp_dir())
     tokens = tf.constant(["cat", "dog", "mouse"])
