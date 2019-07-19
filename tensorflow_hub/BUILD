@@ -416,6 +416,12 @@ py_library(
     name = "expect_numpy_installed",
 )
 
+# We expect numpy to already be installed on the system, e.g. via
+# `pip install tensorflow_datasets`
+py_library(
+    name = "expect_tensorflow_datasets_installed",
+)
+
 py_library(
     name = "module_v2",
     srcs = ["module_v2.py"],

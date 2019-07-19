@@ -40,12 +40,20 @@ Explores object detection with the use of the
 Shows how to train an image classifier based on any TensorFlow Hub module that
 computes image feature vectors.
 
-
 #### [`text_embeddings`](text_embeddings)
 
-Contains an example tool to generate a text embedding module from a csv file
-with word embeddings.
+Example tool to generate a text embedding module from a csv file with word
+embeddings.
 
 #### [`half_plus_two`](half_plus_two)
 
 Simple example of how to create a TensorFlow Hub Module.
+
+### TensorFlow 2
+
+#### [`text_embeddings_v2`](text_embeddings)
+
+Example tool to generate a text embedding module in TF2 format.
+
+#### [`mnist`](mnist_export_v2)
+Example tool to train and export a simple MNIST classifier in TF2 format.

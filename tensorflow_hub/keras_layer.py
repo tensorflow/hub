@@ -72,8 +72,8 @@ class KerasLayer(tf.keras.layers.Layer):
       dtype=tf.string)    # Expects a tf.string input tensor.
   ```
 
-  Note: This layer can be used inside the model_fn of a TF2 Estimator. See
-  https://www.tensorflow.org/alpha/guide/migration_guide#using_a_custom_model_fn
+  Note: This layer can be used inside the model_fn of a TF2 Estimator. See the
+  [migration guide](https://www.tensorflow.org/beta/guide/migration_guide#using_a_custom_model_fn)
   for guidance on how to pick up trainable variables, losses and updates
   explicitly from Keras objects instead of relying on graph collections.
   This layer class does not support graph collections.
