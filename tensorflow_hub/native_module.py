@@ -553,7 +553,7 @@ class _ModuleImpl(module_impl.ModuleImpl):
     if len(meta_graph.collection_def) and _is_tpu_graph_function():
       raise NotImplementedError(
           "Applying modules with collections inside TPU functions is not "
-          "supported.")
+          "supported. Collections found: %s" % str(meta_graph.collection_def))
 
     tf_v1.train.import_meta_graph(
         meta_graph,
