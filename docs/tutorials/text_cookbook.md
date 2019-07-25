@@ -5,7 +5,7 @@ domain with TensorFlow Hub. It is a starting place for anybody who wants to
 solve typical ML problems using pre-trained ML components rather than starting
 from scratch.
 
-## Classification tasks
+## Classification
 
 When we want to predict a class for a given example, for example **sentiment**,
 **toxicity**, **article category**, or any other characteristic.
