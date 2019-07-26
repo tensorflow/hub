@@ -34,6 +34,8 @@ upper_tabs:
         path: /hub/tutorials/image_retraining
       - title: Text classification
         path: /hub/tutorials/text_classification_with_tf_hub
+      - title: Text cookbook
+        path: /hub/tutorials/text_cookbook
       - title: Action recognition
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/action_recognition_with_tf_hub.ipynb
         status: external
