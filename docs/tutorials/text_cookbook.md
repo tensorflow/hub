@@ -45,6 +45,15 @@ including downloading the data and submitting the results.
 | [Predicting Movie Review Sentiment with BERT on TF Hub](https://github.com/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb)| ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | | | | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | |
 | [IMDB classification on Kaggle](https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb)| ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | | | | | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) |
 
+#### Bangla task with FastText embeddings
+TensorFlow Hub does not currently offer a module in every language. The
+following tutorial shows how to leverage TensorFlow Hub for fast experimentation
+and modular ML development.
+
+[Bangla Article Classifier](https://github.com/tensorflow/hub/blob/master/examples/colab/bangla_article_classifier.ipynb) -
+demonstrates how to create a reusable TensorFlow Hub text embedding, and use it
+to train a Keras classifier for
+[BARD Bangla Article dataset](https://github.com/tanvirfahim15/BARD-Bangla-Article-Classifier).
 
 ## Semantic similarity
 
