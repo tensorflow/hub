@@ -31,6 +31,7 @@ import tensorflow_hub as hub
 from tensorflow_hub import tf_v1
 
 # pylint: disable=g-direct-tensorflow-import
+from tensorflow.python.feature_column import dense_features_v2
 from tensorflow.python.feature_column import feature_column_v2
 from tensorflow.python.ops.lookup_ops import HashTable
 from tensorflow.python.ops.lookup_ops import KeyValueTensorInitializer
@@ -133,7 +134,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer = dense_features_v2.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(feature_layer_out)
@@ -151,7 +152,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer = dense_features_v2.DenseFeatures(feature_columns)
       feature_layer_out_1 = feature_layer(features)
       feature_layer_out_2 = feature_layer(features)
 
@@ -311,7 +312,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer = dense_features_v2.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf_v1.train.MonitoredSession() as sess:
         output = sess.run(feature_layer_out)
@@ -331,7 +332,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      feature_layer = feature_column_v2.DenseFeatures(feature_columns)
+      feature_layer = dense_features_v2.DenseFeatures(feature_columns)
       feature_layer_out_1 = feature_layer(features)
       feature_layer_out_2 = feature_layer(features)
 
