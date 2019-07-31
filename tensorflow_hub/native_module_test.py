@@ -31,6 +31,7 @@ from tensorflow_hub import tf_v1
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.eager import function as function_eager
 from tensorflow.python.framework import function
+from tensorflow.python.framework import test_util
 from tensorflow.python.ops.control_flow_ops import ControlFlowContext
 from tensorflow.python.ops.lookup_ops import HashTable
 from tensorflow.python.ops.lookup_ops import index_to_string_table_from_file
@@ -272,6 +273,7 @@ class TFHubStatelessModuleTest(tf.test.TestCase):
       with self.assertRaisesRegexp(TypeError, "missing"):
         m()
 
+  @test_util.run_v1_only("b/138681007")
   def testUseWithinWhileLoop(self):
     with tf.Graph().as_default():
       spec = hub.create_module_spec(double_module_fn)
@@ -563,6 +565,7 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
           variable_names = set(name for name, _ in variable_names_and_shapes)
           self.assertEqual(variable_names, {"module/var123"})
 
+  @test_util.run_v1_only("b/138681007")
   def testNonResourceVariableInWhileLoop(self):
     with tf.Graph().as_default():
       # This test uses non-Resource variables to see an actual colocation
@@ -582,6 +585,7 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
         sess.run(tf_v1.global_variables_initializer())
         self.assertAllEqual(sess.run([oi, ox]), [4, 160.0])
 
+  @test_util.run_v1_only("b/138681007")
   def testNonResourceVariableInCond(self):
     with tf.Graph().as_default():
       spec = hub.create_module_spec(stateful_non_rv_module_fn)
@@ -1545,6 +1549,7 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
         grad = tf.gradients([y], [x])
         self.assertAllClose(sess.run(grad, {x: 2, n: 3}), [12.0])
 
+  @test_util.run_v1_only("b/138681007")
   def testUseModuleWithWhileLoopInsideCond(self):
     spec = hub.create_module_spec(while_module_fn)
     with tf.Graph().as_default():
