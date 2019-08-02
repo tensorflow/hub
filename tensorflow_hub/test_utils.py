@@ -25,6 +25,18 @@ import threading
 
 from absl import flags
 
+# TODO(b/73987364): It is not possible to extend feature columns without
+# depending on TensorFlow internal implementation details.
+# pylint: disable=g-direct-tensorflow-import
+# pylint: disable=g-import-not-at-top,g-statement-before-imports
+try:
+  from tensorflow.python.feature_column import dense_features_v2
+except ImportError:
+  pass
+# pylint: disable=g-import-not-at-top,g-statement-before-imports
+from tensorflow.python.feature_column import feature_column_v2
+# pylint: enable=g-direct-tensorflow-import
+
 
 def _do_redirect(handler, location):
   handler.send_response(301)
@@ -138,3 +150,14 @@ def test_srcdir():
     return os.environ["TEST_SRCDIR"]
   else:
     raise RuntimeError("Missing TEST_SRCDIR environment.")
+
+
+def get_dense_features_module():
+  """Returns the module that contains DenseFeatures class.
+
+  This is a defense against changes in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a  # pylint: disable=line-too-long
+  that moved DenseFeatures into dense_features_v2.
+  """
+  if hasattr(feature_column_v2, "DenseFeatures"):
+    return feature_column_v2
+  return dense_features_v2

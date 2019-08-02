@@ -105,6 +105,7 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":tensorflow_hub",
+        ":test_utils",
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
