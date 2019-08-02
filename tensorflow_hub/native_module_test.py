@@ -1517,11 +1517,25 @@ def nested_control_flow_module_fn():
 
 class TFHubModulesWithControlFlow(tf.test.TestCase):
 
-  def testCondModule(self):
+  def _testCondModule(self):
     self._testReluModule(cond_module_fn)
 
-  def testModuleWithNestedConds(self):
+  def testCondModule(self):
+    self._testCondModule()
+
+  @test_util.enable_control_flow_v2
+  def testCondModuleWithControlFlowV2(self):
+    self._testCondModule()
+
+  def _testModuleWithNestedConds(self):
     self._testReluModule(nested_cond_module_fn)
+
+  def testModuleWithNestedConds(self):
+    self._testModuleWithNestedConds()
+
+  @test_util.enable_control_flow_v2
+  def testModuleWithNestedCondsWithControlFlowV2(self):
+    self._testModuleWithNestedConds()
 
   def _testReluModule(self, module_fn):
     spec = hub.create_module_spec(module_fn)
@@ -1530,13 +1544,13 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
         x = tf_v1.placeholder(dtype=tf.float32, name="x")
         relu_module = hub.Module(spec)
         y = relu_module(x)
+        grad = tf.gradients([y], [x])
         self.assertAllClose(sess.run(y, {x: 9.1}), 9.1)
         self.assertAllClose(sess.run(y, {x: -2.4}), 0.0)
-        grad = tf.gradients([y], [x])
         self.assertAllClose(sess.run(grad, {x: 2}), [1.0])
         self.assertAllClose(sess.run(grad, {x: -2}), [0.0])
 
-  def testWhileModule(self):
+  def _testWhileModule(self):
     spec = hub.create_module_spec(while_module_fn)
     with tf.Graph().as_default():
       with tf_v1.Session() as sess:
@@ -1544,10 +1558,17 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
         n = tf_v1.placeholder(tf.int32)
         pow_module = hub.Module(spec)
         y = pow_module({"x": x, "n": n})
+        grad = tf.gradients([y], [x])
         self.assertAllClose(sess.run(y, {x: 9.1, n: 1}), 9.1)
         self.assertAllClose(sess.run(y, {x: 2.4, n: 2}), 5.76)
-        grad = tf.gradients([y], [x])
         self.assertAllClose(sess.run(grad, {x: 2, n: 3}), [12.0])
+
+  def testWhileModule(self):
+    self._testWhileModule()
+
+  @test_util.enable_control_flow_v2
+  def testWhileModuleWithControlFlowV2(self):
+    self._testWhileModule()
 
   @test_util.run_v1_only("b/138681007")
   def testUseModuleWithWhileLoopInsideCond(self):
@@ -1561,7 +1582,7 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
       with tf_v1.Session() as sess:
         self.assertEqual(sess.run(cond), 9.0)
 
-  def testNestedControlFlowModule(self):
+  def _testNestedControlFlowModule(self):
     spec = hub.create_module_spec(nested_control_flow_module_fn)
     with tf.Graph().as_default():
       with tf_v1.Session() as sess:
@@ -1569,15 +1590,22 @@ class TFHubModulesWithControlFlow(tf.test.TestCase):
         a = tf_v1.placeholder(tf.float32)
         m = hub.Module(spec)
         out = m({"elems": elems, "a": a})
+        grad = tf.gradients([out], [elems])
         self.assertAllClose(
             sess.run(out, {
                 a: 1.1,
                 elems: [10, 0, 0.5, 1.2]
             }), 11.2)
 
-        grad = tf.gradients([out], [elems])
         self.assertAllClose(sess.run(grad, {a: 1, elems: [10, 0, 0.5, 1.2]}),
                             [[1.0, 0.0, 0.0, 1.0]])
+
+  def testNestedControlFlowModule(self):
+    self._testNestedControlFlowModule()
+
+  @test_util.enable_control_flow_v2
+  def testNestedControlFlowModuleWithControlFlowV2(self):
+    self._testNestedControlFlowModule()
 
 
 def attached_messages_module_fn(tagged=0):
