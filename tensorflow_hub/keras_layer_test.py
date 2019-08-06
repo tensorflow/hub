@@ -205,9 +205,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormRetraining(self, save_from_keras):
     """Tests imported batch norm with trainable=True."""
-    if save_from_keras:
-      _skip_if_keras_save_too_old(self)
-      self.skipTest("b/138834776 (broken update ops)")
+    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
@@ -240,9 +238,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormFreezing(self, save_from_keras):
     """Tests imported batch norm with trainable=False."""
-    if save_from_keras:
-      _skip_if_keras_save_too_old(self)
-      self.skipTest("b/138839477 (unexplained issue on Kokoro)")
+    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
@@ -465,9 +461,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormRetraining(self, save_from_keras):
     """Tests imported batch norm with trainable=True."""
-    if save_from_keras:
-      _skip_if_keras_save_too_old(self)
-      self.skipTest("b/138834776 (broken update ops)")
+    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     estimator = tf.estimator.Estimator(
@@ -508,9 +502,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormFreezing(self, save_from_keras):
     """Tests imported batch norm with trainable=False."""
-    if save_from_keras:
-      _skip_if_keras_save_too_old(self)
-      self.skipTest("b/138839477 (unexplained issue on Kokoro)")
+    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     estimator = tf.estimator.Estimator(
