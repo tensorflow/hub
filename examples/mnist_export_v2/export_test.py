@@ -28,14 +28,15 @@ import tensorflow_hub as hub
 from examples.mnist_export_v2 import export
 
 
-class TFHubMNISTTest(tf.test.TestCase):
+class ExportTest(tf.test.TestCase):
+  """Test for MNIST model exporter."""
 
   def setUp(self):
-    self.mock_dataset = tf.data.Dataset.range(5).map(
-        lambda x: {
-            "image": tf.cast(255 * tf.random.normal([1, 28, 28, 1]), tf.uint8),
-            "label": x
-        })
+    super(ExportTest, self).setUp()
+    def create_image_and_label(index):
+      image = tf.cast(255 * tf.random.normal([1, 28, 28, 1]), tf.uint8)
+      return dict(image=image, label=index)
+    self.mock_dataset = tf.data.Dataset.range(5).map(create_image_and_label)
 
   def test_model_exporting(self):
     export.train_and_export(
@@ -50,7 +51,7 @@ class TFHubMNISTTest(tf.test.TestCase):
         dataset=self.mock_dataset,
         export_path="%s/model/1" % self.get_temp_dir())
     model = hub.load("%s/model/1" % self.get_temp_dir())
-    output_ = model.call(tf.zeros([1, 28, 28, 1], dtype=tf.uint8).numpy())
+    output_ = model(tf.zeros([1, 28, 28, 1], dtype=tf.uint8).numpy())
     self.assertEqual(output_.shape, [1, 10])
 
 
@@ -61,3 +62,4 @@ if __name__ == "__main__":
     tf.test.main()
   else:
     logging.warning("Skipping running tests for TF Version: %s", tf.__version__)
+

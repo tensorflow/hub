@@ -45,8 +45,6 @@ class MNIST(tf.keras.models.Model):
     self.layer_1 = tf.keras.layers.Dense(64)
     self.layer_2 = tf.keras.layers.Dense(10, activation=output_activation)
 
-  @tf.function(
-      input_signature=[tf.TensorSpec(shape=[None, 28, 28, 1], dtype=tf.uint8)])
   def call(self, inputs):
     casted = tf.keras.layers.Lambda(lambda x: tf.cast(x, tf.float32))(inputs)
     flatten = tf.keras.layers.Flatten()(casted)
@@ -116,6 +114,9 @@ def train_and_export(export_path,
           epoch, step,
           metric.result().numpy()))
 
+  # We have to call either predict or fit to make it possible to export with
+  # tf.keras.models.save_model.
+  model.predict(next(iter(dataset))["image"])
   # Export the model as SavedModel 2.0.
   tf.saved_model.save(model, export_path)
 
