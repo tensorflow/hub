@@ -118,7 +118,7 @@ class KerasLayer(tf.keras.layers.Layer):
         self._add_existing_weight(v, trainable=True)
       trainable_variables = {id(v) for v in self._func.trainable_variables}
     else:
-      trainable_variables = {}
+      trainable_variables = set()
     if hasattr(self._func, "variables"):
       for v in self._func.variables:
         if id(v) not in trainable_variables:
