@@ -388,6 +388,7 @@ py_test(
     name = "keras_layer_test",
     srcs = ["keras_layer_test.py"],
     python_version = "PY2",
+    shard_count = 2,
     srcs_version = "PY2AND3",
     deps = [
         ":tensorflow_hub",
