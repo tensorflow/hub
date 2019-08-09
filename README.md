@@ -29,7 +29,7 @@ that can be reused on new tasks.
 *   [Common issues](docs/common_issues.md)
 *   Tutorials:
     *   [Image Retraining](https://www.tensorflow.org/tutorials/image_retraining)
-    *   [Text Classification](https://www.tensorflow.org/tutorials/text_classification_with_tf_hub)
+    *   [Text Cookbook](https://www.tensorflow.org/hub/tutorials/text_cookbook)
     *   [Additional Examples](examples/README.md)
 *   Key Concepts:
     *   [Using a Module](docs/basics.md)
