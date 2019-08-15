@@ -97,7 +97,8 @@ def train_and_export(export_path,
   model = MNIST()
   if not dataset:
     dataset = tfds.load(
-        "mnist", split="train", batch_size=batch_size).shuffle(
+        "mnist", split="train", batch_size=batch_size,
+        shuffle_files=True).shuffle(
             buffer_size, reshuffle_each_iteration=True)
 
   optimizer_fn = tf.keras.optimizers.Adam(learning_rate=learning_rate)
