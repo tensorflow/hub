@@ -82,6 +82,14 @@ def _save_half_plus_one_model(export_dir, save_from_keras=False):
   tf.saved_model.save(obj, export_dir)
 
 
+def _tensors_names_set(tensor_sequence):
+  """Converts tensor sequence to a set of tensor references."""
+  # Tensor name stands as a proxy for the uniqueness of the tensors.
+  # In TensorFlow 2.x one can use the `experimental_ref` method, but it is not
+  # available in older TF versions.
+  return {t.name for t in tensor_sequence}
+
+
 def _save_batch_norm_model(export_dir, save_from_keras=False):
   """Writes a Hub-style SavedModel with a batch norm layer."""
   inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
@@ -104,12 +112,13 @@ def _save_batch_norm_model(export_dir, save_from_keras=False):
   obj.__call__ = call_fn
   # Test assertions pick up variables by their position here.
   obj.trainable_variables = [bn.beta, bn.gamma]
-  assert set(obj.trainable_variables) == set(model.trainable_variables)
+  assert _tensors_names_set(obj.trainable_variables) == _tensors_names_set(
+      model.trainable_variables)
   obj.variables = [bn.beta, bn.gamma, bn.moving_mean, bn.moving_variance]
-  assert set(obj.variables) == set(
+  assert _tensors_names_set(obj.variables) == _tensors_names_set(
       model.trainable_variables + model.non_trainable_variables)
   obj.regularization_losses = []
-  assert set(model.losses) == set()
+  assert not model.losses
   tf.saved_model.save(obj, export_dir)
 
 
@@ -162,8 +171,8 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(len(model.non_trainable_weights), 2)
     self.assertCountEqual([v.shape.rank for v in model.non_trainable_weights],
                           [2, 1])  # Kernel and bias from the plus_1 layer.
-    self.assertNoCommonElements(model.trainable_weights,
-                                model.non_trainable_weights)
+    self.assertNoCommonElements(_tensors_names_set(model.trainable_weights),
+                                _tensors_names_set(model.non_trainable_weights))
     # Retrain on y = x/2 + 6 for x near 10.
     # (Console output should show loss below 0.2.)
     model.compile(tf.keras.optimizers.SGD(0.002),
@@ -537,9 +546,12 @@ if __name__ == "__main__":
   if hasattr(hub, "KerasLayer"):
     # At this point, we are either in in a late TF1 version or in TF2.
     # In TF1, we need to enable V2-like behavior, notably eager execution.
-    # `tf.enable_v2_behavior` seems to be missing at times, but
-    # `tf.enable_eager_behavior` has been around for long, so we call that.
+    # `tf.enable_v2_behavior` seems available and should be preferred.
+    # The alternative `tf.enable_eager_behavior` has been around for longer, and
+    # will be enabled if `tf.enable_v2_behavior` is not available.
     # In TF2, those enable_*() methods are unnecessary and no longer available.
-    if hasattr(tf, "enable_eager_execution"):
-      tf.enable_eager_execution()
+    if hasattr(tf, "enable_v2_behavior"):
+      tf.enable_v2_behavior()
+    elif hasattr(tf, "enable_eager_behavior"):
+      tf.enable_eager_behavior()
     tf.test.main()
