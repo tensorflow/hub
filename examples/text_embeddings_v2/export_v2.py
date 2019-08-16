@@ -40,8 +40,9 @@ from absl import app
 import numpy as np
 import tensorflow as tf
 
-# Remove these symbols when they become public.
+# Remove this import when the symbol used becomes public.
 from tensorflow.python.ops import lookup_ops
+# TODO(b/139530531): Remove this import when TrackableAsset becomes public.
 from tensorflow.python.training.tracking import tracking
 
 FLAGS = None
