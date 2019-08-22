@@ -39,6 +39,7 @@ py_library(
         ":saved_model_module",
         "//tensorflow_hub:expect_tensorflow_installed",
         ":config",
+        "//tensorflow_hub/tools:empty_package",
     ],
 )
 
@@ -418,10 +419,16 @@ py_library(
     name = "expect_numpy_installed",
 )
 
-# We expect numpy to already be installed on the system, e.g. via
-# `pip install tensorflow_datasets`
+# We expect tensorflow_datasets to already be installed on the system, e.g. via
+# `pip install tensorflow-datasets`
 py_library(
     name = "expect_tensorflow_datasets_installed",
+)
+
+# We expect absl to already be installed on the system, e.g. via
+# `pip install absl-py`
+py_library(
+    name = "expect_absl_py_installed",
 )
 
 py_library(

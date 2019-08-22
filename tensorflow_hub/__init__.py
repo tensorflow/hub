@@ -60,6 +60,11 @@ except ImportError:
 
 from tensorflow_hub.config import _run
 _run()
+
+# The package `tensorflow_hub.tools` is available separately for import, but
+# it is not meant to be available as attribute of the tensorflow_hub module.
+from tensorflow_hub import tools
+del tools
 # pylint: enable=g-bad-import-order
 # pylint: enable=g-import-not-at-top
 

@@ -1,4 +1,4 @@
-# Copyright 2018 The TensorFlow Hub Authors. All Rights Reserved.
+# Copyright 2019 The TensorFlow Hub Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+licenses(["notice"])  # Apache 2.0 License
 
-licenses(["notice"])  # Apache 2.0
+package(
+    default_visibility = ["//tensorflow_hub:__subpackages__"],
+)
 
-package(default_visibility = ["//visibility:private"])
-
-sh_binary(
-    name = "build_pip_package",
-    srcs = ["build_pip_package.sh"],
-    data = [
-        "//tensorflow_hub",
-        "//tensorflow_hub/tools/make_image_classifier",
-    ],
+py_library(
+    name = "empty_package",
+    srcs = ["__init__.py"],
+    srcs_version = "PY2AND3",
 )

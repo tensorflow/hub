@@ -26,6 +26,9 @@ the TF Hub module, are trained on the new dataset. TF Hub offers a variety of
 suitable modules with various size/accuracy tradeoffs.
 
 The resulting model is exported in TensorFlow's standard SavedModel format.
+
+For more information, please see the README file next to the source code,
+https://github.com/tensorflow/hub/blob/master/tools/make_image_classifier/README.md
 """
 
 # NOTE: This is an expanded, command-line version of
@@ -105,8 +108,9 @@ def _check_keras_dependencies():
   try:
     tf.keras.preprocessing.image.load_img(six.BytesIO())
   except ImportError:
-    # TODO(b/139179365): Print helpful pip install command once available.
-    print("*** Unsatisfied dependencies of keras_preprocessing.image. ***")
+    print("\n*** Unsatisfied dependencies of keras_preprocessing.image. ***\n"
+          "To install them, use your system's equivalent of\n"
+          "pip install tensorflow_hub[make_image_classifier]\n")
     raise
   except Exception as e:  # pylint: disable=broad-except
     # Loading from dummy content as above is expected to fail in other ways.
