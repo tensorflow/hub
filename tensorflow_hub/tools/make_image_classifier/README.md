@@ -79,7 +79,7 @@ per class).
 
 **Note:** For a quick demo, omit --image_dir. This will download and use
 the "TF Flowers" dataset and train a model to classify photos of flowers
-as dasiy, dandelion, rose, sunflower or tulip.
+as daisy, dandelion, rose, sunflower or tulip.
 
 The `--tfhub_module` is the URL of a pre-trained model piece, or "module",
 on [TensorFlow Hub](https://tfhub.dev). You can point your browser to the
