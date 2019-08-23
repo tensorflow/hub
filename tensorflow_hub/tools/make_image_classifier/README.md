@@ -17,24 +17,28 @@ which demonstrates the key techniques of this program in your browser.
 
 ## Installation
 
-This tool requires TensorFlow 2.0 (or its public beta1) and
-tensorflow_hub 0.6.0 or better (yet to be released as of August 2019).
+This tool requires pre-release versions of the tensorflow and tensorflow_hub
+libraries, which can be installed with:
 
 ```shell
-$ pip install 'tensorflow>=2.0.0beta1'
-$ pip install 'tensorflow-hub[make_image_classifier]>=0.6.0'
+$ pip install tf-nightly-2.0-preview
+$ pip install tf-hub-nightly[make_image_classifier]
 ```
 
-After that, the `make_image_classifier` executable is available on the
-command line:
+<!-- TODO(b/139467904): replace by tensorflow>=2.0.0 -->
+<!-- and matching tensorflow_hub once available. -->
+
+After installation, the `make_image_classifier` executable is available
+on the command line:
 
 ```shell
 $ make_image_classifier --help
 ```
 
 This tool tends to run much faster with a GPU, if TensorFlow is installed
-to use it. For instructions, see
-[tensorflow.org/install/gpu](https://www.tensorflow.org/install/gpu).
+to use it. To do so, you need to install GPU drivers per
+[tensorflow.org/install/gpu](https://www.tensorflow.org/install/gpu)
+and use pip package `tf-nightly-gpu-2.0-preview`.
 
 
 ## Basic Usage
