@@ -116,7 +116,7 @@ def train_and_export(export_path,
           metric.result().numpy()))
 
   # We have to call either predict or fit to make it possible to export with
-  # tf.keras.models.save_model.
+  # tf.saved_model.save.
   model.predict(next(iter(dataset))["image"])
   # Export the model as SavedModel 2.0.
   tf.saved_model.save(model, export_path)
