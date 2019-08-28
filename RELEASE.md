@@ -13,6 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
+# Current version 0.7.0-dev
+
+# Release 0.6.0
+  * Added two examples for exporting of Hub/TF2 modules.
+  * Switched to `dense_features_v2` if a high enough TF version is installed.
+  * Added `tools/make_image_classifier` for use with TF2.
+
 # Release 0.5.0
   * Fixes in `hub.KerasLayer` related with regularizers, config serialization
     and usage with `tf.estimator`.
