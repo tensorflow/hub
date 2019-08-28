@@ -26,7 +26,7 @@ landing_page:
         </div>
       code_block: |
         <pre class = "prettyprint">
-          !pip install "tensorflow_hub==0.4.0"
+          !pip install "tensorflow_hub"
           !pip install "tf-nightly"
 
           import tensorflow as tf
