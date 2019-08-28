@@ -30,7 +30,7 @@ and as a .tflite file for deployment to mobile devices with TensorFlow Lite.
 TODO(b/139467904): Add support for post-training model optimization.
 
 For more information, please see the README file next to the source code,
-https://github.com/tensorflow/hub/blob/master/tools/make_image_classifier/README.md
+https://github.com/tensorflow/hub/blob/master/tensorflow_hub/tools/make_image_classifier/README.md
 """
 
 # NOTE: This is an expanded, command-line version of
