@@ -25,7 +25,9 @@ followed by a linear classifier. The linear classifier, and optionally also
 the TF Hub module, are trained on the new dataset. TF Hub offers a variety of
 suitable modules with various size/accuracy tradeoffs.
 
-The resulting model is exported in TensorFlow's standard SavedModel format.
+The resulting model can be exported in TensorFlow's standard SavedModel format
+and as a .tflite file for deployment to mobile devices with TensorFlow Lite.
+TODO(b/139467904): Add support for post-training model optimization.
 
 For more information, please see the README file next to the source code,
 https://github.com/tensorflow/hub/blob/master/tools/make_image_classifier/README.md
@@ -39,6 +41,8 @@ https://github.com/tensorflow/hub/blob/master/tools/make_image_classifier/README
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import tempfile
 
 from absl import app
 from absl import flags
@@ -65,6 +69,14 @@ flags.DEFINE_integer(
 flags.DEFINE_string(
     "saved_model_dir", None,
     "The final model is exported as a SavedModel directory with this name.")
+flags.DEFINE_string(
+    "tflite_output_file", None,
+    "The final model is exported as a .tflite flatbuffers file with this name.")
+flags.DEFINE_string(
+    "labels_output_file", None,
+    "Where to save the labels (that is, names of image subdirectories). "
+    "The lines in this file appear in the same order as the predictions "
+    "of the model.")
 flags.DEFINE_integer(
     "train_epochs", 5,
     "Training will do this many iterations over the dataset.")
@@ -122,7 +134,7 @@ def _get_data_with_keras(image_dir, image_size, batch_size,
   """Gets training and validation data via keras_preprocessing.
 
   Args:
-    image_dir: A Python string with the name of a directory that conatins
+    image_dir: A Python string with the name of a directory that contains
       subdirectories of images, one per class.
     image_size: A list or tuple with 2 Python integers specifying
       the fixed height and width to which input images are resized.
@@ -133,7 +145,7 @@ def _get_data_with_keras(image_dir, image_size, batch_size,
 
   Returns:
     A nested tuple ((train_data, train_size),
-                    (valid_data, valid_size), num_classes) where:
+                    (valid_data, valid_size), labels) where:
     train_data, valid_data: Generators for use with Model.fit_generator,
       each yielding tuples (images, labels) where
         images is a float32 Tensor of shape [batch_size, height, width, 3]
@@ -142,7 +154,8 @@ def _get_data_with_keras(image_dir, image_size, batch_size,
           with one-hot encoded classes.
     train_size, valid_size: Python integers with the numbers of training
       and validation examples, respectively.
-    num_classes: A Python integer with the number of classes to be predicted.
+    labels: A tuple of strings with the class labels (subdirectory names).
+      The index of a label in this tuple is the numeric class id.
   """
   datagen_kwargs = dict(rescale=1./255,
                         # TODO(b/139467904): Expose this as a flag.
@@ -166,9 +179,13 @@ def _get_data_with_keras(image_dir, image_size, batch_size,
   train_generator = train_datagen.flow_from_directory(
       image_dir, subset="training", shuffle=True, **dataflow_kwargs)
 
+  indexed_labels = [(index, label)
+                    for label, index in train_generator.class_indices.items()]
+  sorted_indices, sorted_labels = zip(*sorted(indexed_labels))
+  assert sorted_indices == tuple(range(len(sorted_labels)))
   return ((train_generator, train_generator.samples),
           (valid_generator, valid_generator.samples),
-          train_generator.num_classes)
+          sorted_labels)
 
 
 def _image_size_for_module(module_layer, flags_image_size=None):
@@ -287,10 +304,16 @@ def main(args):
     print("No --image_dir given, downloading tf_flowers by default.")
     image_dir = tf.keras.utils.get_file(
         "flower_photos", _DEFAULT_IMAGE_URL, untar=True)
-  train_data_and_size, valid_data_and_size, num_classes = _get_data_with_keras(
+  train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
       image_dir, image_size, FLAGS.batch_size)
+  print("Found", len(labels), "classes:", ", ".join(labels))
 
-  model = _build_model(module_layer, image_size, num_classes)
+  if FLAGS.labels_output_file:
+    with tf.io.gfile.GFile(FLAGS.labels_output_file, "w") as f:
+      f.write("\n".join(labels + ("",)))
+    print("Labels written to", FLAGS.labels_output_file)
+
+  model = _build_model(module_layer, image_size, len(labels))
   train_result = _train_model(
       model, FLAGS.train_epochs, FLAGS.learning_rate, FLAGS.momentum,
       train_data_and_size, valid_data_and_size, FLAGS.batch_size)
@@ -299,9 +322,20 @@ def main(args):
   if FLAGS.assert_accuracy_at_least:
     _assert_accuracy(train_result, FLAGS.assert_accuracy_at_least)
 
-  if FLAGS.saved_model_dir:
-    tf.saved_model.save(model, FLAGS.saved_model_dir)
-    print("SavedModel model exported to", FLAGS.saved_model_dir)
+  saved_model_dir = FLAGS.saved_model_dir
+  if FLAGS.tflite_output_file and not saved_model_dir:
+    # We need a SavedModel for conversion, even if the user did not request it.
+    saved_model_dir = tempfile.mkdtemp()
+  if saved_model_dir:
+    tf.saved_model.save(model, saved_model_dir)
+    print("SavedModel model exported to", saved_model_dir)
+
+  if FLAGS.tflite_output_file:
+    converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+    lite_model_content = converter.convert()
+    with tf.io.gfile.GFile(FLAGS.tflite_output_file, "wb") as f:
+      f.write(lite_model_content)
+    print("TFLite model exported to", FLAGS.tflite_output_file)
 
 
 def _ensure_tf2():

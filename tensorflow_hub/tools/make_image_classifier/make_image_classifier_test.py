@@ -31,25 +31,30 @@ import tensorflow_hub as hub
 from tensorflow_hub.tools.make_image_classifier import make_image_classifier
 
 
-def _write_filled_jpeg_file(path, rgb, image_size):
+def _fill_image(rgb, image_size):
   r, g, b = rgb
-  img = np.broadcast_to(np.array([[[r, g, b]]], dtype=np.uint8),
-                        shape=(image_size, image_size, 3))
-  tf.keras.preprocessing.image.save_img(path, img, "channels_last", "jpeg")
+  return np.broadcast_to(np.array([[[r, g, b]]], dtype=np.uint8),
+                         shape=(image_size, image_size, 3))
+
+
+def _write_filled_jpeg_file(path, rgb, image_size):
+  tf.keras.preprocessing.image.save_img(path, _fill_image(rgb, image_size),
+                                        "channels_last", "jpeg")
 
 
 class MakeImageClassifierTest(tf.test.TestCase):
   IMAGE_SIZE = 24
   IMAGES_PER_CLASS = 20
+  CMY_NAMES_AND_RGB_VALUES = (("cyan", (0, 255, 255)),
+                              ("magenta", (255, 0, 255)),
+                              ("yellow", (255, 255, 0)))
   DEFAULT_FLAGS = dict(image_size=IMAGE_SIZE, train_epochs=10,
                        batch_size=8, learning_rate=0.1, momentum=0.0)
 
   def _write_cmy_dataset(self):
     path = os.path.join(self.get_temp_dir(), "cmy_image_dir")
     os.mkdir(path)  # Fails if exists.
-    for class_name, rgb in (("cyan", (0, 255, 255)),
-                            ("magenta", (255, 0, 255)),
-                            ("yellow", (255, 255, 0))):
+    for class_name, rgb in self.CMY_NAMES_AND_RGB_VALUES:
       class_subdir = os.path.join(path, class_name)
       os.mkdir(class_subdir)
       for i in range(self.IMAGES_PER_CLASS):
@@ -86,24 +91,60 @@ class MakeImageClassifierTest(tf.test.TestCase):
     model.save(path, save_format="tf")
     return path
 
+  def _load_labels(self, filename):
+    with tf.io.gfile.GFile(filename, "r") as f:
+      return [label.strip("\n") for label in f]
+
+  def _load_lite_model(self, filename):
+    """Returns a numpy-to-numpy wrapper for the model in a .tflite file."""
+    self.assertTrue(os.path.isfile(filename))
+    with tf.io.gfile.GFile(filename, "rb") as f:
+      model_content = f.read()
+    interpreter = tf.lite.Interpreter(model_content=model_content)
+    def lite_model(images):
+      interpreter.allocate_tensors()
+      input_index = interpreter.get_input_details()[0]['index']
+      interpreter.set_tensor(input_index, images)
+      interpreter.invoke()
+      output_index = interpreter.get_output_details()[0]['index']
+      return interpreter.get_tensor(output_index)
+    return lite_model
+
   def testEndToEndSuccess(self):
     logging.info("Using testdata in %s", self.get_temp_dir())
     avg_model_dir = self._export_global_average_model()
     image_dir = self._write_cmy_dataset()
     saved_model_dir = os.path.join(self.get_temp_dir(), "final_saved_model")
-    self.assertFalse(  # Make sure we don't test for pre-existing files.
-        os.path.isfile(os.path.join(saved_model_dir, "saved_model.pb")))
+    saved_model_expected_file = os.path.join(saved_model_dir, "saved_model.pb")
+    tflite_output_file = os.path.join(self.get_temp_dir(), "final_model.tflite")
+    labels_output_file = os.path.join(self.get_temp_dir(), "labels.txt")
+    # Make sure we don't test for pre-existing files.
+    self.assertFalse(os.path.isfile(saved_model_expected_file))
+    self.assertFalse(os.path.isfile(tflite_output_file))
+    self.assertFalse(os.path.isfile(labels_output_file))
 
     with flagsaver.flagsaver(
         image_dir=image_dir, tfhub_module=avg_model_dir,
         # This dataset is expected to be fit perfectly.
         assert_accuracy_at_least=0.9,
-        saved_model_dir=saved_model_dir, **self.DEFAULT_FLAGS):
+        saved_model_dir=saved_model_dir,
+        tflite_output_file=tflite_output_file,
+        labels_output_file=labels_output_file,
+        **self.DEFAULT_FLAGS):
       make_image_classifier.main([])
 
-    # Test for main output artifact.
-    self.assertTrue(
-        os.path.isfile(os.path.join(saved_model_dir, "saved_model.pb")))
+    # Test that the SavedModel was written.
+    self.assertTrue(os.path.isfile(saved_model_expected_file))
+
+    # Test that the TFLite model works.
+    labels = self._load_labels(labels_output_file)
+    lite_model = self._load_lite_model(tflite_output_file)
+    for class_name, rgb in self.CMY_NAMES_AND_RGB_VALUES:
+      input_batch = (_fill_image(rgb, self.IMAGE_SIZE)[None, ...]
+                     / np.array(255., dtype=np.float32))
+      output_batch = lite_model(input_batch)
+      prediction = labels[np.argmax(output_batch[0])]
+      self.assertEqual(class_name, prediction)
 
   def testEndToEndAccuracyFailure(self):
     logging.info("Using testdata in %s", self.get_temp_dir())

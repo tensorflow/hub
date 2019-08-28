@@ -50,7 +50,9 @@ $ make_image_classifier \
   --image_dir my_image dir \
   --tfhub_module https://tfhub.dev/google/tf2-preview/mobilenet_v2/feature_vector/4 \
   --image_size 224 \
-  --saved_model_dir my_dir/new_model
+  --saved_model_dir my_dir/new_model \
+  --labels_output_file class_labels.txt \
+  --tflite_output_file new_mobile_model.tflite
 ```
 
 The `--image_dir` is a directory of subdirectories of images, defining
@@ -98,10 +100,30 @@ Some part of the data is set aside as validation data; the partially
 trained model is evaluated on that after each epoch. You can see
 progress bars and accuracy indicators on the console.
 
-After training, the given `--saved_model_dir`is created and filled
+After training, the given `--saved_model_dir` is created and filled
 with several files that represent the complete image classification model
-in TensorFlow's SavedModel format. This can be deployed to
-TensorFlow Serving or TensorFlow Lite.
+in TensorFlow's SavedModel format. This can be deployed to TensorFlow Serving.
+
+If `--labels_output_file` is given, the names of the classes are written
+to that text file, one per line, in the same order as they appear
+in the predictions output by the model.
+
+If `--tflite_output_file` is given, the complete image classification model
+is written to that file in TensorFlow Lite's model format ("flatbuffers").
+This can be deployed to TF Lite on mobile devices.
+If you are not deploying to TF Lite, you can simply omit this flag.
+
+If you set all the flags as in the example above, you can test the
+resulting TF Lite model with
+[tensorflow/lite/examples/python/label_image.py](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/examples/python/label_image.py)
+by downloading that program and running on an image like
+
+```shell
+python label_image.py \
+  --input_mean 0 --input_std 255 \
+  --model_file new_mobile_model.tflite --label_file class_labels.txt \
+  --image my_image_dir/cat/a_feline_photo.jpg  # <<< Adjust filename.
+```
 
 
 ## Advanced usage
