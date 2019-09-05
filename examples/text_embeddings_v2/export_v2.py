@@ -40,11 +40,6 @@ from absl import app
 import numpy as np
 import tensorflow as tf
 
-# Remove this import when the symbol used becomes public.
-from tensorflow.python.ops import lookup_ops
-# TODO(b/139530531): Remove this import when TrackableAsset becomes public.
-from tensorflow.python.training.tracking import tracking
-
 FLAGS = None
 
 
@@ -129,14 +124,13 @@ class TextEmbeddingModel(tf.train.Checkpoint):
                                                       num_lines_to_ignore,
                                                       num_lines_to_use)
     self._oov_buckets = oov_buckets
-    # Make the vocabulary file a `TrackableAsset` to ensure it is saved along
-    # with the model.
-    self._vocabulary_file = tracking.TrackableAsset(
-        write_vocabulary_file(self._vocabulary))
-    self._table = lookup_ops.index_table_from_file(
-        vocabulary_file=self._vocabulary_file,
-        num_oov_buckets=self._oov_buckets,
-        hasher_spec=lookup_ops.FastHashSpec)
+    # Assign the table initializer to this instance to ensure the asset
+    # it depends on is saved with the SavedModel.
+    self._table_initializer = tf.lookup.TextFileInitializer(
+        vocab_file_path, tf.string, tf.lookup.TextFileIndex.WHOLE_LINE,
+        tf.int64, tf.lookup.TextFileIndex.LINE_NUMBER)
+    self._table = tf.lookup.StaticVocabularyTable(
+        self._table_initializer, num_oov_buckets=oov_buckets)
     oovs = np.zeros([oov_buckets, self._pretrained_vectors.shape[1]])
     self._pretrained_vectors.resize([
         self._pretrained_vectors.shape[0] + oov_buckets,
