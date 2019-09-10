@@ -127,7 +127,8 @@ class TextEmbeddingModel(tf.train.Checkpoint):
     # Assign the table initializer to this instance to ensure the asset
     # it depends on is saved with the SavedModel.
     self._table_initializer = tf.lookup.TextFileInitializer(
-        vocab_file_path, tf.string, tf.lookup.TextFileIndex.WHOLE_LINE,
+        write_vocabulary_file(self._vocabulary),
+        tf.string, tf.lookup.TextFileIndex.WHOLE_LINE,
         tf.int64, tf.lookup.TextFileIndex.LINE_NUMBER)
     self._table = tf.lookup.StaticVocabularyTable(
         self._table_initializer, num_oov_buckets=oov_buckets)
