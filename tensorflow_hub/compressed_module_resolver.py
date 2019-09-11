@@ -79,24 +79,9 @@ class HttpCompressedFileResolver(resolver.Resolver):
 
     def download(handle, tmp_dir):
       """Fetch a module via HTTP(S), handling redirect and download headers."""
-      cur_url = handle
       request = url.Request(_append_compressed_format_query(handle))
-
-      # Look for and handle a special response header. If present, interpret it
-      # as a redirect to the module download location. This allows publishers
-      # (if they choose) to provide the same URL for both a module download and
-      # its documentation.
-
-      class LoggingHTTPRedirectHandler(url.HTTPRedirectHandler):
-
-        def redirect_request(self, req, fp, code, msg, headers, newurl):
-          cur_url = newurl  # pylint:disable=unused-variable
-          return url.HTTPRedirectHandler.redirect_request(
-              self, req, fp, code, msg, headers, newurl)
-
-      url_opener = url.build_opener(LoggingHTTPRedirectHandler)
-      response = url_opener.open(request)
-      return resolver.DownloadManager(cur_url).download_and_uncompress(
+      response = self._call_urlopen(request)
+      return resolver.DownloadManager(handle).download_and_uncompress(
           response, tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
@@ -105,6 +90,10 @@ class HttpCompressedFileResolver(resolver.Resolver):
   def _lock_file_timeout_sec(self):
     # This method is provided as a convenience to simplify testing.
     return LOCK_FILE_TIMEOUT_SEC
+
+  def _call_urlopen(self, request):
+    # Overriding this method allows setting SSL context in Python 3.
+    return url.urlopen(request)
 
 
 class GcsCompressedFileResolver(resolver.Resolver):
