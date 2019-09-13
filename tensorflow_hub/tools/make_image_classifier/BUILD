@@ -15,12 +15,16 @@
 licenses(["notice"])  # Apache 2.0 License
 
 package(
-    default_visibility = ["//tensorflow_hub:__subpackages__"],
+    default_visibility = [
+        "//:__subpackages__",
+        "//tensorflow_hub:__subpackages__",
+    ],
 )
 
+# A library with reusable pieces of make_image_classifier.
 py_library(
     name = "make_image_classifier_lib",
-    srcs = ["make_image_classifier.py"],
+    srcs = ["make_image_classifier_lib.py"],
     srcs_version = "PY2AND3",
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
@@ -28,12 +32,25 @@ py_library(
     ],
 )
 
+# The make_image_classifier script as a py_library (private, for testing only).
+py_library(
+    name = "make_image_classifier_main",
+    srcs = ["make_image_classifier.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":make_image_classifier_lib",
+        "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub",
+    ],
+)
+
+# The make_image_classifier script as a py_binary.
 py_binary(
     name = "make_image_classifier",
     srcs = ["make_image_classifier.py"],
     python_version = "PY3",
     deps = [
-        ":make_image_classifier_lib",
+        ":make_image_classifier_main",
     ],
 )
 
@@ -43,6 +60,7 @@ py_test(
     python_version = "PY3",
     deps = [
         ":make_image_classifier_lib",
+        ":make_image_classifier_main",
         "//tensorflow_hub:expect_absl_py_installed",  # "/testing:flagsaver"
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",

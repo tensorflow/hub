@@ -51,6 +51,9 @@ import six
 import tensorflow as tf
 import tensorflow_hub as hub
 
+from tensorflow_hub.tools.make_image_classifier import make_image_classifier_lib as lib
+
+_DEFAULT_HPARAMS = lib.get_default_hparams()
 
 flags.DEFINE_string(
     "image_dir", None,
@@ -77,35 +80,43 @@ flags.DEFINE_string(
     "Where to save the labels (that is, names of image subdirectories). "
     "The lines in this file appear in the same order as the predictions "
     "of the model.")
-flags.DEFINE_integer(
-    "train_epochs", 5,
-    "Training will do this many iterations over the dataset.")
-flags.DEFINE_bool(
-    "do_fine_tuning", False,
-    "If set, the --tfhub_module is trained together with the rest of "
-    "the model being built.")
-flags.DEFINE_integer(
-    "batch_size", 32,
-    "Each training step samples a batch of this many images "
-    "from the training data. (You may need to shrink this when using a GPU "
-    "and getting out-of-memory errors. Avoid values below 8 when re-training "
-    "modules that use batch normalization.)")
-flags.DEFINE_float(
-    "learning_rate", 0.005,
-    "The learning rate to use for gradient descent training.")
-flags.DEFINE_float(
-    "momentum", 0.9,
-    "The momentum parameter to use for gradient descent training.")
 flags.DEFINE_float(
     "assert_accuracy_at_least", None,
     "If set, the program fails if the validation accuracy at the end of "
     "training is less than this number (between 0 and 1), and no export of "
     "the trained model happens.")
-
+flags.DEFINE_integer(
+    "train_epochs", _DEFAULT_HPARAMS.train_epochs,
+    "Training will do this many iterations over the dataset.")
+flags.DEFINE_bool(
+    "do_fine_tuning", _DEFAULT_HPARAMS.do_fine_tuning,
+    "If set, the --tfhub_module is trained together with the rest of "
+    "the model being built.")
+flags.DEFINE_integer(
+    "batch_size", _DEFAULT_HPARAMS.batch_size,
+    "Each training step samples a batch of this many images "
+    "from the training data. (You may need to shrink this when using a GPU "
+    "and getting out-of-memory errors. Avoid values below 8 when re-training "
+    "modules that use batch normalization.)")
+flags.DEFINE_float(
+    "learning_rate", _DEFAULT_HPARAMS.learning_rate,
+    "The learning rate to use for gradient descent training.")
+flags.DEFINE_float(
+    "momentum", _DEFAULT_HPARAMS.momentum,
+    "The momentum parameter to use for gradient descent training.")
 
 FLAGS = flags.FLAGS
 
-_DEFAULT_IMAGE_URL = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
+
+def _get_hparams_from_flags():
+  """Creates dict of hyperparameters from flags."""
+  return lib.HParams(
+      train_epochs=FLAGS.train_epochs,
+      do_fine_tuning=FLAGS.do_fine_tuning,
+      batch_size=FLAGS.batch_size,
+      learning_rate=FLAGS.learning_rate,
+      momentum=FLAGS.momentum,
+  )
 
 
 def _check_keras_dependencies():
@@ -129,153 +140,6 @@ def _check_keras_dependencies():
     pass
 
 
-def _get_data_with_keras(image_dir, image_size, batch_size,
-                         do_data_augmentation=False):
-  """Gets training and validation data via keras_preprocessing.
-
-  Args:
-    image_dir: A Python string with the name of a directory that contains
-      subdirectories of images, one per class.
-    image_size: A list or tuple with 2 Python integers specifying
-      the fixed height and width to which input images are resized.
-    batch_size: A Python integer with the number of images per batch of
-      training and validation data.
-    do_data_augmentation: An optional boolean, controlling whether the
-      training dataset is augmented by randomly distorting input images.
-
-  Returns:
-    A nested tuple ((train_data, train_size),
-                    (valid_data, valid_size), labels) where:
-    train_data, valid_data: Generators for use with Model.fit_generator,
-      each yielding tuples (images, labels) where
-        images is a float32 Tensor of shape [batch_size, height, width, 3]
-          with pixel values in range [0,1],
-        labels is a float32 Tensor of shape [batch_size, num_classes]
-          with one-hot encoded classes.
-    train_size, valid_size: Python integers with the numbers of training
-      and validation examples, respectively.
-    labels: A tuple of strings with the class labels (subdirectory names).
-      The index of a label in this tuple is the numeric class id.
-  """
-  datagen_kwargs = dict(rescale=1./255,
-                        # TODO(b/139467904): Expose this as a flag.
-                        validation_split=.20)
-  dataflow_kwargs = dict(target_size=image_size, batch_size=batch_size,
-                         interpolation="bilinear")
-
-  valid_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-      **datagen_kwargs)
-  valid_generator = valid_datagen.flow_from_directory(
-      image_dir, subset="validation", shuffle=False, **dataflow_kwargs)
-
-  if do_data_augmentation:
-    # TODO(b/139467904): Expose the following constants as flags.
-    train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-        rotation_range=40, horizontal_flip=True, width_shift_range=0.2,
-        height_shift_range=0.2, shear_range=0.2, zoom_range=0.2,
-        **datagen_kwargs)
-  else:
-    train_datagen = valid_datagen
-  train_generator = train_datagen.flow_from_directory(
-      image_dir, subset="training", shuffle=True, **dataflow_kwargs)
-
-  indexed_labels = [(index, label)
-                    for label, index in train_generator.class_indices.items()]
-  sorted_indices, sorted_labels = zip(*sorted(indexed_labels))
-  assert sorted_indices == tuple(range(len(sorted_labels)))
-  return ((train_generator, train_generator.samples),
-          (valid_generator, valid_generator.samples),
-          sorted_labels)
-
-
-def _image_size_for_module(module_layer, flags_image_size=None):
-  """Returns the input image size to use with the given module.
-
-  Args:
-    module_layer: A hub.KerasLayer initialized from a Hub module expecting
-      image input.
-    flags_image_size: An optional Python integer (supposedly from flags).
-      If not None, requests using this value as height and width of input size.
-
-  Returns:
-    A tuple (height, width) of Python integers that can be used as input
-    image size for the given module_layer.
-
-  Raises:
-    ValueError: If flags_image_size is set but incompatible with the module.
-    ValueError: If the module does not specify a particular inpurt size and
-       flags_image_size is not set.
-  """
-  # TODO(b/139530454): Use a library helper function once available.
-  # The stop-gap code below assumes any concrete function backing the
-  # module call will accept a batch of images with the one accepted size.
-  module_image_size = tuple(
-      module_layer._func.__call__  # pylint:disable=protected-access
-      .concrete_functions[0].structured_input_signature[0][0].shape[1:3])
-  if flags_image_size is None:
-    if None in module_image_size:
-      raise ValueError("Must set --image_size because "
-                       "--tfhub_module specifies none.")
-    else:
-      return module_image_size
-  else:
-    requested_image_size = tf.TensorShape([flags_image_size, flags_image_size])
-    assert requested_image_size.is_fully_defined()
-    if requested_image_size.is_compatible_with(module_image_size):
-      return tuple(requested_image_size.as_list())
-    else:
-      raise ValueError("--tfhub_module expects image size {}, "
-                       "but --image_size requests {}".format(
-                           module_image_size,
-                           tuple(requested_image_size.as_list())))
-
-
-def _build_model(module_layer, image_size, num_classes):
-  """Builds the full classifier model from the given module_layer."""
-  # TODO(b/139467904): Expose the hyperparameters below as flags.
-  model = tf.keras.Sequential([
-      module_layer,
-      tf.keras.layers.Dropout(rate=0.2),
-      tf.keras.layers.Dense(num_classes, activation="softmax",
-                            kernel_regularizer=tf.keras.regularizers.l2(0.0001))
-  ])
-  model.build((None, image_size[0], image_size[1], 3))
-  print(model.summary())
-  return model
-
-
-def _train_model(model, train_epochs, learning_rate, momentum,
-                 train_data_and_size, valid_data_and_size, batch_size):
-  """Trains model with the given data and hyperparameters.
-
-  Args:
-    model: The tf.keras.Model from _build_model().
-    train_epochs: A Python integer with the number of passes over the
-      training dataset.
-    learning_rate: A Python float forwarded to the optimizer.
-    momentum: A Python float forwarded to the optimizer.
-    train_data_and_size: A (data, size) tuple from _get_data_with_keras().
-    valid_data_and_size: A (data, size) tuple from _get_data_with_keras().
-    batch_size: A Python integer, the number of examples returned by each
-      call to the generators.
-
-  Returns:
-    The tf.keras.callbacks.History object returned by tf.keras.Model.fit*().
-  """
-  train_data, train_size = train_data_and_size
-  valid_data, valid_size = valid_data_and_size
-  model.compile(
-      optimizer=tf.keras.optimizers.SGD(lr=learning_rate, momentum=momentum),
-      # TODO(b/139467904): Expose this hyperparameter as a flag.
-      loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
-      metrics=["accuracy"])
-  steps_per_epoch = train_size // batch_size
-  validation_steps = valid_size // batch_size
-  return model.fit_generator(
-      train_data, epochs=train_epochs, steps_per_epoch=steps_per_epoch,
-      validation_data=valid_data, validation_steps=validation_steps)
-
-
 def _assert_accuracy(train_result, assert_accuracy_at_least):
   # Fun fact: With TF1 behavior, the key was called "val_acc".
   val_accuracy = train_result.history["val_accuracy"][-1]
@@ -291,36 +155,20 @@ def main(args):
   """Main function to be called by absl.app.run() after flag parsing."""
   del args
   _check_keras_dependencies()
+  hparams = _get_hparams_from_flags()
 
-  module_layer = hub.KerasLayer(FLAGS.tfhub_module,
-                                trainable=FLAGS.do_fine_tuning)
-  image_size = _image_size_for_module(module_layer, FLAGS.image_size)
-  print("Using module {} with image size {}".format(
-      FLAGS.tfhub_module, image_size))
+  image_dir = FLAGS.image_dir or lib.get_default_image_dir()
 
-  if FLAGS.image_dir:
-    image_dir = FLAGS.image_dir
-  else:
-    print("No --image_dir given, downloading tf_flowers by default.")
-    image_dir = tf.keras.utils.get_file(
-        "flower_photos", _DEFAULT_IMAGE_URL, untar=True)
-  train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
-      image_dir, image_size, FLAGS.batch_size)
-  print("Found", len(labels), "classes:", ", ".join(labels))
+  model, labels, train_result = lib.make_image_classifier(
+      FLAGS.tfhub_module, image_dir, hparams, FLAGS.image_size)
+  if FLAGS.assert_accuracy_at_least:
+    _assert_accuracy(train_result, FLAGS.assert_accuracy_at_least)
+  print("Done with training.")
 
   if FLAGS.labels_output_file:
     with tf.io.gfile.GFile(FLAGS.labels_output_file, "w") as f:
       f.write("\n".join(labels + ("",)))
     print("Labels written to", FLAGS.labels_output_file)
-
-  model = _build_model(module_layer, image_size, len(labels))
-  train_result = _train_model(
-      model, FLAGS.train_epochs, FLAGS.learning_rate, FLAGS.momentum,
-      train_data_and_size, valid_data_and_size, FLAGS.batch_size)
-  print("Done with training.")
-
-  if FLAGS.assert_accuracy_at_least:
-    _assert_accuracy(train_result, FLAGS.assert_accuracy_at_least)
 
   saved_model_dir = FLAGS.saved_model_dir
   if FLAGS.tflite_output_file and not saved_model_dir:

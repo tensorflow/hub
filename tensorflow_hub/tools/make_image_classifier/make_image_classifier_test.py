@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Unit tests for make_image_classifier.py."""
+"""Unit tests for make_image_classifier_lib.py and make_image_classifier.py.
+
+For now, we keep a single unit test for the library and its command-line
+driver, because the latter is the best way to achieve end-to-end testing.
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -29,6 +33,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 from tensorflow_hub.tools.make_image_classifier import make_image_classifier
+from tensorflow_hub.tools.make_image_classifier import make_image_classifier_lib
 
 
 def _fill_image(rgb, image_size):
@@ -163,13 +168,13 @@ class MakeImageClassifierTest(tf.test.TestCase):
     module_layer = hub.KerasLayer(model_dir)
     self.assertTupleEqual(
         (self.IMAGE_SIZE, self.IMAGE_SIZE),
-        make_image_classifier._image_size_for_module(module_layer, None))
+        make_image_classifier_lib._image_size_for_module(module_layer, None))
     self.assertTupleEqual(
         (self.IMAGE_SIZE, self.IMAGE_SIZE),
-        make_image_classifier._image_size_for_module(module_layer,
-                                                     self.IMAGE_SIZE))
+        make_image_classifier_lib._image_size_for_module(module_layer,
+                                                         self.IMAGE_SIZE))
     with self.assertRaisesRegex(ValueError, "image size"):
-      make_image_classifier._image_size_for_module(
+      make_image_classifier_lib._image_size_for_module(
           module_layer, self.IMAGE_SIZE + 1)
 
   def testImageSizeForModuleWithVariableInputSize(self):
@@ -177,14 +182,14 @@ class MakeImageClassifierTest(tf.test.TestCase):
     module_layer = hub.KerasLayer(model_dir)
     self.assertTupleEqual(
         (self.IMAGE_SIZE, self.IMAGE_SIZE),
-        make_image_classifier._image_size_for_module(module_layer,
-                                                     self.IMAGE_SIZE))
+        make_image_classifier_lib._image_size_for_module(module_layer,
+                                                         self.IMAGE_SIZE))
     self.assertTupleEqual(
         (2 * self.IMAGE_SIZE, 2 * self.IMAGE_SIZE),
-        make_image_classifier._image_size_for_module(module_layer,
-                                                     2 * self.IMAGE_SIZE))
+        make_image_classifier_lib._image_size_for_module(module_layer,
+                                                         2 * self.IMAGE_SIZE))
     with self.assertRaisesRegex(ValueError, "none"):
-      make_image_classifier._image_size_for_module(module_layer, None)
+      make_image_classifier_lib._image_size_for_module(module_layer, None)
 
 
 if __name__ == "__main__":
