@@ -41,10 +41,17 @@ if tf_utils.fc2_implements_resources():
   class DenseFeatureColumn(
       feature_column._DenseColumn,  # pylint: disable=protected-access
       feature_column_v2.DenseColumn):
-    pass
+
+    @property
+    def dtype(self):
+      return tf.float32
 else:
   class DenseFeatureColumn(feature_column._DenseColumn):  # pylint: disable=protected-access
-    pass
+
+    @property
+    def dtype(self):
+      return tf.float32
+
 
 _MODULE_RESOURCE_STRING = "module"
 
