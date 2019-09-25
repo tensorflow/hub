@@ -47,6 +47,43 @@ from tensorflow.python.framework import op_def_registry
 from tensorflow.python import pywrap_tensorflow as c_api
 # pylint: enable=g-bad-import-order
 
+# Align `op_def_registry` API between TensorFlow 1.X and 2.X.
+if not hasattr(op_def_registry, "get"):
+
+  def get(name):
+    registered_ops = op_def_registry.get_registered_ops()
+    return registered_ops.get(name)
+
+  op_def_registry.get = get
+
+if not hasattr(op_def_registry, "sync"):
+
+  def _remove_non_deprecated_descriptions(op_def):
+    for input_arg in op_def.input_arg:
+      input_arg.description = ""
+    for output_arg in op_def.output_arg:
+      output_arg.description = ""
+    for attr in op_def.attr:
+      attr.description = ""
+
+    op_def.summary = ""
+    op_def.description = ""
+
+  def sync():
+    p_buffer = c_api.TF_GetAllOpList()
+    cpp_op_list = op_def_pb2.OpList()
+    cpp_op_list.ParseFromString(c_api.TF_GetBuffer(p_buffer))
+
+    registered_ops = op_def_registry.get_registered_ops()
+    for op_def in cpp_op_list.op:
+      # If an OpList is registered from a gen_*_ops.py, it does not any
+      # descriptions. Strip them here as well to satisfy validation in
+      # register_op_list.
+      _remove_non_deprecated_descriptions(op_def)
+      registered_ops[op_def.name] = op_def
+
+  op_def_registry.sync = sync
+
 _MODULE_PROTO_FILENAME_PB = "tfhub_module.pb"
 
 _MODULE_V3_SUPPORTED_FEATURES = frozenset([])  # None yet.
@@ -472,7 +509,8 @@ class _ModuleImpl(module_impl.ModuleImpl):
           meta_graph_lib.prepend_name_scope(
               tensor_name, import_scope=absolute_scope_name))
 
-    state_op_names = list_registered_stateful_ops_without_inputs()
+    state_op_names = list_registered_stateful_ops_without_inputs(
+        meta_graph.graph_def)
     state_map = get_state_map(meta_graph, state_op_names, set(), _get_tensor)
 
     return variables_tensor_map, state_map
@@ -518,8 +556,10 @@ class _ModuleImpl(module_impl.ModuleImpl):
     # As state ops in the apply graph are unused, replace them with Placeholders
     # so that in a heirarchical instantiation, apply_graph state ops are
     # ignored.
-    replace_apply_state(meta_graph,
-                        list_registered_stateful_ops_without_inputs(), feed_map)
+    replace_apply_state(
+        meta_graph,
+        list_registered_stateful_ops_without_inputs(meta_graph.graph_def),
+        feed_map)
     feed_map.update(infeed_map)
 
     # Make state tensors enter the current context. This way the Module can be
@@ -591,20 +631,26 @@ class _ModuleImpl(module_impl.ModuleImpl):
     return self._variable_map
 
 
-def list_registered_stateful_ops_without_inputs():
+def is_registered_stateful_op_without_inputs(name):
+  """Checks if an op is registered, stateful and does not expect inputs."""
+  op_def = op_def_registry.get(name)
+  return op_def is not None and (op_def.is_stateful and not op_def.input_arg)
+
+
+def list_registered_stateful_ops_without_inputs(graph_def):
   """Returns set of registered stateful ops that do not expect inputs.
 
   This list is used to identify the ops to be included in the state-graph and
   that are subsequently fed into the apply-graphs.
 
+  Args:
+    graph_def: GraphDef to list ops from.
+
   Returns:
     A set of strings.
   """
-  return set([
-      name
-      for name, op in op_def_registry.get_registered_ops().items()
-      if op.is_stateful and not op.input_arg
-  ])
+  used_ops = (node.op for node in graph_def.node)
+  return {op for op in used_ops if is_registered_stateful_op_without_inputs(op)}
 
 
 def get_state_map(meta_graph, state_ops, unsupported_state_ops,
@@ -1047,7 +1093,8 @@ def _apply_colocation_attr_map(colocation_attr_map, absolute_import_scope):
 
 def find_state_op_colocation_error(graph, reported_tags=None):
   """Returns error message for colocation of state ops, or None if ok."""
-  state_op_types = list_registered_stateful_ops_without_inputs()
+  state_op_types = list_registered_stateful_ops_without_inputs(
+      graph.as_graph_def())
   state_op_map = {op.name: op for op in graph.get_operations()
                   if op.type in state_op_types}
   for op in state_op_map.values():
