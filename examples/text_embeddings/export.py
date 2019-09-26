@@ -81,8 +81,8 @@ def load(file_path, parse_line_fn):
       embeddings_dim = len(embedding)
     elif embeddings_dim != len(embedding):
       raise ValueError(
-          "Inconsistent embedding dimension detected, %d != %d for token %s",
-          embeddings_dim, len(embedding), token)
+          ("Inconsistent embedding dimension detected, "
+           "%d != %d for token %s") % (embeddings_dim, len(embedding), token))
 
     vocabulary.append(token)
     embeddings.append(embedding)
