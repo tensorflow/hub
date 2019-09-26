@@ -834,38 +834,19 @@ def register_ops_if_needed(graph_ops):
     tf.errors.NotFoundError: if `graph_ops` contains ops that are not in either
     python or c++ registry.
   """
-  missing_ops = graph_ops - set(op_def_registry.get_registered_ops().keys())
-
-  if not missing_ops:
+  if all(op_def_registry.get(op) is not None for op in graph_ops):
     return
-
-  p_buffer = c_api.TF_GetAllOpList()
-  cpp_op_list = op_def_pb2.OpList()
-  cpp_op_list.ParseFromString(c_api.TF_GetBuffer(p_buffer))
-  cpp_registry_ops = {op.name: op for op in cpp_op_list.op}
-
-  missing_op_list = op_def_pb2.OpList()
-  for missing_op in missing_ops:
-    if missing_op not in cpp_registry_ops:
-      logging.info(
-          "Op %s is missing from both the python and C++ registry.",
-          missing_op)
-    else:
-      missing_op_list.op.extend([cpp_registry_ops[missing_op]])
-      logging.info(
-          "Adding op %s from c++ registry to python registry.",
-          missing_op)
-
-  op_def_registry.register_op_list(missing_op_list)
 
   # Note: Only raise missing op ValueError after trying to load ops.
   # This allows the test to exercise all the calls into TensorFlow
   # without having to write a C + python test.
-  if not missing_ops <= set(cpp_registry_ops.keys()):
-    raise tf.errors.NotFoundError(None, None,
+  op_def_registry.sync()
+  missing_ops = {op for op in graph_ops if op_def_registry.get(op) is None}
+  if missing_ops:
+    raise tf.errors.NotFoundError(
+        None, None,
         "Graph ops missing from the python registry (%s) are also absent from "
-        "the c++ registry."
-        % missing_ops.difference(set(cpp_registry_ops.keys())))
+        "the c++ registry." % missing_ops)
 
 
 def fix_colocation_after_import(input_map, absolute_import_scope):
