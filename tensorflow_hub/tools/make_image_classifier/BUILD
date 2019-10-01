@@ -55,6 +55,17 @@ py_binary(
     ],
 )
 
+# The make_image_classifier script as a PY2 py_binary.
+py_binary(
+    name = "make_image_classifier_py2",
+    srcs = ["make_image_classifier.py"],
+    main = "make_image_classifier.py",
+    python_version = "PY2",
+    deps = [
+        ":make_image_classifier_main",
+    ],
+)
+
 py_test(
     name = "make_image_classifier_test",
     srcs = ["make_image_classifier_test.py"],
