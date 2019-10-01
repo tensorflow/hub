@@ -23,10 +23,9 @@ multiple tips for improvement and a module comparison section.
 
 ### Keras
 
-[Text classification with Keras](https://www.tensorflow.org/beta/tutorials/keras/basic_text_classification_with_tfhub) -
+[Text classification with Keras](https://www.tensorflow.org/tutorials/keras/text_classification_with_hub) -
 example for building an IMDB sentiment classifier with Keras and TensorFlow
 Datasets.
-
 
 ### BERT
 [Predicting Movie Review Sentiment with BERT on TF Hub](https://github.com/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb) -
@@ -41,7 +40,7 @@ including downloading the data and submitting the results.
 |           | Estimator | Keras | TF2 | TF Datasets | BERT | Kaggle APIs |
 | --------- | --------- | ----- | --- | ----------- | ---- | ----------- |
 | [Text classification](https://www.tensorflow.org/hub/tutorials/text_classification_with_tf_hub) | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | | | | | |
-| [Text classification with Keras](https://www.tensorflow.org/beta/tutorials/keras/basic_text_classification_with_tfhub)| | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | | |
+| [Text classification with Keras](https://www.tensorflow.org/tutorials/keras/text_classification_with_hub)| | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | | |
 | [Predicting Movie Review Sentiment with BERT on TF Hub](https://github.com/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb)| ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | | | | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | |
 | [IMDB classification on Kaggle](https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb)| ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) | | | | | ![done](https://www.gstatic.com/images/icons/material/system_gm/1x/bigtop_done_googblue_18dp.png) |
 
