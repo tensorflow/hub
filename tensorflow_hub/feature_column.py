@@ -454,11 +454,20 @@ def sparse_text_embedding_column(key,
 
 
 class _SparseTextEmbeddingColumn(
-    feature_column._DenseColumn,  # pylint: disable=protected-access
+    DenseFeatureColumn,  # pylint: disable=protected-access
     collections.namedtuple(
         "_ModuleEmbeddingColumn",
         ("key", "combiner", "module_spec", "default_value", "trainable"))):
   """Returned by sparse_text_embedding_column(). Do not use directly."""
+
+  @property
+  def _is_v2_column(self):
+    return True
+
+  @property
+  def parents(self):
+    """See 'FeatureColumn` base class."""
+    return [self.key]
 
   @property
   def name(self):
@@ -473,13 +482,26 @@ class _SparseTextEmbeddingColumn(
     """Returns intermediate representation (usually a `Tensor`)."""
     return inputs.get(self.key)
 
+  def transform_feature(self, transformation_cache, state_manager):
+    return transformation_cache.get(self.key, state_manager)
+
   @property
   def _parse_example_spec(self):
+    """Returns a `tf.Example` parsing spec as dict."""
+    return self.parse_example_spec
+
+  @property
+  def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
     return {self.key: tf_v1.VarLenFeature(tf.string)}
 
   @property
   def _variable_shape(self):
+    """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
+    return self.variable_shape
+
+  @property
+  def variable_shape(self):
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
 
@@ -506,3 +528,8 @@ class _SparseTextEmbeddingColumn(
     text_batch = inputs.get(self)
     return self._get_dense_tensor_for_inputs(text_batch, self.trainable and
                                              trainable)
+
+  def get_dense_tensor(self, transformation_cache, state_manager):
+    """Returns a `Tensor`."""
+    input_tensor = transformation_cache.get(self, state_manager)
+    return self._get_dense_tensor_for_inputs(input_tensor, self.trainable)

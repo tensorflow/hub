@@ -391,6 +391,11 @@ class SparseTextEmbeddingColumnTest(tf.test.TestCase):
     parsing_spec = tf_v1.feature_column.make_parse_example_spec([text_column])
     self.assertEqual(parsing_spec, {"text": tf_v1.VarLenFeature(tf.string)})
 
+  def testParents(self):
+    text_column = hub.sparse_text_embedding_column(
+        "text", self.spec, "sum", "", trainable=False)
+    self.assertEqual(["text"], text_column.parents)
+
   def testInputLayer(self):
     with tf.Graph().as_default():
       text_a = tf.SparseTensor(
