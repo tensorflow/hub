@@ -25,6 +25,8 @@ except ImportError:
   import unittest.mock as mock
 # pylint:disable=g-import-not-at-top,g-statement-before-imports
 
+import os
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -66,6 +68,15 @@ def text_module_fn():
 def invalid_text_module_fn():
   text = tf_v1.placeholder(tf.string, shape=[10])
   hub.add_signature(inputs=text, outputs=tf.zeros([10, 3]))
+
+
+def export_module_spec(spec, export_path):
+  """Export module with random initialization."""
+  with tf_v1.Graph().as_default():
+    m = hub.Module(spec)
+    with tf_v1.Session() as session:
+      session.run(tf_v1.initializers.global_variables())
+      m.export(export_path, session)
 
 
 class CommonColumnTest(tf.test.TestCase):
@@ -235,6 +246,20 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     with self.assertRaisesRegexp(ValueError, "only one input"):
       hub.text_embedding_column("coment", spec, trainable=False)
 
+  def testConfig(self):
+    module_path = os.path.join(self.get_temp_dir(), "module")
+    export_module_spec(self.spec, module_path)
+    text_column = hub.text_embedding_column("text", module_path)
+    config = text_column.get_config()
+    cloned_text_column = hub.feature_column._TextEmbeddingColumn.from_config(
+        config)
+    self.assertEqual(cloned_text_column.module_spec_path,
+                     text_column.module_spec_path)
+
+    with self.assertRaisesRegexp(NotImplementedError, "Can only generate"):
+      text_column = hub.text_embedding_column("text", self.spec)
+      config = text_column.get_config()
+
 
 def create_image_module_fn(randomly_initialized=False):
   def image_module_fn():
@@ -373,6 +398,20 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
     estimator.predict(input_fn)
+
+  def testConfig(self):
+    module_path = os.path.join(self.get_temp_dir(), "module")
+    export_module_spec(self.spec, module_path)
+    image_column = hub.image_embedding_column("image", module_path)
+    config = image_column.get_config()
+    cloned_image_column = hub.feature_column._ImageEmbeddingColumn.from_config(
+        config)
+    self.assertEqual(cloned_image_column.module_spec_path,
+                     image_column.module_spec_path)
+
+    with self.assertRaisesRegexp(NotImplementedError, "Can only generate"):
+      image_column = hub.image_embedding_column("image", self.spec)
+      config = image_column.get_config()
 
 
 class SparseTextEmbeddingColumnTest(tf.test.TestCase):

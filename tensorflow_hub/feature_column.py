@@ -102,10 +102,8 @@ def text_embedding_column(key, module_spec, trainable=False):
   Raises:
      ValueError: if module_spec is not suitable for use in this feature column.
   """
-  module_spec = module.as_module_spec(module_spec)
-  _check_module_is_text_embedding(module_spec)
   return _TextEmbeddingColumn(
-      key=key, module_spec=module_spec, trainable=trainable)
+      key=key, module_spec_path=module_spec, trainable=trainable)
 
 
 def _check_module_is_text_embedding(module_spec):
@@ -151,8 +149,13 @@ def _check_module_is_text_embedding(module_spec):
 class _TextEmbeddingColumn(
     DenseFeatureColumn,
     collections.namedtuple("_ModuleEmbeddingColumn",
-                           ("key", "module_spec", "trainable"))):
+                           ("key", "module_spec_path", "trainable"))):
   """Returned by text_embedding_column(). Do not use directly."""
+
+  def __init__(self, key, module_spec_path, trainable):
+    self.module_spec = module.as_module_spec(self.module_spec_path)
+    _check_module_is_text_embedding(self.module_spec)
+    super(_TextEmbeddingColumn, self).__init__()
 
   @property
   def _is_v2_column(self):
@@ -226,6 +229,20 @@ class _TextEmbeddingColumn(
     text_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
     return self._get_dense_tensor_for_input_tensor(input_tensor, text_module)
 
+  def get_config(self):
+    if not isinstance(self.module_spec_path, six.string_types):
+      raise NotImplementedError(
+          "Can only generate a valid config for `hub.text_embedding_column`"
+          "that uses a string `module_spec`.\n\n"
+          "Got `type(module_spec)`: {}".format(type(self.module_spec_path)))
+    config = dict(zip(self._fields, self))
+    return config
+
+  @classmethod
+  def from_config(cls, config):
+    copied_config = config.copy()
+    return cls(**copied_config)
+
 
 # TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
 # could however break checkpoint compatibility.
@@ -266,9 +283,7 @@ def image_embedding_column(key, module_spec):
   Raises:
      ValueError: if module_spec is not suitable for use in this feature column.
   """
-  module_spec = module.as_module_spec(module_spec)
-  _check_module_is_image_embedding(module_spec)
-  return _ImageEmbeddingColumn(key=key, module_spec=module_spec)
+  return _ImageEmbeddingColumn(key=key, module_spec_path=module_spec)
 
 
 def _check_module_is_image_embedding(module_spec):
@@ -317,8 +332,14 @@ def _check_module_is_image_embedding(module_spec):
 
 class _ImageEmbeddingColumn(DenseFeatureColumn,
                             collections.namedtuple("_ImageEmbeddingColumn",
-                                                   ("key", "module_spec"))):
+                                                   ("key", "module_spec_path"))
+                           ):
   """Returned by image_embedding_column(). Do not use directly."""
+
+  def __init__(self, key, module_spec_path):
+    self.module_spec = module.as_module_spec(self.module_spec_path)
+    _check_module_is_image_embedding(self.module_spec)
+    super(_ImageEmbeddingColumn, self).__init__()
 
   @property
   def _is_v2_column(self):
@@ -384,6 +405,20 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     images = transformation_cache.get(self, state_manager)
     image_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
     return self._get_dense_tensor_for_images(images, image_module)
+
+  def get_config(self):
+    if not isinstance(self.module_spec_path, six.string_types):
+      raise NotImplementedError(
+          "Can only generate a valid config for `hub.image_embedding_column`"
+          "that uses a string `module_spec`.\n\n"
+          "Got `type(module_spec)`: {}".format(type(self.module_spec_path)))
+    config = dict(zip(self._fields, self))
+    return config
+
+  @classmethod
+  def from_config(cls, config):
+    copied_config = config.copy()
+    return cls(**copied_config)
 
 
 def sparse_text_embedding_column(key,
