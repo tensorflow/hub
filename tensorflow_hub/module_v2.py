@@ -27,29 +27,11 @@ from tensorflow_hub import tf_v1
 def resolve(handle):
   """Resolves a module handle into a path.
 
-   Resolves a module handle into a path by downloading and caching in
-   location specified by TF_HUB_CACHE_DIR if needed.
+  This function works both for plain TF2 SavedModels and the older
+  hub.Modules for TF1.
 
-  Args:
-    handle: (string) the Module handle to resolve.
-
-  Returns:
-    A string representing the Module path.
-  """
-  return registry.resolver(handle)
-
-
-def load(handle, tags=None):
-  """Loads a module from a handle.
-
-  Currently this method is fully supported only with Tensorflow 2.x and with
-  modules created by calling tensorflow.saved_model.save(). The method works in
-  both eager and graph modes.
-
-  Depending on the type of handle used, the call may involve downloading a
-  Tensorflow Hub module to a local cache location specified by the
-  TFHUB_CACHE_DIR environment variable. If a copy of the module is already
-  present in the TFHUB_CACHE_DIR, the download step is skipped.
+  Resolves a module handle into a path by downloading and caching in
+  location specified by TF_HUB_CACHE_DIR if needed.
 
   Currently, three types of module handles are supported:
     1) Smart URL resolvers such as tfhub.dev, e.g.:
@@ -62,6 +44,35 @@ def load(handle, tags=None):
 
   Args:
     handle: (string) the Module handle to resolve.
+
+  Returns:
+    A string representing the Module path.
+  """
+  return registry.resolver(handle)
+
+
+def load(handle, tags=None):
+  """Resolves a handle and loads the resulting module.
+
+  This is the preferred API to load a Hub module in low-level TensorFlow 2.
+  Users of higher-level frameworks like Keras should use the framework's
+  corresponding wrapper, like hub.KerasLayer.
+
+  This function is roughly equivalent to the TF2 function `tf.save_model.load()`
+  on the result of `hub.resolve(handle)`. Calling this function requires
+  TF 1.14 or newer. It can be called both in eager and graph mode.
+
+  This function can handle the deprecated hub.Module format to the extent
+  that `tf.save_model.load()` in TF2 does. In particular, the returned object
+  has attributes
+    * `.variables`: a list of variables from the loaded object;
+    * `.signatures`: a dict of TF2 ConcreteFunctions, keyed by signature names,
+      that take tensor kwargs and return a tensor dict.
+  However, the information imported by hub.Module into the collections of a
+  tf.Graph is lost (e.g., regularization losses and update ops).
+
+  Args:
+    handle: (string) the Module handle to resolve; see hub.resolve().
     tags: A set of strings specifying the graph variant to use, if loading from
       a v1 module.
 

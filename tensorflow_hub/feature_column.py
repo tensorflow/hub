@@ -61,6 +61,8 @@ _MODULE_RESOURCE_STRING = "module"
 def text_embedding_column(key, module_spec, trainable=False):
   """Uses a Module to construct a dense representation from a text feature.
 
+  TODO(b/131678043): This does not work yet with TF2.
+
   This feature column can be used on an input feature whose values are strings
   of arbitrary size.
 
@@ -249,6 +251,8 @@ class _TextEmbeddingColumn(
 def image_embedding_column(key, module_spec):
   """Uses a Module to get a dense 1-D representation from the pixels of images.
 
+  TODO(b/131678043): This does not work yet with TF2.
+
   This feature column can be used on images, represented as float32 tensors of
   RGB pixel data in the range [0,1]. This can be read from a numeric_column()
   if the tf.Example input data happens to have decoded images, all with the
@@ -427,6 +431,8 @@ def sparse_text_embedding_column(key,
                                  default_value,
                                  trainable=False):
   """Uses a Module to construct dense representations from sparse text features.
+
+  TODO(b/131678043): This does not work yet with TF2.
 
   The input to this feature column is a batch of multiple strings with
   arbitrary size, assuming the input is a SparseTensor.

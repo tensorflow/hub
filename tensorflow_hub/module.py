@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""TensorFlow Hub Module definition."""
+"""The deprecated hub.Module class of TensorFlow Hub."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -40,6 +40,9 @@ def as_module_spec(spec):
 
 def load_module_spec(path):
   """Loads a ModuleSpec from the filesystem.
+
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  For TF2, switch to plain SavedModels and hub.load().
 
   Args:
     path: string describing the location of a module. There are several
@@ -78,7 +81,10 @@ def export_module_spec(spec, path, checkpoint_path, name_transform_fn):
 # Module class provides a unified access to all ModuleSpecs implementations and
 # should not contain specific implementation code in it (e.g. SavedModel code).
 class Module(object):
-  """Part of a TensorFlow model that can be transferred between models.
+  """Part of a TensorFlow 1 model that can be transferred between models.
+
+  DEPRECATION NOTE: The hub.Module API and file format works for TF1 only.
+  For TF2, switch to plain SavedModels and hub.load().
 
   A Module represents a part of a TensorFlow graph that can be exported to disk
   (based on the SavedModel format) and later re-loaded. A Module has a defined
@@ -477,7 +483,11 @@ def _prepare_outputs(dict_outputs, as_dict):
 
 @contextlib.contextmanager
 def eval_function_for_module(spec, tags=None):
-  """Context manager that yields a function to directly evaluate a Module.
+  """Context manager that yields a function to directly evaluate a hub.Module.
+
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  For TF2, switch to plain SavedModels and hub.load().
+  Eager evalutaion in TF2 obviates the need for this helper.
 
   This creates a separate graph, in which all of the signatures of the module
   are instantiated. Then, it creates a session and initializes the module

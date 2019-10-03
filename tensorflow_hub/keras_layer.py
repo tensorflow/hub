@@ -43,6 +43,10 @@ class KerasLayer(tf.keras.layers.Layer):
   object can be passed directly, or be specified by a Python string with a
   handle that gets passed to `hub.load()`.
 
+  This is the preferred API to load a TF2-style SavedModel from TF Hub
+  into a Keras model. Calling this function requires TF 1.14 or newer.
+  It can be called both in eager and graph mode.
+
   The callable object is expected to follow the conventions detailed below.
   (These are met by TF2-compatible modules loaded from TensorFlow Hub.)
 
