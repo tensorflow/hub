@@ -1,14 +1,41 @@
 # Installation
 
-TensorFlow Hub depends on bug fixes and enhancements not present in TensorFlow
-releases prior to `1.7`. You must [install or
-upgrade](https://www.tensorflow.org/install/) your TensorFlow package to at
-least `1.7` to use TensorFlow Hub:
+The `tensorflow_hub` library can be installed alongside TensorFlow 1
+and TensorFlow 2. We recommend that new users start with TensorFlow 2
+right away, and current users upgrade to it.
 
+## Use with TensorFlow 2
+
+Use [pip](https://pip.pypa.io/) to
+[install TensorFlow 2](https://www.tensorflow.org/install) as usual.
+(See there for extra instructions about GPU support.)
+Then install [`tensorflow-hub`](https://pypi.org/project/tensorflow-hub/)
+next to it.
+    
 ```bash
-$ pip install "tensorflow>=1.7.0"
+$ pip install "tensorflow>=2.0.0"
 $ pip install tensorflow-hub
 ```
 
-This section will be updated to include a specific TensorFlow version
-requirement when a compatible release is made available.
+The TF1-style API of TensorFlow Hub works with the v1 compatibility mode
+of TensorFlow 2.
+
+## Legacy use with TensorFlow 1
+
+The `tensorflow_hub` library requires TensorFlow version 1.7 or greater.
+
+We strongly recommend to install it with TensorFlow 1.15, which defaults
+to TF1-compatible behavior but contains many TF2 features under the hood
+to allow some use of TensorFlow Hub's TF2-style APIs.
+
+```bash
+$ pip install "tensorflow~=1.15"
+$ pip install tensorflow-hub
+```
+
+## Use of pre-release versions
+
+The pip packages `tf-nightly` and `tf-hub-nightly` are built automatically
+from the source code on github, with no release testing. This lets
+developers try out the latest code without
+[building from source](build_from_source.md).
