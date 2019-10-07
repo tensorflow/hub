@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Module implementation that loads raw SavedModels."""
+"""Implementation of deprecated hub.Module that loads raw TF1 SavedModels."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -55,7 +55,11 @@ def _drop_collections(saved_model_handler, collections):
 
 def create_module_spec_from_saved_model(saved_model_path,
                                         drop_collections=None):
-  """Experimental: Create a ModuleSpec out of a SavedModel.
+  """Experimental: Create a ModuleSpec out of a SavedModel from TF1.
+
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  For TF2, TensorFlow Hub ships plain SavedModels, removing the need for
+  conversions like this.
 
   Define a ModuleSpec from a SavedModel. Note that this is not guaranteed to
   work in all cases and it assumes the SavedModel has followed some conventions:

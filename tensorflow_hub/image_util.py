@@ -32,18 +32,33 @@ ImageModuleInfo = image_module_info_pb2.ImageModuleInfo  # pylint: disable=inval
 
 
 def attach_image_module_info(image_module_info):
-  """Attaches an ImageModuleInfo message from within a module_fn."""
+  """Attaches an ImageModuleInfo message from within a module_fn.
+
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+
+  Args:
+    image_module_info: an ImageModuleInfo message.
+  """
   native_module.attach_message(IMAGE_MODULE_INFO_KEY, image_module_info)
 
 
 def get_image_module_info(module_or_spec, required=False):
-  """Returns the module's attached ImageModuleInfo message, or None."""
+  """Returns the module's attached ImageModuleInfo message, or None if missing.
+
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+
+  Args:
+    module_or_spec: a hub.Module or module_spec object.
+    required: if true, raises KeyError instead of returning None.
+  """
   return module_or_spec.get_attached_message(
       IMAGE_MODULE_INFO_KEY, ImageModuleInfo, required=required)
 
 
 def get_expected_image_size(module_or_spec, signature=None, input_name=None):
   """Returns expected [height, width] dimensions of an image input.
+
+  TODO(b/139530454): This does not work yet with TF2.
 
   Args:
     module_or_spec: a Module or ModuleSpec that accepts image inputs.
@@ -91,6 +106,8 @@ def get_num_image_channels(module_or_spec, signature=None, input_name=None):
 
   This is for advanced users only who expect to handle modules with
   image inputs that might not have the 3 usual RGB channels.
+
+  TODO(b/139530454): This does not work yet with TF2.
 
   Args:
     module_or_spec: a Module or ModuleSpec that accepts image inputs.

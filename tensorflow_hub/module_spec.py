@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""ModuleSpec interface."""
+"""The ModuleSpec interface, for the deprecated hub.Module class."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -22,7 +22,10 @@ import abc
 
 
 class ModuleSpec(object):
-  """Represents the contents of a Module before it has been instantiated.
+  """Represents the contents of a hub.Module before it has been instantiated.
+
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  For TF2, switch to plain SavedModels and hub.load().
 
   A ModuleSpec is the blueprint used by `Module` to create one or more instances
   of a specific module in one or more graphs. The details on how to construct

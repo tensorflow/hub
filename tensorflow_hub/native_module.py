@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Module implementation that loads/exports in Hub SavedModel format."""
+"""The implementation of deprecated hub.Module backed by custom SavedModels."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -158,6 +158,9 @@ class Loader(object):
 def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   """Creates a ModuleSpec from a function that builds the module's graph.
 
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  For TF2, switch to plain SavedModels.
+
   The `module_fn` is called on a new graph (not the current one) to build the
   graph of the module and define its signatures via `hub.add_signature()`.
   Example:
@@ -173,8 +176,8 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   See `add_signature()` for documentation on adding multiple input/output
   signatures.
 
-  NOTE: In anticipation of future TF-versions, `module_fn` is called on a graph
-  that uses resource variables by default. If you want old-style variables then
+  NOTE: The `module_fn` is called on a graph that uses resource variables
+  by default. If you want old-style variables ("ref variables"), then
   you can use `with tf.variable_scope("", use_resource=False)` in `module_fn`.
 
   Multiple graph variants can be defined by using the `tags_and_args` argument.
@@ -235,7 +238,10 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
 def add_signature(name=None, inputs=None, outputs=None):
   """Adds a signature to the module definition.
 
-  NOTE: This must be called within a `module_fn` that is defining a Module.
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  For TF2, switch to plain SavedModels.
+
+  NOTE: This must be called within a `module_fn` that is defining a hub.Module.
 
   Args:
     name: Signature name as a string. If omitted, it is interpreted as 'default'
@@ -271,7 +277,10 @@ def add_signature(name=None, inputs=None, outputs=None):
 def attach_message(key, message):
   """Adds an attached message to the module definition.
 
-  NOTE: This must be called within a `module_fn` that is defining a Module.
+  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  For TF2, switch to plain SavedModels.
+
+  NOTE: This must be called within a `module_fn` that is defining a hub.Module.
 
   See ModuleSpec.get_attached_message() for an introduction to attached messages
   and the API for module consumers.

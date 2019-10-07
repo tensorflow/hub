@@ -29,6 +29,8 @@ upper_tabs:
         path: /hub/fine_tuning
       - title: Hosting a Module
         path: /hub/hosting
+      - title: Migration to TF2
+        path: /hub/migration_tf2
       - heading: Tutorials
       - title: Image retraining
         path: /hub/tutorials/image_retraining

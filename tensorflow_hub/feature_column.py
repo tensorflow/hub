@@ -61,6 +61,8 @@ _MODULE_RESOURCE_STRING = "module"
 def text_embedding_column(key, module_spec, trainable=False):
   """Uses a Module to construct a dense representation from a text feature.
 
+  TODO(b/131678043): This does not work yet with TF2.
+
   This feature column can be used on an input feature whose values are strings
   of arbitrary size.
 
@@ -102,10 +104,8 @@ def text_embedding_column(key, module_spec, trainable=False):
   Raises:
      ValueError: if module_spec is not suitable for use in this feature column.
   """
-  module_spec = module.as_module_spec(module_spec)
-  _check_module_is_text_embedding(module_spec)
   return _TextEmbeddingColumn(
-      key=key, module_spec=module_spec, trainable=trainable)
+      key=key, module_spec_path=module_spec, trainable=trainable)
 
 
 def _check_module_is_text_embedding(module_spec):
@@ -151,8 +151,13 @@ def _check_module_is_text_embedding(module_spec):
 class _TextEmbeddingColumn(
     DenseFeatureColumn,
     collections.namedtuple("_ModuleEmbeddingColumn",
-                           ("key", "module_spec", "trainable"))):
+                           ("key", "module_spec_path", "trainable"))):
   """Returned by text_embedding_column(). Do not use directly."""
+
+  def __init__(self, key, module_spec_path, trainable):
+    self.module_spec = module.as_module_spec(self.module_spec_path)
+    _check_module_is_text_embedding(self.module_spec)
+    super(_TextEmbeddingColumn, self).__init__()
 
   @property
   def _is_v2_column(self):
@@ -226,11 +231,27 @@ class _TextEmbeddingColumn(
     text_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
     return self._get_dense_tensor_for_input_tensor(input_tensor, text_module)
 
+  def get_config(self):
+    if not isinstance(self.module_spec_path, six.string_types):
+      raise NotImplementedError(
+          "Can only generate a valid config for `hub.text_embedding_column`"
+          "that uses a string `module_spec`.\n\n"
+          "Got `type(module_spec)`: {}".format(type(self.module_spec_path)))
+    config = dict(zip(self._fields, self))
+    return config
+
+  @classmethod
+  def from_config(cls, config):
+    copied_config = config.copy()
+    return cls(**copied_config)
+
 
 # TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
 # could however break checkpoint compatibility.
 def image_embedding_column(key, module_spec):
   """Uses a Module to get a dense 1-D representation from the pixels of images.
+
+  TODO(b/131678043): This does not work yet with TF2.
 
   This feature column can be used on images, represented as float32 tensors of
   RGB pixel data in the range [0,1]. This can be read from a numeric_column()
@@ -266,9 +287,7 @@ def image_embedding_column(key, module_spec):
   Raises:
      ValueError: if module_spec is not suitable for use in this feature column.
   """
-  module_spec = module.as_module_spec(module_spec)
-  _check_module_is_image_embedding(module_spec)
-  return _ImageEmbeddingColumn(key=key, module_spec=module_spec)
+  return _ImageEmbeddingColumn(key=key, module_spec_path=module_spec)
 
 
 def _check_module_is_image_embedding(module_spec):
@@ -317,8 +336,14 @@ def _check_module_is_image_embedding(module_spec):
 
 class _ImageEmbeddingColumn(DenseFeatureColumn,
                             collections.namedtuple("_ImageEmbeddingColumn",
-                                                   ("key", "module_spec"))):
+                                                   ("key", "module_spec_path"))
+                           ):
   """Returned by image_embedding_column(). Do not use directly."""
+
+  def __init__(self, key, module_spec_path):
+    self.module_spec = module.as_module_spec(self.module_spec_path)
+    _check_module_is_image_embedding(self.module_spec)
+    super(_ImageEmbeddingColumn, self).__init__()
 
   @property
   def _is_v2_column(self):
@@ -385,6 +410,20 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     image_module = state_manager.get_resource(self, _MODULE_RESOURCE_STRING)
     return self._get_dense_tensor_for_images(images, image_module)
 
+  def get_config(self):
+    if not isinstance(self.module_spec_path, six.string_types):
+      raise NotImplementedError(
+          "Can only generate a valid config for `hub.image_embedding_column`"
+          "that uses a string `module_spec`.\n\n"
+          "Got `type(module_spec)`: {}".format(type(self.module_spec_path)))
+    config = dict(zip(self._fields, self))
+    return config
+
+  @classmethod
+  def from_config(cls, config):
+    copied_config = config.copy()
+    return cls(**copied_config)
+
 
 def sparse_text_embedding_column(key,
                                  module_spec,
@@ -392,6 +431,8 @@ def sparse_text_embedding_column(key,
                                  default_value,
                                  trainable=False):
   """Uses a Module to construct dense representations from sparse text features.
+
+  TODO(b/131678043): This does not work yet with TF2.
 
   The input to this feature column is a batch of multiple strings with
   arbitrary size, assuming the input is a SparseTensor.
@@ -454,11 +495,20 @@ def sparse_text_embedding_column(key,
 
 
 class _SparseTextEmbeddingColumn(
-    feature_column._DenseColumn,  # pylint: disable=protected-access
+    DenseFeatureColumn,  # pylint: disable=protected-access
     collections.namedtuple(
         "_ModuleEmbeddingColumn",
         ("key", "combiner", "module_spec", "default_value", "trainable"))):
   """Returned by sparse_text_embedding_column(). Do not use directly."""
+
+  @property
+  def _is_v2_column(self):
+    return True
+
+  @property
+  def parents(self):
+    """See 'FeatureColumn` base class."""
+    return [self.key]
 
   @property
   def name(self):
@@ -473,13 +523,26 @@ class _SparseTextEmbeddingColumn(
     """Returns intermediate representation (usually a `Tensor`)."""
     return inputs.get(self.key)
 
+  def transform_feature(self, transformation_cache, state_manager):
+    return transformation_cache.get(self.key, state_manager)
+
   @property
   def _parse_example_spec(self):
+    """Returns a `tf.Example` parsing spec as dict."""
+    return self.parse_example_spec
+
+  @property
+  def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
     return {self.key: tf_v1.VarLenFeature(tf.string)}
 
   @property
   def _variable_shape(self):
+    """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
+    return self.variable_shape
+
+  @property
+  def variable_shape(self):
     """`TensorShape` of `_get_dense_tensor`, without batch dimension."""
     return self.module_spec.get_output_info_dict()["default"].get_shape()[1:]
 
@@ -506,3 +569,8 @@ class _SparseTextEmbeddingColumn(
     text_batch = inputs.get(self)
     return self._get_dense_tensor_for_inputs(text_batch, self.trainable and
                                              trainable)
+
+  def get_dense_tensor(self, transformation_cache, state_manager):
+    """Returns a `Tensor`."""
+    input_tensor = transformation_cache.get(self, state_manager)
+    return self._get_dense_tensor_for_inputs(input_tensor, self.trainable)
