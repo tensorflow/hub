@@ -1,0 +1,237 @@
+# SavedModels from TF Hub in TensorFlow 2
+
+The [SavedModel format of
+TensorFlow 2](https://www.tensorflow.org/guide/saved_model)
+is the recommended way to share pre-trained models and model pieces
+on TensorFlow Hub. It replaces the older [hub.Module format for
+TensorFlow 1](tf1_hub_module.md) and comes with a new set of APIs.
+
+This page explains how to reuse TF2 SavedModels in a TensorFlow 2
+program with the low-level `hub.load()` API and its `hub.KerasLayer`
+wrapper. (Typically, `hub.KerasLayer` is combined with other `tf.keras.layers`
+to build a Keras model or the `model_fn` of a TF2 Estimator.)
+These APIs can also load the older hub.Modules for TF1, within limits,
+see the [migration guide](migration_tf2.md).
+
+Users of TensorFlow 1 can update to TF 1.15 and then use the same APIs.
+Older versions of TF1 do not work.
+
+
+## Using SavedModels from TF Hub
+
+### Using a SavedModel in Keras
+
+[Keras](https://www.tensorflow.org/guide/keras/) is TensorFlow's high-level API
+for building deep learning models by composing Keras Layer objects.
+The `tensorflow_hub` library provides the class `hub.KerasLayer` that gets
+initialized with the URL (or filesystem path) of a SavedModel and then
+provides the computation from the SavedModel, including its pre-trained
+weights.
+
+Here is an example of using a pre-trained text embedding:
+
+```python
+import tensorflow as tf
+import tensorflow_hub as hub
+
+hub_url = "https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1"
+embed = hub.KerasLayer(hub_url)
+embeddings = embed(["A long sentence.", "single-word", "http://example.com"])
+print(embeddings.shape, embeddings.dtype)
+```
+
+From this, a text classifier can be built in the usual Keras way:
+
+```python
+model = tf.keras.Sequential([
+    embed,
+    tf.keras.layers.Dense(16, activation="relu"),
+    tf.keras.layers.Dense(1, activation="sigmoid"),
+])
+```
+
+The [Text classification
+colab](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
+is a complete example how to train and evaluate such a classifier.
+
+The model weights in a `hub.KerasLayer` are set to non-trainable by default.
+See the section on fine-tuning below for how to change that. Weights are
+shared between all applications of the same layer object, as usual in Keras.
+
+
+### Using a SavedModel in an Estimator
+
+Users of TensorFlow's
+[Estimator](https://www.tensorflow.org/tutorials/distribute/multi_worker_with_estimator)
+API for distributed training can use SavedModels from TF Hub by
+writing their `model_fn` in terms of  `hub.KerasLayer` among other
+`tf.keras.layers`.
+
+
+### Behind the scenes: SavedModel downloading and caching
+
+Using a SavedModel from TensorFlow Hub
+(or other HTTPS servers that implement its [hosting](hosting.md) protocol)
+downloads it to the local filesystem if not already present.
+The environment variable `TFHUB_CACHE_DIR` can be set to override the default
+temporary location for caching the downloaded and uncompressed SavedModels.
+
+
+### Using a SavedModel in low-level TensorFlow
+
+The function `hub.load(handle)` downloads and decompresses a SavedModel
+(unless `handle` it already a filesystem path) and then returns the result
+of loading it with TensorFlow's built-in function `tf.saved_model.load()`.
+Therefore, `hub.load()` can handle any valid SavedModel (unlike its
+predecessor `hub.Module` for TF1).
+
+#### Advanced topic: what to expect from the SavedModel after loading
+
+Depending on the contents of the SavedModel, the result of
+`obj = hub.load(...)` can be invoked in various ways (as explained in
+much greater detail in TensorFlow's [SavedModel
+Guide](https://www.tensorflow.org/guide/saved_model):
+
+  * The serving signatures of the SavedModel (if any) are represented as a
+    dictionary of concrete functions and can be called like
+    `tensors_out = obj.signatures["serving_default"](**tensors_in)`,
+    with dictionaries of tensors keyed by the respective input and output
+    names and subject to the signature's shape and dtype constraints.
+
+  * The
+    [`@tf.function`](https://www.tensorflow.org/api_docs/python/tf/function)-decorated
+    methods of the saved object (if any) are restored as tf.function objects
+    that can be called by all combinations of Tensor and non-Tensor arguments
+    for which the tf.function had been
+    [traced](https://www.tensorflow.org/tutorials/customization/performance#tracing)
+    prior to saving. In particular, if there is an `obj.__call__` method
+    with suitable traces, `obj` itself can be called like a Python function.
+    A simple example could look like
+    `output_tensor = obj(input_tensor, training=False)`.
+
+This leaves enormous flexibility in the interfaces that SavedModels can
+implement. The yet-to-be-published SavedModel Interfaces doc establishes
+conventions on how SavedModels from TF Hub are expected to use this,
+such that client code, including adapters like `hub.KerasLayer`,
+know how to use the SavedModel.
+
+The trainable variables in a SavedModel are reloaded as trainable,
+and `tf.GradientTape` will watch them by default. See the section on
+fine-tuning below for some caveats, and consider avoiding this for starters.
+Even if you want to fine-tune, you may want to see if `obj.trainable_variables`
+advises to re-train only a subset of the originally trainable variables.
+
+
+## Creating SavedModels for TF Hub
+
+### Overview
+
+SavedModel is TensorFlow's standard serialization format for trained models or model pieces.
+It stores the model's trained weights together with the exact TensorFlow
+operations to perform its computation. It can be used independently from
+the code that created it. In particular, it can be reused across different
+high-level model-building APIs like Keras, because TensorFlow operations
+are their common basic language.
+
+### Saving from Keras
+
+Starting with TensorFlow 2, `tf.keras.Model.save()` and
+`tf.keras.models.save_model()` default to the SavedModel format (not HDF5).
+The resulting SavedModels that can be used with `hub.load()`,
+`hub.KerasLayer` and similar adapters for other high-level APIs
+as they become available. (The fine points of Keras saving are documented in its
+[RFC](https://github.com/tensorflow/community/blob/master/rfcs/20190509-keras-saved-model.md).)
+
+To share a complete Keras Model, just save it with `include_optimizer=False`.
+
+To share a piece of a Keras Model, make the piece a Model in itself and then
+save that. You can either lay out the code like that from the start....
+
+```python
+piece_to_share = tf.keras.Model(...)
+full_model = tf.keras.Sequential([piece_to_share, ...])
+full_model.fit(...)
+piece_to_share.save(...)
+```
+
+...or cut out the piece to share after the fact (if it aligns with the
+layering of your full model):
+
+```python
+full_model = tf.keras.Model(...)
+sharing_input = full_model.get_layer(...).get_output_at(0)
+sharing_output = full_model.get_layer(...).get_output_at(0)
+piece_to_share = tf.keras.Model(sharing_input, sharing_output)
+piece_to_share.save(..., include_optimizer=False)
+```
+
+[TensorFlow Models](https://github.com/tensorflow/models) on GitHub
+uses the former approach for BERT (see
+[nlp/bert_models.py](https://github.com/tensorflow/models/blob/master/official/nlp/bert_models.py)
+and [nlp/bert/export_tfhub.py](https://github.com/tensorflow/models/blob/master/official/nlp/bert/export_tfhub.py),
+note the split between `core_model` and `pretrain_model`)
+and the the latter approach for ResNet (see
+[vision/image_classification/tfhub_export.py](https://github.com/tensorflow/models/blob/master/official/vision/image_classification/tfhub_export.py)).
+
+
+### Saving from low-level TensorFlow
+
+This requires good familiarity with TensorFlow's [SavedModel
+Guide](https://www.tensorflow.org/guide/saved_model) and the
+interface on the object returned by `hub.load()` (see above). The code at
+[tensorflow/examples/saved_model/integration_tests/](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/saved_model/integration_tests)
+may be informative, esp. the `export_mnist.py` and `use_mnist.py` pair.
+
+
+## Fine-Tuning
+
+Training the already-trained variables of an imported SavedModel together with
+those of the model around it is called *fine-tuning* the SavedModel.
+This can result in better quality, but often makes the training more
+demanding (may take more time, depend more on the optimizer and its
+hyperparameters, increase the risk of overfitting and require dataset
+augmentation, esp. for CNNs). We advise SavedModel consumers to look into
+fine-tuning only after having established a good training regime,
+and only if the SavedModel publisher recommends it.
+
+### For SavedModel consumers
+
+Creating a `hub.KerasLayer` like
+
+```python
+layer = hub.KerasLayer(..., trainable=True)
+```
+
+enables fine-tuning of the SavedModel loaded by the layer. It adds the
+trainable weights and weight regularizers declared in the SavedModel
+to the Keras model, and runs the SavedModel's computation in training
+mode (think of dropout etc.).
+
+The [image classification
+colab](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
+contains an end-to-end example with optional fine-tuning.
+
+### For SavedModel creators
+
+When creating a SavedModel for sharing on TensorFlow Hub,
+think ahead if and how its consumers should fine-tune it,
+and provide guidance in the documentation.
+
+Saving from a Keras Model should make all the mechanics of fine-tuning work
+(saving weight regularization losses, declaring trainable variables, tracing
+`__call__` for both `training=True` and `training=False`, etc.)
+
+Choose a model interface that plays well with gradient flow,
+e.g., output logits instead of softmax probabilities or top-k predictions.
+
+If the model use dropout, batch normalization, or similar training techniques
+that involve hyperparameters, set them to values that make sense across many
+expected target problems and batch sizes. (As of this writing, saving from
+Keras does not make it easy to let consumers adjust them, but see
+[tensorflow/examples/saved_model/integration_tests/export_mnist.py](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/saved_model/integration_tests/export_mnist.py)
+for some crude workarounds.)
+
+Weight regularizers on individual layers are saved (with their regularization
+strength coefficients), but weight regularization from within the optimizer
+(like `tf.keras.optimizers.Ftrl.l1_regularization_strength=...)`)
+is lost. Advise consumers of your SavedModel accordingly.

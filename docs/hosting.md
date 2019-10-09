@@ -38,3 +38,7 @@ $ tar -tf module.tar.gz
 Tarballs for use with the deprecated `hub.Module()` API from TF1 will also
 contain a `./tfhub_module.pb` file. The `hub.load()` API for TF2 SavedModels
 ignores such a file.
+
+The `tensorflow_hub` library expects that module URLs are versioned
+and that the module content of a given version is immutable, so that it can
+be cached indefinitely.

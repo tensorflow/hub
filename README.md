@@ -13,38 +13,50 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
+<!--
+This file is rendered on github.com/tensorflow/hub.
+g3doc/_index.yaml is rendered on tensorflow.org/hub.
+Both link to g3doc/overview.md and g3doc/*.md for detailed docs.
+-->
+
 # TensorFlow Hub
 
-TensorFlow Hub is a library to foster the publication, discovery, and
-consumption of reusable parts of machine learning models. In particular,
-it provides **modules**, which are pre-trained pieces of TensorFlow models
-that can be reused on new tasks.
+[TensorFlow Hub](https://tfhub.dev) is a repository of reusable assets
+for machine learning with [TensorFlow](https://www.tensorflow.org/).
+In particular, it provides pre-trained SavedModels that can be reused
+to solve new tasks with less training time and less training data.
 
+This GitHub repository hosts the `tensorflow_hub` Python library to download
+and reuse SavedModels in your TensorFlow program with a minimum amount of code,
+as well as other associated code and documentation.
 
 ## Getting Started
 
-*   [Introduction](https://www.tensorflow.org/hub/)
-*   [Installation](docs/installation.md)
-*   [Build from source](docs/build_from_source.md)
-*   [Common issues](docs/common_issues.md)
-*   Tutorials:
-    *   [Image Retraining](https://www.tensorflow.org/tutorials/image_retraining)
-    *   [Text Cookbook](https://www.tensorflow.org/hub/tutorials/text_cookbook)
-    *   [Additional Examples](examples/README.md)
-*   Key Concepts:
-    *   [Using a Module](docs/basics.md)
-    *   [Creating a New Module](docs/creating.md)
-    *   [Fine-Tuning a Module](docs/fine_tuning.md)
-*   Modules:
-    *   Find available modules on [tfhub.dev](https://tfhub.dev/)
-    *   [Common Signatures for Modules](docs/common_signatures/index.md)
+  * [Introduction](https://www.tensorflow.org/hub/)
+  * The asset types of [tfhub.dev](https://tfhub.dev/)
+      * [SavedModels for TensorFlow 2](docs/tf2_saved_model.md)
+      * Deprecated: [hub.Modules for TensorFlow 1](docs/tf1_hub_module.md) and
+        their [Common Signatures](docs/common_signatures/index.md) collection.
+  * Using the library
+      * [Installation](docs/installation.md)
+      * [Migration to TF2](docs/migration_tf2.md)
+      * [Common issues](docs/common_issues.md)
+      * [Build from source](docs/build_from_source.md)
+      * [Hosting a module](docs/hosting.md)
+  * Tutorials
+      * [TF2 Image Retraining](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
+      * [TF2 Text Classification](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
+      * [Additional TF1 and TF2 examples](examples/README.md)
 
 
 ## Contributing
 
 If you'd like to contribute to TensorFlow Hub, be sure to review the
-[contribution guidelines](CONTRIBUTING.md). This project adheres to TensorFlow's
-[code of
+[contribution guidelines](CONTRIBUTING.md). To contribute code to the
+library itself (not examples), you will probably need to
+[build from source](docs/build_from_source.md).
+
+This project adheres to TensorFlow's [code of
 conduct](https://github.com/tensorflow/tensorflow/blob/master/CODE_OF_CONDUCT.md). By
 participating, you are expected to uphold this code.
 
