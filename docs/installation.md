@@ -9,12 +9,13 @@ right away, and current users upgrade to it.
 Use [pip](https://pip.pypa.io/) to
 [install TensorFlow 2](https://www.tensorflow.org/install) as usual.
 (See there for extra instructions about GPU support.)
-Then install [`tensorflow-hub`](https://pypi.org/project/tensorflow-hub/)
-next to it.
+Then install a current version of
+[`tensorflow-hub`](https://pypi.org/project/tensorflow-hub/)
+next to it (must be 0.5.0 or newer).
     
 ```bash
 $ pip install "tensorflow>=2.0.0"
-$ pip install tensorflow-hub
+$ pip install --upgrade tensorflow-hub
 ```
 
 The TF1-style API of TensorFlow Hub works with the v1 compatibility mode
@@ -29,8 +30,8 @@ to TF1-compatible behavior but contains many TF2 features under the hood
 to allow some use of TensorFlow Hub's TF2-style APIs.
 
 ```bash
-$ pip install "tensorflow~=1.15"
-$ pip install tensorflow-hub
+$ pip install "tensorflow>=1.15,<2.0"
+$ pip install --upgrade tensorflow-hub
 ```
 
 ## Use of pre-release versions
