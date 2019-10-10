@@ -132,7 +132,7 @@ create the necessary python `_pb2.py` files from the `.proto` files.
 (tensorflow_hub_env)~/hub/$ brew install protobuf
 ```
 
-#### On linux
+#### On Linux
 
 ```
 (tensorflow_hub_env)~/hub/$ sudo apt install protobuf-compiler

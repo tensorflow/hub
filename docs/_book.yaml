@@ -13,25 +13,37 @@ upper_tabs:
     other:
     - name: Guide
       contents:
+      # Python library usage information
+      - heading: Using the library
       - title: Overview
         path: /hub/overview
-      - heading: Asset types
-      - title: SavedModels for TensorFlow 2
-        path: /hub/tf2_saved_model
-      - title: Deprecated: hub.Modules for TensorFlow 1
-        path: /hub/tf1_hub_module
-      - heading: Using the library
-      - title: Installation
+      - title: Installation and usage
         path: /hub/installation
       - title: Migration to TF2
         path: /hub/migration_tf2
       - title: Common issues
         path: /hub/common_issues
+      - title: Community and support
+        path: /hub/community
+      # Asset types available on tfhub.dev
+      - heading: Asset types
+      - title: SavedModels for TensorFlow 2
+        path: /hub/tf2_saved_model
+      - title: Deprecated: hub.Modules for TensorFlow 1
+        path: /hub/tf1_hub_module
+      # Contributing to TF-Hub - either models or code
+      - heading: Contributing
+      - title: Contribute on GitHub
+      - path: hub/contribute
+      - title: Publish models on tfhub.dev
+      - path: /hub/publish
+      # Advanced developer topics
+      - heading: Developer info
       - title: Build from source
         path: /hub/build_from_source
-      - title: Hosting a Module
+      - title: Hosting your own models
         path: /hub/hosting
-      - heading: Tutorials
+      # Tutorials
       - title: Text classification - TF2
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb
         status: external
