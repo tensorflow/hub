@@ -74,7 +74,7 @@ def text_embedding_column(key, module_spec, trainable=False):
   Example:
 
   ```python
-    comment = text_embedding_column("comment", "/tmp/text-module")
+    comment = hub.text_embedding_column("comment", "/tmp/text-module")
     feature_columns = [comment, ...]
     ...
     features = {
@@ -448,7 +448,7 @@ def sparse_text_embedding_column(key,
   For Example:
 
   ```python
-    comment = sparse_text_embedding_column("comment", "/tmp/text_module")
+    comment = hub.sparse_text_embedding_column("comment", "/tmp/text_module")
     feature_columns = [comment, ...]
     ...
     features = {
