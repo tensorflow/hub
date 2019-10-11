@@ -14,6 +14,9 @@ limitations under the License.
 ==============================================================================-->
 
 # Current version 0.7.0-dev
+  * Documentation update for TensorFlow 2.
+      * Use `hub.load()` and `hub.KerasLayer` with TF2 (also works in 1.15).
+      * For TF1, `hub.Module` and is associated APIs remain available.
 
 # Release 0.6.0
   * Added two examples for exporting of Hub/TF2 modules.

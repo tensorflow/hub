@@ -1,3 +1,6 @@
+# This file is rendered on tensorflow.org/hub.
+# ../README.md is rendered on github.com/tensorflow/hub.
+# Both link to ./overview.md and ./*.md for detailed docs.
 book_path: /hub/_book.yaml
 project_path: /hub/_project.yaml
 description: <!--no description-->
@@ -26,13 +29,11 @@ landing_page:
         </div>
       code_block: |
         <pre class = "prettyprint">
-          !pip install "tensorflow_hub"
-          !pip install "tf-nightly"
+          !pip install "tensorflow_hub>=0.5.0"
+          !pip install "tensorflow>=2.0.0"
 
           import tensorflow as tf
           import tensorflow_hub as hub
-
-          tf.enable_eager_execution()
 
           module_url = "https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1"
           embed = hub.KerasLayer(module_url)
