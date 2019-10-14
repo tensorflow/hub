@@ -102,6 +102,7 @@ class KerasLayer(tf.keras.layers.Layer):
     self._handle = handle
 
     # Resolve the handle to a callable `func`.
+    # NOTE: The name _func gets baked into object-based checkpoints.
     if callable(handle):
       self._func = handle
     else:
@@ -212,3 +213,8 @@ class KerasLayer(tf.keras.layers.Layer):
       config["arguments"] = self._arguments
 
     return config
+
+  @property
+  def resolved_object(self):
+    """Returns the callable object to which `handle` resolved in `__init__`."""
+    return self._func
