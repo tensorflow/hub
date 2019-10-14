@@ -43,6 +43,8 @@ upper_tabs:
         path: /hub/build_from_source
       - title: Hosting your own models
         path: /hub/hosting
+      - title: Reusable SavedModels
+        path: /hub/reusable_saved_models
       # Tutorials
       - title: Text classification - TF2
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb
