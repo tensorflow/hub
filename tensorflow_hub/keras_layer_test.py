@@ -46,6 +46,13 @@ def _skip_if_keras_save_too_old(test_case):
         "SavedModels in Keras model saving." % tf.__version__)
 
 
+def _skip_if_no_tf_asset(test_case):
+  if not hasattr(tf.saved_model, "Asset"):
+    test_case.skipTest(
+        "Your TensorFlow version (%s) looks too old for creating SavedModels "
+        " with assets." % tf.__version__)
+
+
 def _save_half_plus_one_model(export_dir, save_from_keras=False):
   """Writes Hub-style SavedModel to compute y = wx + 1, with w trainable."""
   inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
@@ -308,6 +315,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
   def testCustomAttributes(self, save_from_keras):
     """Tests custom attributes (Asset and Variable) on a SavedModel."""
     if save_from_keras: _skip_if_keras_save_too_old(self)
+    _skip_if_no_tf_asset(self)
     base_dir = os.path.join(self.get_temp_dir(), "custom-attributes")
     export_dir = os.path.join(base_dir, "model")
     temp_dir = os.path.join(base_dir, "scratch")
