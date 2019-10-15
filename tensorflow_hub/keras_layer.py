@@ -154,7 +154,7 @@ class KerasLayer(tf.keras.layers.Layer):
 
   def _call_loss_if_trainable(self, loss):
     """Returns `loss` conditioned on whether this layer is trainable."""
-    return lambda: loss() if self.trainable else None
+    return lambda: loss() if self.trainable else 0.
 
   def call(self, inputs, training=None):
     # We basically want to call this...

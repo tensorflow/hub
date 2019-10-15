@@ -236,13 +236,13 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     outp = imported(inp)
     model = tf.keras.Model(inp, outp)
     # When untrainable, the layer does not contribute regularization losses.
-    self.assertAllEqual(model.losses, np.array([], dtype=np.float32))
+    self.assertAllEqual(model.losses, np.array([0.], dtype=np.float32))
     # When trainable (even set after the fact), the layer forwards its losses.
     imported.trainable = True
     self.assertAllEqual(model.losses, np.array([0.0025], dtype=np.float32))
     # This can be toggled repeatedly.
     imported.trainable = False
-    self.assertAllEqual(model.losses, np.array([], dtype=np.float32))
+    self.assertAllEqual(model.losses, np.array([0.], dtype=np.float32))
     imported.trainable = True
     self.assertAllEqual(model.losses, np.array([0.0025], dtype=np.float32))
 
