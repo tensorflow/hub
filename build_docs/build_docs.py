@@ -52,7 +52,7 @@ import tensorflow_hub as hub
 flags.DEFINE_string('output_dir', '/tmp/hub_api', 'Where to output the docs')
 flags.DEFINE_string(
     'code_url_prefix',
-    'https://github.com/tensorlfow/hub/blob/master/tensorflow_hub/',
+    'https://github.com/tensorflow/hub/blob/master/tensorflow_hub/',
     'The url prefix for links to code.')
 
 flags.DEFINE_bool('search_hints', True,
