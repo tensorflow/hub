@@ -103,6 +103,7 @@ class KerasLayer(tf.keras.layers.Layer):
     # json-serializable. If you add or change arguments here, please also update
     # the `get_config` method.
     self._handle = handle
+    self._tags = tags
 
     # Resolve the handle to a callable `func`.
     # NOTE: The name _func gets baked into object-based checkpoints.
@@ -199,6 +200,7 @@ class KerasLayer(tf.keras.layers.Layer):
 
     config.update({
         "handle": self._handle,
+        "tags": self._tags,
     })
 
     if hasattr(self, "_output_shape"):
