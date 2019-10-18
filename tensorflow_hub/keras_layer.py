@@ -90,6 +90,9 @@ class KerasLayer(tf.keras.layers.Layer):
     arguments: optionally, a dict with additional keyword arguments passed
       to the callable. These must be JSON-serializable to save the Keras config
       of this layer.
+    tags: A tag or sequence of tags identifying the MetaGraph to load. Optional
+      if the SavedModel contains a single MetaGraph, as for those exported from
+      `tf.saved_model.load`.
     **kwargs: 'output_shape': A tuple with the (possibly partial) output
       shape of the callable *without* leading batch size. Other arguments
       are pass into the Layer constructor.
