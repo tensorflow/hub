@@ -95,7 +95,7 @@ class KerasLayer(tf.keras.layers.Layer):
       are pass into the Layer constructor.
   """
 
-  def __init__(self, handle, trainable=False, arguments=None, **kwargs):
+  def __init__(self, handle, trainable=False, arguments=None, tags=None, **kwargs):
     # Note: for compatibility with keras-model serialization this layer is
     # json-serializable. If you add or change arguments here, please also update
     # the `get_config` method.
@@ -106,7 +106,7 @@ class KerasLayer(tf.keras.layers.Layer):
     if callable(handle):
       self._func = handle
     else:
-      self._func = module_v2.load(handle)
+      self._func = module_v2.load(handle, tags=tags)
       if not callable(self._func):
         raise ValueError("Non-callable result from hub.load('%s')" %
                          str(handle))
