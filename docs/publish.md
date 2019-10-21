@@ -1,4 +1,4 @@
-# Publishing on tfhub.dev
+# Publishing
 
 Are you interested in publishing your models on tfhub.dev? Express your interest
 via our
