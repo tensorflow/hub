@@ -35,6 +35,7 @@ as well as other associated code and documentation.
   * [Introduction](https://www.tensorflow.org/hub/)
   * The asset types of [tfhub.dev](https://tfhub.dev/)
       * [SavedModels for TensorFlow 2](docs/tf2_saved_model.md)
+        and the [Reusable SavedModel interface](docs/reusable_saved_models.md).
       * Deprecated: [hub.Modules for TensorFlow 1](docs/tf1_hub_module.md) and
         their [Common Signatures](docs/common_signatures/index.md) collection.
   * Using the library

@@ -68,8 +68,10 @@ del tools
 # pylint: enable=g-bad-import-order
 # pylint: enable=g-import-not-at-top
 
-# Used by doc generation script.
-_allowed_symbols = [
+# If __all__ is defined the doc generator script only documents the listed
+# objects (__all__ defines which symbols you get with
+# `from tensorflow_hub import *`).
+__all__ = [
     "LatestModuleExporter",
     "register_module_for_export",
     "image_embedding_column",

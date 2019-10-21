@@ -80,7 +80,7 @@ temporary location for caching the downloaded and uncompressed SavedModels.
 ### Using a SavedModel in low-level TensorFlow
 
 The function `hub.load(handle)` downloads and decompresses a SavedModel
-(unless `handle` it already a filesystem path) and then returns the result
+(unless `handle` is already a filesystem path) and then returns the result
 of loading it with TensorFlow's built-in function `tf.saved_model.load()`.
 Therefore, `hub.load()` can handle any valid SavedModel (unlike its
 predecessor `hub.Module` for TF1).
@@ -109,11 +109,13 @@ Guide](https://www.tensorflow.org/guide/saved_model):
     A simple example could look like
     `output_tensor = obj(input_tensor, training=False)`.
 
-This leaves enormous flexibility in the interfaces that SavedModels can
-implement. The yet-to-be-published SavedModel Interfaces doc establishes
-conventions on how SavedModels from TF Hub are expected to use this,
-such that client code, including adapters like `hub.KerasLayer`,
-know how to use the SavedModel.
+This leaves enormous liberty in the interfaces that SavedModels can
+implement. The [Reusable SavedModels interface](reusable_saved_models.md)
+for `obj` establishes conventions such that client code, including adapters
+like `hub.KerasLayer`, know how to use the SavedModel.
+
+Some SavedModels may not follow that convention, especially whole models
+not meant to be reused in larger models, and just provide serving signatures.
 
 The trainable variables in a SavedModel are reloaded as trainable,
 and `tf.GradientTape` will watch them by default. See the section on
@@ -126,7 +128,8 @@ advises to re-train only a subset of the originally trainable variables.
 
 ### Overview
 
-SavedModel is TensorFlow's standard serialization format for trained models or model pieces.
+SavedModel is TensorFlow's standard serialization format for trained models
+or model pieces.
 It stores the model's trained weights together with the exact TensorFlow
 operations to perform its computation. It can be used independently from
 the code that created it. In particular, it can be reused across different
@@ -139,8 +142,7 @@ Starting with TensorFlow 2, `tf.keras.Model.save()` and
 `tf.keras.models.save_model()` default to the SavedModel format (not HDF5).
 The resulting SavedModels that can be used with `hub.load()`,
 `hub.KerasLayer` and similar adapters for other high-level APIs
-as they become available. (The fine points of Keras saving are documented in its
-[RFC](https://github.com/tensorflow/community/blob/master/rfcs/20190509-keras-saved-model.md).)
+as they become available.
 
 To share a complete Keras Model, just save it with `include_optimizer=False`.
 
@@ -177,10 +179,39 @@ and the the latter approach for ResNet (see
 ### Saving from low-level TensorFlow
 
 This requires good familiarity with TensorFlow's [SavedModel
-Guide](https://www.tensorflow.org/guide/saved_model) and the
-interface on the object returned by `hub.load()` (see above). The code at
+Guide](https://www.tensorflow.org/guide/saved_model).
+
+If you want to provide more than just a serving signature, you should
+implement the [Reusable SavedModel interface](reusable_saved_models.md).
+Conceptually, this looks like
+
+```python
+class MyMulModel(tf.train.Checkpoint):
+  def __init__(self, v_init):
+    super(MyMulModel, self).__init__()
+    self.v = tf.Variable(v_init)
+    self.variables = [self.v]
+    self.trainable_variables = [self.v]
+    self.regularization_losses = [
+        tf.function(input_signature=[])(lambda: 0.001 * self.v**2),
+    ]
+
+  @tf.function(input_signature=[tf.TensorSpec(shape=None, dtype=tf.float32)])
+  def __call__(self, inputs):
+    return tf.multiply(inputs, self.v)
+
+tf.saved_model.save(MyMulModel(2.0), "/tmp/my_mul")
+
+layer = hub.KerasLayer("/tmp/my_mul")
+print(layer([10., 20.]))  # [20., 40.]
+layer.trainable = True
+print(layer.trainable_weights)  # [2.]
+print(layer.losses)  # 0.004
+```
+
+The code at
 [tensorflow/examples/saved_model/integration_tests/](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/saved_model/integration_tests)
-may be informative, esp. the `export_mnist.py` and `use_mnist.py` pair.
+contains larger examples, esp. the `export_mnist.py` and `use_mnist.py` pair.
 
 
 ## Fine-Tuning

@@ -46,6 +46,13 @@ def _skip_if_keras_save_too_old(test_case):
         "SavedModels in Keras model saving." % tf.__version__)
 
 
+def _skip_if_no_tf_asset(test_case):
+  if not hasattr(tf.saved_model, "Asset"):
+    test_case.skipTest(
+        "Your TensorFlow version (%s) looks too old for creating SavedModels "
+        " with assets." % tf.__version__)
+
+
 def _save_half_plus_one_model(export_dir, save_from_keras=False):
   """Writes Hub-style SavedModel to compute y = wx + 1, with w trainable."""
   inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
@@ -147,6 +154,34 @@ def _save_model_with_hparams(export_dir):
   tf.saved_model.save(obj, export_dir)
 
 
+def _save_model_with_custom_attributes(export_dir, temp_dir,
+                                       save_from_keras=False):
+  """Writes a Hub-style SavedModel with a custom attributes."""
+  # Calling the module parses an integer.
+  f = lambda a: tf.strings.to_number(a, tf.int64)
+  if save_from_keras:
+    inp = tf.keras.layers.Input(shape=(1,), dtype=tf.string)
+    outp = tf.keras.layers.Lambda(f)(inp)
+    model = tf.keras.Model(inp, outp)
+  else:
+    model = tf.train.Checkpoint()
+    model.__call__ = tf.function(
+        input_signature=[tf.TensorSpec(shape=(None, 1), dtype=tf.string)])(f)
+
+  # Running on the `sample_input` file yields the `sample_output` value.
+  asset_source_file_name = os.path.join(temp_dir, "number.txt")
+  tf.io.gfile.makedirs(temp_dir)
+  with tf.io.gfile.GFile(asset_source_file_name, "w") as f:
+    f.write("12345\n")
+  model.sample_input = tf.saved_model.Asset(asset_source_file_name)
+  model.sample_output = tf.Variable([[12345]], dtype=tf.int64)
+
+  # Save model and invalidate the original asset file name.
+  tf.saved_model.save(model, export_dir)
+  tf.io.gfile.remove(asset_source_file_name)
+  return export_dir
+
+
 class KerasTest(tf.test.TestCase, parameterized.TestCase):
   """Tests KerasLayer in an all-Keras environment."""
 
@@ -201,13 +236,13 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     outp = imported(inp)
     model = tf.keras.Model(inp, outp)
     # When untrainable, the layer does not contribute regularization losses.
-    self.assertAllEqual(model.losses, np.array([], dtype=np.float32))
+    self.assertAllEqual(model.losses, np.array([0.], dtype=np.float32))
     # When trainable (even set after the fact), the layer forwards its losses.
     imported.trainable = True
     self.assertAllEqual(model.losses, np.array([0.0025], dtype=np.float32))
     # This can be toggled repeatedly.
     imported.trainable = False
-    self.assertAllEqual(model.losses, np.array([], dtype=np.float32))
+    self.assertAllEqual(model.losses, np.array([0.], dtype=np.float32))
     imported.trainable = True
     self.assertAllEqual(model.losses, np.array([0.0025], dtype=np.float32))
 
@@ -275,6 +310,24 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(var_mean.numpy(), np.array([0.0]))
     self.assertAllClose(var_variance.numpy(), np.array([1.0]))
     self.assertAllClose(model(np.array(x, np.float32)), np.array(y))
+
+  @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
+  def testCustomAttributes(self, save_from_keras):
+    """Tests custom attributes (Asset and Variable) on a SavedModel."""
+    if save_from_keras: _skip_if_keras_save_too_old(self)
+    _skip_if_no_tf_asset(self)
+    base_dir = os.path.join(self.get_temp_dir(), "custom-attributes")
+    export_dir = os.path.join(base_dir, "model")
+    temp_dir = os.path.join(base_dir, "scratch")
+    _save_model_with_custom_attributes(export_dir, temp_dir,
+                                       save_from_keras=save_from_keras)
+    imported = hub.KerasLayer(export_dir)
+    expected_outputs = imported.resolved_object.sample_output.value().numpy()
+    asset_path = imported.resolved_object.sample_input.asset_path.numpy()
+    with tf.io.gfile.GFile(asset_path) as f:
+      inputs = tf.constant([[f.read()]], dtype=tf.string)
+    actual_outputs = imported(inputs).numpy()
+    self.assertAllEqual(expected_outputs, actual_outputs)
 
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testComputeOutputShape(self, save_from_keras):
