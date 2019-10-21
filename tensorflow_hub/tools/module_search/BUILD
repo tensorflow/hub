@@ -14,11 +14,24 @@
 # ==============================================================================
 licenses(["notice"])  # Apache 2.0 License
 
+py_binary(
+    name = "search",
+    srcs = ["search.py"],
+    python_version = "PY3",
+    deps = [
+        ":utils",
+        "//tensorflow_hub:expect_numpy_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
 py_library(
     name = "utils",
     srcs = ["utils.py"],
     deps = [
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub:expect_tensorflow_datasets_installed",
+        "//tensorflow_hub",
     ],
 )
