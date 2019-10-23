@@ -32,6 +32,7 @@ from tensorflow_hub import module_v2
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import smart_cond
 from tensorflow.python.training.tracking import base as tracking_base
+from tensorflow.python.training.tracking import data_structures
 from tensorflow.python.util import tf_inspect
 # pylint: enable=g-direct-tensorflow-import
 
@@ -44,14 +45,14 @@ class KerasLayer(tf.keras.layers.Layer):
   handle that gets passed to `hub.load()`.
 
   This is the preferred API to load a TF2-style SavedModel from TF Hub
-  into a Keras model. Calling this function requires TF 1.14 or newer.
+  into a Keras model. Calling this function requires TF 1.15 or newer.
   It can be called both in eager and graph mode.
 
   The callable object is expected to follow the conventions detailed below.
   (These are met by TF2-compatible modules loaded from TensorFlow Hub.)
 
   The callable is invoked with a single positional argument set to one tensor
-  or a list of tensors containing the inputs to the layer. If the callable
+  or a nest of tensors containing the inputs to the layer. If the callable
   accepts a `training` argument, a Python boolean is passed for it. It is True
   if this layer is marked trainable *and* called for training.
 
@@ -65,7 +66,7 @@ class KerasLayer(tf.keras.layers.Layer):
       arguments and return a scalar tensor.
 
   Note: to work-around missing shape inference functionalities from functions
-  created from FunctionDefs, in many cases one has to pass an 'output_shape'
+  created from FunctionDefs, in rare cases one has to pass an 'output_shape'
   and potentially 'input_shape' and 'dtype'. E.g. the following is a typical
   work-around:
   ```
@@ -89,10 +90,13 @@ class KerasLayer(tf.keras.layers.Layer):
     trainable: Boolean controlling whether this layer is trainable.
     arguments: optionally, a dict with additional keyword arguments passed
       to the callable. These must be JSON-serializable to save the Keras config
+      of this layer, and are not tracked as checkpointing dependencies
       of this layer.
-    **kwargs: 'output_shape': A tuple with the (possibly partial) output
-      shape of the callable *without* leading batch size. Other arguments
-      are pass into the Layer constructor.
+    **kwargs: 'output_shape': A single tuple or a nest of tuples with the
+      (possibly partial) output shapes of the callable *without* leading
+      batch size. This must have the same nesting structure as the output of
+      the callable object and cover all output tensors.
+      Other kwargs are forwarded to Keras' base Layer constructor.
   """
 
   def __init__(self, handle, trainable=False, arguments=None, **kwargs):
@@ -110,9 +114,14 @@ class KerasLayer(tf.keras.layers.Layer):
       if not callable(self._func):
         raise ValueError("Non-callable result from hub.load('%s')" %
                          str(handle))
-    # TODO(b/124219898): We should do shape inference on the callable.
+    # TODO(b/142213824): Remove setting shapes when shape inference works.
     if "output_shape" in kwargs:
-      self._output_shape = tuple(kwargs.pop("output_shape"))
+      # Autograph chokes on _convert_nest_to_shapes(), so we call it here
+      # and not from within call(). The result is marked NoDependency
+      # to avoid autoconversion to a trackable _DictWrapper, because that
+      # upsets json.dumps() when saving the result of get_config().
+      self._output_shape = data_structures.NoDependency(
+          _convert_nest_to_shapes(kwargs.pop("output_shape")))
 
     # Initialize an empty layer, then add_weight() etc. as needed.
     super(KerasLayer, self).__init__(trainable=trainable, **kwargs)
@@ -144,7 +153,10 @@ class KerasLayer(tf.keras.layers.Layer):
         "training" in self._func_fullargspec.args or
         "training" in self._func_fullargspec.kwonlyargs)
     if arguments is not None:
-      self._arguments = arguments
+      # The attribute is marked NoDependency to avoid autoconversion to a
+      # trackable _DictWrapper, because that upsets json.dumps() when saving
+      # the result of get_config().
+      self._arguments = data_structures.NoDependency(arguments)
 
   def _add_existing_weight(self, weight, trainable=None):
     """Calls add_weight() to register but not create an existing weight."""
@@ -178,10 +190,22 @@ class KerasLayer(tf.keras.layers.Layer):
       result = smart_cond.smart_cond(training,
                                      lambda: f(training=True),
                                      lambda: f(training=False))
-    # TODO(b/124219898): Polymorphic function should return shaped tensor.
-    if hasattr(self, "_output_shape"):
-      result.set_shape((inputs.shape[0],) + self._output_shape)
+
+    # TODO(b/142213824): Remove setting shapes when shape inference works.
+    result = self._apply_output_shape_if_set(inputs, result)
     return result
+
+  def _apply_output_shape_if_set(self, inputs, outputs):
+    if not hasattr(self, "_output_shape"):
+      return outputs
+    # Traverse the nest and turn shape-like tuples into tf.TensorShapes,
+    # or else map_structure below would try to recurse into them.
+    output_shape = getattr(self, "_output_shape")
+    batch_size = tf.nest.flatten(inputs)[0].shape[0]
+    def _inplace_set_shape(tensor, shape):
+      tensor.set_shape(tf.TensorShape(batch_size).concatenate(shape))
+    _ = tf.nest.map_structure(_inplace_set_shape, outputs, output_shape)
+    return outputs
 
   def get_config(self):
     config = super(KerasLayer, self).get_config()
@@ -199,7 +223,14 @@ class KerasLayer(tf.keras.layers.Layer):
     })
 
     if hasattr(self, "_output_shape"):
-      config["output_shape"] = self._output_shape
+      output_shape = _convert_nest_from_shapes(self._output_shape)
+      try:
+        json.dumps(output_shape)
+      except TypeError:
+        raise ValueError(
+            "hub.KerasLayer(..., output_shape=) is not json-serializable.\n"
+            "Got value: {}".format(output_shape))
+      config["output_shape"] = output_shape
 
     if hasattr(self, "_arguments"):
       # Raise clear errors for non-serializable arguments.
@@ -218,3 +249,29 @@ class KerasLayer(tf.keras.layers.Layer):
   def resolved_object(self):
     """Returns the callable object to which `handle` resolved in `__init__`."""
     return self._func
+
+
+def _convert_nest_to_shapes(x):
+    """In a nest, convert raw tuples/lists of int or None to tf.TensorShape."""
+    # A dict is certainly a container and not a shape. We need to handle
+    # it first and not try construct a TensorShape from its keys.
+    if isinstance(x, dict):
+      return type(x)([(k, _convert_nest_to_shapes(v)) for k, v in x.items()])
+    # Anything else might be already a TensorShape, a tuple that converts
+    # to a TensorShape, or a sequence that needs further recursion.
+    try:
+      return tf.TensorShape(x)
+    except TypeError:
+      pass  # Will try parsing as a container instead.
+    if isinstance(x, (list, tuple)):
+      return type(x)([_convert_nest_to_shapes(v) for v in x])
+    else:
+      raise TypeError("Cannot convert to nest of TensorShapes, "
+                      "found none of TensorShape, dict, list, tuple: %r" % x)
+
+def _convert_nest_from_shapes(x):
+  """Convert a nest of tf.TensorShape to raw tuples of int or None."""
+  def _shape_as_tuple(x):
+    assert isinstance(x, tf.TensorShape)
+    return tuple(x.as_list())
+  return tf.nest.map_structure(_shape_as_tuple, x)
