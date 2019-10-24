@@ -31,7 +31,6 @@ from tensorflow_hub import module_v2
 
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import smart_cond
-from tensorflow.python.training.tracking import base as tracking_base
 from tensorflow.python.training.tracking import data_structures
 from tensorflow.python.util import tf_inspect
 # pylint: enable=g-direct-tensorflow-import
@@ -83,7 +82,7 @@ class KerasLayer(tf.keras.layers.Layer):
   explicitly from Keras objects instead of relying on graph collections.
   This layer class does not support graph collections.
 
-  Args:
+  Attributes:
     handle: a callable object (subject to the conventions above), or a
       Python string for which hub.load() returns such a callable.
       A string is required to save the Keras config of this Layer.
@@ -92,7 +91,7 @@ class KerasLayer(tf.keras.layers.Layer):
       to the callable. These must be JSON-serializable to save the Keras config
       of this layer, and are not tracked as checkpointing dependencies
       of this layer.
-    **kwargs: 'output_shape': A single tuple or a nest of tuples with the
+    **kwargs: 'output_shape': A tuple or a nest of tuples with the
       (possibly partial) output shapes of the callable *without* leading
       batch size. This must have the same nesting structure as the output of
       the callable object and cover all output tensors.
@@ -237,7 +236,7 @@ class KerasLayer(tf.keras.layers.Layer):
       for key, value in self._arguments.items():
         try:
           json.dumps(value)
-        except TypeError as e:
+        except TypeError:
           raise ValueError(
               "`hub.KerasLayer(..., arguments)` contains non json-serializable"
               "values in key: {}".format(key))
@@ -252,22 +251,23 @@ class KerasLayer(tf.keras.layers.Layer):
 
 
 def _convert_nest_to_shapes(x):
-    """In a nest, convert raw tuples/lists of int or None to tf.TensorShape."""
-    # A dict is certainly a container and not a shape. We need to handle
-    # it first and not try construct a TensorShape from its keys.
-    if isinstance(x, dict):
-      return type(x)([(k, _convert_nest_to_shapes(v)) for k, v in x.items()])
-    # Anything else might be already a TensorShape, a tuple that converts
-    # to a TensorShape, or a sequence that needs further recursion.
-    try:
-      return tf.TensorShape(x)
-    except TypeError:
-      pass  # Will try parsing as a container instead.
-    if isinstance(x, (list, tuple)):
-      return type(x)([_convert_nest_to_shapes(v) for v in x])
-    else:
-      raise TypeError("Cannot convert to nest of TensorShapes, "
-                      "found none of TensorShape, dict, list, tuple: %r" % x)
+  """In a nest, convert raw tuples/lists of int or None to tf.TensorShape."""
+  # A dict is certainly a container and not a shape. We need to handle
+  # it first and not try construct a TensorShape from its keys.
+  if isinstance(x, dict):
+    return type(x)([(k, _convert_nest_to_shapes(v)) for k, v in x.items()])
+  # Anything else might be already a TensorShape, a tuple that converts
+  # to a TensorShape, or a sequence that needs further recursion.
+  try:
+    return tf.TensorShape(x)
+  except TypeError:
+    pass  # Will try parsing as a container instead.
+  if isinstance(x, (list, tuple)):
+    return type(x)([_convert_nest_to_shapes(v) for v in x])
+  else:
+    raise TypeError("Cannot convert to nest of TensorShapes, "
+                    "found none of TensorShape, dict, list, tuple: %r" % x)
+
 
 def _convert_nest_from_shapes(x):
   """Convert a nest of tf.TensorShape to raw tuples of int or None."""
