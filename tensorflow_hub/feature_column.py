@@ -241,7 +241,7 @@ class _TextEmbeddingColumn(
     return config
 
   @classmethod
-  def from_config(cls, config):
+  def from_config(cls, config, custom_objects=None, columns_by_name=None):
     copied_config = config.copy()
     return cls(**copied_config)
 
@@ -420,7 +420,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     return config
 
   @classmethod
-  def from_config(cls, config):
+  def from_config(cls, config, custom_objects=None, columns_by_name=None):
     copied_config = config.copy()
     return cls(**copied_config)
 
