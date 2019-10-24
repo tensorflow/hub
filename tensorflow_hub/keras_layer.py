@@ -91,14 +91,16 @@ class KerasLayer(tf.keras.layers.Layer):
       to the callable. These must be JSON-serializable to save the Keras config
       of this layer, and are not tracked as checkpointing dependencies
       of this layer.
-    **kwargs: 'output_shape': A tuple or a nest of tuples with the
+    _sentinel: Used to prevent further positional arguments.
+    output_shape: A tuple or a nest of tuples with the
       (possibly partial) output shapes of the callable *without* leading
       batch size. This must have the same nesting structure as the output of
       the callable object and cover all output tensors.
-      Other kwargs are forwarded to Keras' base Layer constructor.
+    **kwargs: Forwarded to Keras' base Layer constructor.
   """
 
-  def __init__(self, handle, trainable=False, arguments=None, **kwargs):
+  def __init__(self, handle, trainable=False,  # pylint: disable=invalid-name
+               arguments=None, _sentinel=None, output_shape=None, **kwargs):
     # Note: for compatibility with keras-model serialization this layer is
     # json-serializable. If you add or change arguments here, please also update
     # the `get_config` method.
@@ -114,13 +116,13 @@ class KerasLayer(tf.keras.layers.Layer):
         raise ValueError("Non-callable result from hub.load('%s')" %
                          str(handle))
     # TODO(b/142213824): Remove setting shapes when shape inference works.
-    if "output_shape" in kwargs:
+    if output_shape:
       # Autograph chokes on _convert_nest_to_shapes(), so we call it here
       # and not from within call(). The result is marked NoDependency
       # to avoid autoconversion to a trackable _DictWrapper, because that
       # upsets json.dumps() when saving the result of get_config().
       self._output_shape = data_structures.NoDependency(
-          _convert_nest_to_shapes(kwargs.pop("output_shape")))
+          _convert_nest_to_shapes(output_shape))
 
     # Initialize an empty layer, then add_weight() etc. as needed.
     super(KerasLayer, self).__init__(trainable=trainable, **kwargs)
