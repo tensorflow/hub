@@ -24,6 +24,7 @@ import sys
 import threading
 
 from absl import flags
+import tensorflow as tf
 
 # TODO(b/73987364): It is not possible to extend feature columns without
 # depending on TensorFlow internal implementation details.
@@ -161,3 +162,12 @@ def get_dense_features_module():
   if hasattr(feature_column_v2, "DenseFeatures"):
     return feature_column_v2
   return dense_features_v2
+
+
+def get_test_data_path(file_or_dirname):
+  """Return full test data path."""
+  for directory, subdirs, files in tf.io.gfile.walk(test_srcdir()):
+    for f in subdirs + files:
+      if f.endswith(file_or_dirname):
+        return os.path.join(directory, f)
+  raise ValueError("No %s in test directory" % file_or_dirname)

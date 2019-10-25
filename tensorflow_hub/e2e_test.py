@@ -39,6 +39,7 @@ from tensorflow.python.ops.lookup_ops import index_to_string_table_from_file
 class End2EndTest(tf.test.TestCase):
 
   def setUp(self):
+    super(End2EndTest, self).setUp()
     # Set current directory to test temp directory where we can create
     # files and serve them through the HTTP server.
     os.chdir(self.get_temp_dir())
@@ -184,19 +185,11 @@ class End2EndTest(tf.test.TestCase):
       self.assertIsNotNone(restored_module)
       self.assertTrue(hasattr(restored_module, "add"))
 
-  def _full_module_path(self, module_name):
-    for directory, _, files in tf_v1.gfile.Walk(test_utils.test_srcdir()):
-      for f in files:
-        full_path = f
-        if full_path.endswith(module_name):
-          return os.path.join(directory, f)
-    raise ValueError("No %s in test source directory" % module_name)
-
   def test_load_v1(self):
     if (not hasattr(tf_v1.saved_model, "load_v2") or
         not tf_v1.executing_eagerly()):
       return  # The test only applies when running V2 mode.
-    full_module_path = self._full_module_path("half_plus_two_v1.tar.gz")
+    full_module_path = test_utils.get_test_data_path("half_plus_two_v1.tar.gz")
     os.chdir(os.path.dirname(full_module_path))
     server_port = test_utils.start_http_server()
     handle = "http://localhost:%d/half_plus_two_v1.tar.gz" % server_port
