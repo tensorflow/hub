@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from tensorflow_hub import native_module
 from tensorflow_hub import registry
 from tensorflow_hub import tf_v1
 
@@ -83,9 +84,14 @@ def load(handle, tags=None):
     NotImplementedError: If the code is running against incompatible (1.x)
                          version of TF.
   """
-  if hasattr(tf_v1.saved_model, "load_v2"):
-    module_handle = resolve(handle)
-    return tf_v1.saved_model.load_v2(module_handle, tags=tags)
-  else:
+  if not hasattr(tf_v1.saved_model, "load_v2"):
     raise NotImplementedError("hub.load() is not implemented for TF < 1.14.x, "
                               "Current version: %s" % tf.__version__)
+  module_path = resolve(handle)
+  is_hub_module_v1 = tf.io.gfile.exists(
+      native_module.get_module_proto_path(module_path))
+  if tags is None and is_hub_module_v1:
+      tags = []
+  obj = tf_v1.saved_model.load_v2(module_path, tags=tags)
+  obj._is_hub_module_v1 = is_hub_module_v1  # pylint: disable=protected-access
+  return obj

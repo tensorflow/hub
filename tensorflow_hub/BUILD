@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-licenses(["notice"])  # Apache 2.0 License
+licenses(["notice"])
+
+load("//tensorflow_hub:protos.bzl", "tf_hub_proto_library")  # buildifier: disable=load-on-top
 
 package(default_visibility = ["//:__subpackages__"])
 
 exports_files(["LICENSE"])
-
-load("//tensorflow_hub:protos.bzl", "tf_hub_proto_library")
 
 # This is the public import users should use.
 py_library(
@@ -440,5 +440,23 @@ py_library(
         ":native_module",
         ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_test(
+    name = "module_v2_test",
+    srcs = ["module_v2_test.py"],
+    data = [
+        "testdata/hub_module_v1_mini",
+        "testdata/saved_model_v2_mini",
+    ],
+    # python_version = "PY2",
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    deps = [
+        ":module_v2",
+        ":test_utils",
+        "//tensorflow_hub:expect_tensorflow_installed",
+        ":config",
     ],
 )
