@@ -105,16 +105,15 @@ class KerasLayer(tf.keras.layers.Layer):
     # json-serializable. If you add or change arguments here, please also update
     # the `get_config` method.
     self._handle = handle
+    self._func = load_module(handle)
+    self._has_training_argument = func_has_training_argument(self._func)
+    self._setup_layer(trainable, **kwargs)
 
-    # Resolve the handle to a callable `func`.
-    # NOTE: The name _func gets baked into object-based checkpoints.
-    if callable(handle):
-      self._func = handle
-    else:
-      self._func = module_v2.load(handle)
-      if not callable(self._func):
-        raise ValueError("Non-callable result from hub.load('%s')" %
-                         str(handle))
+    # The attribute is marked NoDependency to avoid autoconversion to a
+    # trackable _DictWrapper, because that upsets json.dumps() when saving
+    # the result of get_config().
+    self._arguments = data_structures.NoDependency(arguments or {})
+
     # TODO(b/142213824): Remove setting shapes when shape inference works.
     if output_shape:
       # Autograph chokes on _convert_nest_to_shapes(), so we call it here
@@ -124,6 +123,9 @@ class KerasLayer(tf.keras.layers.Layer):
       self._output_shape = data_structures.NoDependency(
           _convert_nest_to_shapes(output_shape))
 
+
+  def _setup_layer(self, trainable=False, **kwargs):
+    """Constructs keras layer with relevant weights and losses."""
     # Initialize an empty layer, then add_weight() etc. as needed.
     super(KerasLayer, self).__init__(trainable=trainable, **kwargs)
 
@@ -148,16 +150,6 @@ class KerasLayer(tf.keras.layers.Layer):
               "iterable of callables, each returning a scalar loss term.")
         self.add_loss(self._call_loss_if_trainable(l))  # Supports callables.
 
-    # Prepare to call `func`.
-    self._func_fullargspec = tf_inspect.getfullargspec(self._func.__call__)
-    self._func_wants_training = (
-        "training" in self._func_fullargspec.args or
-        "training" in self._func_fullargspec.kwonlyargs)
-    # The attribute is marked NoDependency to avoid autoconversion to a
-    # trackable _DictWrapper, because that upsets json.dumps() when saving
-    # the result of get_config().
-    self._arguments = data_structures.NoDependency(arguments or {})
-
   def _add_existing_weight(self, weight, trainable=None):
     """Calls add_weight() to register but not create an existing weight."""
     if trainable is None: trainable = weight.trainable
@@ -176,7 +168,7 @@ class KerasLayer(tf.keras.layers.Layer):
     # model is doing (analogous to tf.keras.layers.BatchNormalization in TF2).
     # For the latter, we have to look in two places: the `training` argument,
     # or else Keras' global `learning_phase`, which might actually be a tensor.
-    if not self._func_wants_training:
+    if not self._has_training_argument:
       result = f()
     else:
       if self.trainable:
@@ -271,3 +263,21 @@ def _convert_nest_from_shapes(x):
     assert isinstance(x, tf.TensorShape)
     return tuple(x.as_list())
   return tf.nest.map_structure(_shape_as_tuple, x)
+
+
+def load_module(handle):
+  if callable(handle):
+    return handle
+  else:
+    obj = module_v2.load(handle)
+    if not callable(obj):
+      raise ValueError("Non-callable result from hub.load('%s')" %
+                       str(handle))
+    return obj
+
+
+def func_has_training_argument(func):
+  """Checks whether saved model callable has a training argument."""
+  fullargspec = tf_inspect.getfullargspec(func.__call__)
+  return ("training" in fullargspec.args or
+          "training" in fullargspec.kwonlyargs)

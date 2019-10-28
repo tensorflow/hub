@@ -26,6 +26,9 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
 
+from tensorflow_hub import test_utils
+
+
 # NOTE: A Hub-style SavedModel can either be constructed manually, or by
 # relying on tf.saved_model.save(keras_model, ...) to put in the expected
 # endpoints. The following _save*model() helpers offer a save_from_keras
@@ -730,7 +733,6 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(predictions["variance"], np.array([1.0]))
     self.assertAllClose(predictions["output"], np.array(y))
 
-
   def _output_shape_list_model_fn(self, features, labels, mode, params):
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
     kwargs = {}
@@ -782,6 +784,27 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
          [[[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
           [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
           [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]]]]))
+
+
+class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
+  """Unit tests for KerasLayer."""
+
+  @parameterized.named_parameters(
+      ("v2_implicit_tags", "saved_model_v2_mini"),
+      )
+  def test_load(self, module_name):
+    path = test_utils.get_test_data_path(module_name)
+    m = hub.KerasLayer(path)
+    output = m(10.)  # These modules perform an increment operation.
+    self.assertEqual(output, 11.)
+
+  @parameterized.named_parameters(
+      ("v1_implicit_tags", "hub_module_v1_mini"),
+      )
+  def test_load_fails(self, module_name):
+    path = test_utils.get_test_data_path(module_name)
+    with self.assertRaises(ValueError):
+      hub.KerasLayer(path)
 
 
 if __name__ == "__main__":
