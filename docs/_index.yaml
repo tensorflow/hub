@@ -29,13 +29,13 @@ landing_page:
         </div>
       code_block: |
         <pre class = "prettyprint">
-          !pip install "tensorflow_hub>=0.5.0"
+          !pip install "tensorflow_hub>=0.6.0"
           !pip install "tensorflow>=2.0.0"
 
           import tensorflow as tf
           import tensorflow_hub as hub
 
-          module_url = "https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1"
+          module_url = "https://tfhub.dev/google/nnlm-en-dim128/2"
           embed = hub.KerasLayer(module_url)
           embeddings = embed(["A long sentence.", "single-word",
                               "http://example.com"])
