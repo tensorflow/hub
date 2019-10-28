@@ -153,11 +153,10 @@ class KerasLayer(tf.keras.layers.Layer):
     self._func_wants_training = (
         "training" in self._func_fullargspec.args or
         "training" in self._func_fullargspec.kwonlyargs)
-    if arguments is not None:
-      # The attribute is marked NoDependency to avoid autoconversion to a
-      # trackable _DictWrapper, because that upsets json.dumps() when saving
-      # the result of get_config().
-      self._arguments = data_structures.NoDependency(arguments)
+    # The attribute is marked NoDependency to avoid autoconversion to a
+    # trackable _DictWrapper, because that upsets json.dumps() when saving
+    # the result of get_config().
+    self._arguments = data_structures.NoDependency(arguments or {})
 
   def _add_existing_weight(self, weight, trainable=None):
     """Calls add_weight() to register but not create an existing weight."""
@@ -171,10 +170,7 @@ class KerasLayer(tf.keras.layers.Layer):
 
   def call(self, inputs, training=None):
     # We basically want to call this...
-    kwargs = getattr(self, "_arguments", None)
-    if kwargs is None:
-      kwargs = {}
-    f = functools.partial(self._func, inputs, **kwargs)
+    f = functools.partial(self._func, inputs, **self._arguments)
     # ...but we may also have to pass a Python boolean for `training`, which
     # is the logical "and" of this layer's trainability and what the surrounding
     # model is doing (analogous to tf.keras.layers.BatchNormalization in TF2).
@@ -205,10 +201,11 @@ class KerasLayer(tf.keras.layers.Layer):
     batch_size = tf.nest.flatten(inputs)[0].shape[0]
     def _inplace_set_shape(tensor, shape):
       tensor.set_shape(tf.TensorShape(batch_size).concatenate(shape))
-    _ = tf.nest.map_structure(_inplace_set_shape, outputs, output_shape)
+    tf.nest.map_structure(_inplace_set_shape, outputs, output_shape)
     return outputs
 
   def get_config(self):
+    """Returns a serializable dict of keras layer configuration parameters."""
     config = super(KerasLayer, self).get_config()
     if not isinstance(self._handle, six.string_types):
       # Need to raise this type in order for tf.saved_model.save() to fall back
@@ -218,10 +215,7 @@ class KerasLayer(tf.keras.layers.Layer):
           "Can only generate a valid config for `hub.KerasLayer(handle, ...)`"
           "that uses a string `handle`.\n\n"
           "Got `type(handle)`: {}".format(type(self._handle)))
-
-    config.update({
-        "handle": self._handle,
-    })
+    config["handle"] = self._handle
 
     if hasattr(self, "_output_shape"):
       output_shape = _convert_nest_from_shapes(self._output_shape)
@@ -233,7 +227,7 @@ class KerasLayer(tf.keras.layers.Layer):
             "Got value: {}".format(output_shape))
       config["output_shape"] = output_shape
 
-    if hasattr(self, "_arguments"):
+    if self._arguments:
       # Raise clear errors for non-serializable arguments.
       for key, value in self._arguments.items():
         try:
@@ -253,7 +247,7 @@ class KerasLayer(tf.keras.layers.Layer):
 
 
 def _convert_nest_to_shapes(x):
-  """In a nest, convert raw tuples/lists of int or None to tf.TensorShape."""
+  """In a nest, converts raw tuples/lists of int or None to tf.TensorShape."""
   # A dict is certainly a container and not a shape. We need to handle
   # it first and not try construct a TensorShape from its keys.
   if isinstance(x, dict):
@@ -272,7 +266,7 @@ def _convert_nest_to_shapes(x):
 
 
 def _convert_nest_from_shapes(x):
-  """Convert a nest of tf.TensorShape to raw tuples of int or None."""
+  """Converts a nest of tf.TensorShape to raw tuples of int or None."""
   def _shape_as_tuple(x):
     assert isinstance(x, tf.TensorShape)
     return tuple(x.as_list())
