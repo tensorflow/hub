@@ -790,21 +790,14 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
   """Unit tests for KerasLayer."""
 
   @parameterized.named_parameters(
+      ("v1_implicit_tags", "hub_module_v1_mini"),
       ("v2_implicit_tags", "saved_model_v2_mini"),
       )
-  def test_load(self, module_name):
+  def test_load_with_defaults(self, module_name):
     path = test_utils.get_test_data_path(module_name)
     m = hub.KerasLayer(path)
     output = m(10.)  # These modules perform an increment operation.
     self.assertEqual(output, 11.)
-
-  @parameterized.named_parameters(
-      ("v1_implicit_tags", "hub_module_v1_mini"),
-      )
-  def test_load_fails(self, module_name):
-    path = test_utils.get_test_data_path(module_name)
-    with self.assertRaises(ValueError):
-      hub.KerasLayer(path)
 
 
 if __name__ == "__main__":

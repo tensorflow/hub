@@ -77,7 +77,8 @@ class KerasLayer(tf.keras.layers.Layer):
   ```
 
   Note: This layer can be used inside the model_fn of a TF2 Estimator. See the
-  [migration guide](https://www.tensorflow.org/beta/guide/migration_guide#using_a_custom_model_fn)
+  [migration guide]
+  (https://www.tensorflow.org/beta/guide/migration_guide#using_a_custom_model_fn)
   for guidance on how to pick up trainable variables, losses and updates
   explicitly from Keras objects instead of relying on graph collections.
   This layer class does not support graph collections.
@@ -107,7 +108,8 @@ class KerasLayer(tf.keras.layers.Layer):
     self._handle = handle
     self._func = load_module(handle)
     self._has_training_argument = func_has_training_argument(self._func)
-    self._setup_layer(trainable, **kwargs)
+    self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
+    self._callable = self._get_callable()
 
     # The attribute is marked NoDependency to avoid autoconversion to a
     # trackable _DictWrapper, because that upsets json.dumps() when saving
@@ -123,6 +125,7 @@ class KerasLayer(tf.keras.layers.Layer):
       self._output_shape = data_structures.NoDependency(
           _convert_nest_to_shapes(output_shape))
 
+    self._setup_layer(trainable, **kwargs)
 
   def _setup_layer(self, trainable=False, **kwargs):
     """Constructs keras layer with relevant weights and losses."""
@@ -162,7 +165,7 @@ class KerasLayer(tf.keras.layers.Layer):
 
   def call(self, inputs, training=None):
     # We basically want to call this...
-    f = functools.partial(self._func, inputs, **self._arguments)
+    f = functools.partial(self._callable, inputs, **self._arguments)
     # ...but we may also have to pass a Python boolean for `training`, which
     # is the logical "and" of this layer's trainability and what the surrounding
     # model is doing (analogous to tf.keras.layers.BatchNormalization in TF2).
@@ -180,9 +183,33 @@ class KerasLayer(tf.keras.layers.Layer):
                                      lambda: f(training=True),
                                      lambda: f(training=False))
 
+    # Unwrap dicts returned by signatures.
+    if self._is_hub_module_v1:
+      if "default" in result:
+        result = result["default"]
+      else:
+        raise ValueError("Signature does not has an output named `default`.")
+
     # TODO(b/142213824): Remove setting shapes when shape inference works.
     result = self._apply_output_shape_if_set(inputs, result)
     return result
+
+  def _get_callable(self):
+    """Returns a callable object."""
+    if callable(self._func):
+      return self._func
+    if not self._is_hub_module_v1:
+      raise ValueError("Object used in KerasLayer is not callable.")
+    signature = "default"
+    if (not hasattr(self._func, "signatures") or
+        signature not in self._func.signatures):
+      raise ValueError("TensorFlow Hub Module used in KerasLayer does not "
+                       "has a `default` signature.")
+    f = self._func.signatures[signature]
+    if not callable(f):
+      raise ValueError("Internal error: signature %s is not callable in %s" %
+                       (signature, self._handle))
+    return f
 
   def _apply_output_shape_if_set(self, inputs, outputs):
     if not hasattr(self, "_output_shape"):
@@ -269,15 +296,13 @@ def load_module(handle):
   if callable(handle):
     return handle
   else:
-    obj = module_v2.load(handle)
-    if not callable(obj):
-      raise ValueError("Non-callable result from hub.load('%s')" %
-                       str(handle))
-    return obj
+    return module_v2.load(handle)
 
 
 def func_has_training_argument(func):
-  """Checks whether saved model callable has a training argument."""
+  """Checks whether saved model has a `training` argument."""
+  if not callable(func):
+    return False
   fullargspec = tf_inspect.getfullargspec(func.__call__)
   return ("training" in fullargspec.args or
           "training" in fullargspec.kwonlyargs)
