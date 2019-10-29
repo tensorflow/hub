@@ -37,7 +37,7 @@ from tensorflow.python.util import tf_inspect
 
 
 class KerasLayer(tf.keras.layers.Layer):
-  """Wraps a Hub module (or a similar callable) for TF2 as a Keras Layer.
+  """Wraps a SavedModel (or a legacy Hub.Module) as a Keras Layer.
 
   This layer wraps a callable object for use as a Keras layer. The callable
   object can be passed directly, or be specified by a Python string with a
@@ -84,15 +84,27 @@ class KerasLayer(tf.keras.layers.Layer):
   This layer class does not support graph collections.
 
   Attributes:
-    handle: a callable object (subject to the conventions above), or a
-      Python string for which hub.load() returns such a callable.
+    handle: A callable object (subject to the conventions above), or a
+      Python string to load a saved model via hub.load().
       A string is required to save the Keras config of this Layer.
-    trainable: Boolean controlling whether this layer is trainable.
-    arguments: optionally, a dict with additional keyword arguments passed
+    trainable: Optional. A boolean controlling whether this layer is trainable.
+      Should not be set to True when using a signature (raises ValueError).
+    arguments: Optional. A dict with additional keyword arguments passed
       to the callable. These must be JSON-serializable to save the Keras config
       of this layer, and are not tracked as checkpointing dependencies
       of this layer.
     _sentinel: Used to prevent further positional arguments.
+    tags: Optional. If set indicates which graph variant to use. For legacy
+      hub.Modules leaving unset means to use the empty tags set.
+    signature: Optional. If set, KerasLayer will use the requested signature.
+      For legacy hub.Modules leaving unset means to use the `default` signature.
+      When using a signature, either signature_outputs_as_dict or output_key
+      have to set.
+    signature_outputs_as_dict: If set to True, the call to this layer returns a
+      dict of all the signature outputs. Can only be used if a signature is
+      specified (or default signature is used for legacy Hub.Modules).
+    output_key: Name of the output item to return if the layer returns a dict.
+      For legacy hub.Modules leaving unset means to return the `default` output.
     output_shape: A tuple or a nest of tuples with the
       (possibly partial) output shapes of the callable *without* leading
       batch size. This must have the same nesting structure as the output of
@@ -101,30 +113,46 @@ class KerasLayer(tf.keras.layers.Layer):
   """
 
   def __init__(self, handle, trainable=False,  # pylint: disable=invalid-name
-               arguments=None, _sentinel=None, output_shape=None, **kwargs):
+               arguments=None, _sentinel=None, tags=None, signature=None,
+               signature_outputs_as_dict=None, output_key=None,
+               output_shape=None, **kwargs):
     # Note: for compatibility with keras-model serialization this layer is
     # json-serializable. If you add or change arguments here, please also update
     # the `get_config` method.
-    self._handle = handle
-    self._func = load_module(handle)
-    self._has_training_argument = func_has_training_argument(self._func)
-    self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
-    self._callable = self._get_callable()
-
-    # The attribute is marked NoDependency to avoid autoconversion to a
+    # The arguments are marked NoDependency to avoid autoconversion to a
     # trackable _DictWrapper, because that upsets json.dumps() when saving
     # the result of get_config().
+    self._handle = handle
     self._arguments = data_structures.NoDependency(arguments or {})
-
+    self._signature = signature
+    self._signature_outputs_as_dict = signature_outputs_as_dict
+    self._output_key = output_key
     # TODO(b/142213824): Remove setting shapes when shape inference works.
     if output_shape:
       # Autograph chokes on _convert_nest_to_shapes(), so we call it here
-      # and not from within call(). The result is marked NoDependency
-      # to avoid autoconversion to a trackable _DictWrapper, because that
-      # upsets json.dumps() when saving the result of get_config().
+      # and not from within call().
       self._output_shape = data_structures.NoDependency(
           _convert_nest_to_shapes(output_shape))
 
+    self._func = load_module(handle, tags)
+    self._has_training_argument = func_has_training_argument(self._func)
+    self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
+
+    # Update with the defaults when using legacy Hub.Module.
+    if self._is_hub_module_v1:
+      self._signature = self._signature or "default"
+      if not self._signature_outputs_as_dict:
+        self._output_key = self._output_key or "default"
+    # More validity checks.
+    if self._signature and (bool(self._output_key is not None)
+                            == bool(self._signature_outputs_as_dict)):
+      raise ValueError("When using a signature, either output_key or "
+                       "signature_outputs_as_dict=True should be set.")
+    if not self._signature and self._signature_outputs_as_dict:
+      raise ValueError("signature_outputs_as_dict is only valid if specifying "
+                       "a signature (or using a legacy Hub.Module).")
+
+    self._callable = self._get_callable()
     self._setup_layer(trainable, **kwargs)
 
   def _setup_layer(self, trainable=False, **kwargs):
@@ -165,7 +193,13 @@ class KerasLayer(tf.keras.layers.Layer):
 
   def call(self, inputs, training=None):
     # We basically want to call this...
-    f = functools.partial(self._callable, inputs, **self._arguments)
+    args = []
+    kwargs = self._arguments.copy()
+    if self._signature and isinstance(inputs, dict):
+      kwargs.update(inputs)
+    else:
+      args.append(inputs)
+    f = functools.partial(self._callable, *args, **kwargs)
     # ...but we may also have to pass a Python boolean for `training`, which
     # is the logical "and" of this layer's trainability and what the surrounding
     # model is doing (analogous to tf.keras.layers.BatchNormalization in TF2).
@@ -184,11 +218,15 @@ class KerasLayer(tf.keras.layers.Layer):
                                      lambda: f(training=False))
 
     # Unwrap dicts returned by signatures.
-    if self._is_hub_module_v1:
-      if "default" in result:
-        result = result["default"]
-      else:
-        raise ValueError("Signature does not has an output named `default`.")
+    if self._output_key:
+      if not isinstance(result, dict):
+        raise ValueError("Specifying `output_key` is forbidden if output "
+                         "type %s is not a dict." % type(result))
+      if self._output_key not in result:
+        raise ValueError(
+            "KerasLayer output does not contain the output key %s "
+            "(available: %s)." % (self._output_key, result.keys()))
+      result = result[self._output_key]
 
     # TODO(b/142213824): Remove setting shapes when shape inference works.
     result = self._apply_output_shape_if_set(inputs, result)
@@ -196,19 +234,24 @@ class KerasLayer(tf.keras.layers.Layer):
 
   def _get_callable(self):
     """Returns a callable object."""
-    if callable(self._func):
+    if callable(self._func) and not self._signature:
       return self._func
-    if not self._is_hub_module_v1:
-      raise ValueError("Object used in KerasLayer is not callable.")
-    signature = "default"
-    if (not hasattr(self._func, "signatures") or
-        signature not in self._func.signatures):
-      raise ValueError("TensorFlow Hub Module used in KerasLayer does not "
-                       "has a `default` signature.")
-    f = self._func.signatures[signature]
+    if not hasattr(self._func, "signatures"):
+      if self._signature:  # Assuming the user intended to use a signature.
+        raise ValueError("Loaded object has no signatures.")
+      else:  # Assuming the user intended to use a callable SavedModel.
+        raise ValueError(
+            "Loaded object is not callable and has no signatures.")
+    if self._signature is None:
+      raise ValueError("Signature name has to be specified for non-callable "
+                       "saved models (if not legacy Hub.Module).")
+    if self._signature not in self._func.signatures:
+      raise ValueError("Unknown signature %s in %s (available signatures: %s)."
+                       % (self._signature, self._handle, self._func.signatures))
+    f = self._func.signatures[self._signature]
     if not callable(f):
       raise ValueError("Internal error: signature %s is not callable in %s" %
-                       (signature, self._handle))
+                       (self._signature, self._handle))
     return f
 
   def _apply_output_shape_if_set(self, inputs, outputs):
@@ -257,6 +300,13 @@ class KerasLayer(tf.keras.layers.Layer):
               "values in key: {}".format(key))
       config["arguments"] = self._arguments
 
+    if self._signature:
+      config["signature"] = self._signature
+    if self._output_key:
+      config["output_key"] = self._output_key
+    if self._signature_outputs_as_dict:
+      config["signature_outputs_as_dict"] = self._signature_outputs_as_dict
+
     return config
 
   @property
@@ -292,11 +342,14 @@ def _convert_nest_from_shapes(x):
   return tf.nest.map_structure(_shape_as_tuple, x)
 
 
-def load_module(handle):
+def load_module(handle, tags=None):
   if callable(handle):
+    if tags is not None:
+      raise ValueError("Passing a callable handle is mutually exclusive "
+                       "with setting tags.")
     return handle
   else:
-    return module_v2.load(handle)
+    return module_v2.load(handle, tags=tags)
 
 
 def func_has_training_argument(func):

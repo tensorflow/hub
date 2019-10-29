@@ -37,6 +37,7 @@ from tensorflow_hub import test_utils
 # helper code yet to bridge between optional tensor inputs and properties
 # in Keras model objects.
 
+
 # A series of code changes implemented the necessary Keras functionality
 # up to TF 2.0.0-beta1. For this test to work, we need them up to and including
 # https://github.com/tensorflow/tensorflow/commit/3dc3b5df5f87ac0c460583eebc7d845e33138d2b
@@ -55,6 +56,7 @@ def _skip_if_no_tf_asset(test_case):
     test_case.skipTest(
         "Your TensorFlow version (%s) looks too old for creating SavedModels "
         " with assets." % tf.__version__)
+
 
 def _json_cycle(x):
   return json.loads(json.dumps(x))
@@ -794,10 +796,111 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
       ("v2_implicit_tags", "saved_model_v2_mini"),
       )
   def test_load_with_defaults(self, module_name):
+    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
     path = test_utils.get_test_data_path(module_name)
-    m = hub.KerasLayer(path)
-    output = m(10.)  # These modules perform an increment operation.
-    self.assertEqual(output, 11.)
+    layer = hub.KerasLayer(path)
+    output = layer(inputs)
+    self.assertEqual(output, expected_outputs)
+
+  @parameterized.parameters(
+      ("hub_module_v1_mini", None, None, True),
+      ("hub_module_v1_mini", None, None, False),
+      ("hub_module_v1_mini", "default", None, True),
+      ("hub_module_v1_mini", None, "default", False),
+      ("hub_module_v1_mini", "default", "default", False),
+      )
+  def test_load_legacy_hub_module_v1_with_signature(
+      self, module_name, signature, output_key, as_dict):
+    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
+    path = test_utils.get_test_data_path(module_name)
+    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+                           signature_outputs_as_dict=as_dict)
+    output = layer(inputs)
+    if as_dict:
+      self.assertEqual(output, {"default": expected_outputs})
+    else:
+      self.assertEqual(output, expected_outputs)
+
+  @parameterized.parameters(
+      ("saved_model_v2_mini", None, None, False),
+      ("saved_model_v2_mini", "serving_default", None, True),
+      ("saved_model_v2_mini", "serving_default", "output_0", False),
+      )
+  def test_load_callable_saved_model_v2_with_signature(
+      self, module_name, signature, output_key, as_dict):
+    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
+    path = test_utils.get_test_data_path(module_name)
+    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+                           signature_outputs_as_dict=as_dict)
+    output = layer(inputs)
+    if as_dict:
+      self.assertIsInstance(output, dict)
+      self.assertEqual(output["output_0"], expected_outputs)
+    else:
+      self.assertEqual(output, expected_outputs)
+
+  @parameterized.parameters(
+      ("hub_module_v1_mini", None, None, True),
+      ("hub_module_v1_mini", None, None, False),
+      ("hub_module_v1_mini", "default", None, True),
+      ("hub_module_v1_mini", None, "default", False),
+      ("hub_module_v1_mini", "default", "default", False),
+      ("saved_model_v2_mini", None, None, False),
+      ("saved_model_v2_mini", "serving_default", None, True),
+      ("saved_model_v2_mini", "serving_default", "output_0", False),
+      )
+  def test_keras_layer_get_config(
+      self, module_name, signature, output_key, as_dict):
+    inputs = 10.  # Test modules perform increment op.
+    path = test_utils.get_test_data_path(module_name)
+    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+                           signature_outputs_as_dict=as_dict)
+    outputs = layer(inputs)
+    config = layer.get_config()
+    new_layer = hub.KerasLayer.from_config(_json_cycle(config))
+    new_outputs = new_layer(inputs)
+    self.assertEqual(outputs, new_outputs)
+
+  def test_keras_layer_fails_if_signature_output_not_specified(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    with self.assertRaisesRegex(
+        ValueError, "When using a signature, either output_key or "
+        "signature_outputs_as_dict=True should be set."):
+      hub.KerasLayer(path, signature="serving_default")
+
+  def test_keras_layer_fails_if_with_outputs_as_dict_but_no_signature(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    with self.assertRaisesRegex(
+        ValueError,
+        "signature_outputs_as_dict is only valid if specifying a signature *"):
+      hub.KerasLayer(path, signature_outputs_as_dict=True)
+
+  def test_keras_layer_fails_if_saved_model_v2_with_tags(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    with self.assertRaises(ValueError):
+      hub.KerasLayer(path, signature=None, tags=["train"])
+
+  def test_keras_layer_fails_if_setting_both_output_key_and_as_dict(self):
+    path = test_utils.get_test_data_path("hub_module_v1_mini")
+    with self.assertRaisesRegex(
+        ValueError, "When using a signature, either output_key or "
+        "signature_outputs_as_dict=True should be set."):
+      hub.KerasLayer(path, signature="default",
+                     signature_outputs_as_dict=True, output_key="output")
+
+  def test_keras_layer_fails_if_output_is_not_dict(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    layer = hub.KerasLayer(path, output_key="output_0")
+    with self.assertRaisesRegex(
+        ValueError, "Specifying `output_key` is forbidden if output type *"):
+      layer(10.)
+
+  def test_keras_layer_fails_if_output_key_not_in_layer_outputs(self):
+    path = test_utils.get_test_data_path("hub_module_v1_mini")
+    layer = hub.KerasLayer(path, output_key="unknown")
+    with self.assertRaisesRegex(
+        ValueError, "KerasLayer output does not contain the output key*"):
+      layer(10.)
 
 
 if __name__ == "__main__":
