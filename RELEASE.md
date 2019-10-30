@@ -13,10 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version 0.7.0-dev
+# Current version 0.8.0-dev
+  * Under development
+
+# Release 0.7.0
+  * Added support for HubModule v1 in KerasLayer with default tags/signatures.
+  * Added support for the KerasLayer to specify tags, signature, as_dict, and
+    output_key arguments.
+  * Miscellaneous fixes to `hub.KerasLayer`
   * Documentation update for TensorFlow 2.
       * Use `hub.load()` and `hub.KerasLayer` with TF2 (also works in 1.15).
-      * For TF1, `hub.Module` and is associated APIs remain available.
+      * For TF1, `hub.Module` and it's associated APIs remain available.
 
 # Release 0.6.0
   * Added two examples for exporting of Hub/TF2 modules.
