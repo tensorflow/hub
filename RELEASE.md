@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version 0.8.0-dev
-  * Under development
 
 # Release 0.7.0
   * Added support for HubModule v1 in KerasLayer with default tags/signatures.
