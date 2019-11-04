@@ -132,6 +132,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from tensorflow.contrib import quantize as contrib_quantize
 
 FLAGS = None
 
@@ -778,9 +779,9 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
   # transformed.
   if quantize_layer:
     if is_training:
-      tf.contrib.quantize.create_training_graph()
+      contrib_quantize.create_training_graph()
     else:
-      tf.contrib.quantize.create_eval_graph()
+      contrib_quantize.create_eval_graph()
 
   tf.summary.histogram('activations', final_tensor)
 

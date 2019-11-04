@@ -14,5 +14,6 @@ py_binary(
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",
+        #  "tensorflow/contrib/quantize:quantize_graph",
     ],
 )
