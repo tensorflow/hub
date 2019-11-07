@@ -35,10 +35,11 @@ def get_default_image_dir():
                                  _DEFAULT_IMAGE_URL, untar=True)
 
 
-class HParams(collections.namedtuple(
-    "HParams",
-    ["train_epochs", "do_fine_tuning", "batch_size", "learning_rate",
-     "momentum"])):
+class HParams(
+    collections.namedtuple("HParams", [
+        "train_epochs", "do_fine_tuning", "batch_size", "learning_rate",
+        "momentum", "dropout_rate"
+    ])):
   """The hyperparameters for make_image_classifier.
 
   train_epochs: Training will do this many iterations over the dataset.
@@ -47,6 +48,7 @@ class HParams(collections.namedtuple(
   batch_size: Each training step samples a batch of this many images.
   learning_rate: The learning rate to use for gradient descent training.
   momentum: The momentum parameter to use for gradient descent training.
+  dropout_rate: The fraction of the input units to drop, used in dropout layer.
 """
 
 
@@ -57,7 +59,8 @@ def get_default_hparams():
       do_fine_tuning=False,
       batch_size=32,
       learning_rate=0.005,
-      momentum=0.9)
+      momentum=0.9,
+      dropout_rate=0.2)
 
 
 def _get_data_with_keras(image_dir, image_size, batch_size,
@@ -161,50 +164,70 @@ def _image_size_for_module(module_layer, requested_image_size=None):
                            tuple(requested_image_size.as_list())))
 
 
-def _build_model(module_layer, image_size, num_classes):
-  """Builds the full classifier model from the given module_layer."""
+def build_model(module_layer, hparams, image_size, num_classes):
+  """Builds the full classifier model from the given module_layer.
+
+  Args:
+    module_layer: Pre-trained tfhub model layer.
+    hparams: A namedtuple of hyperparameters. This function expects
+      .dropout_rate: The fraction of the input units to drop, used in dropout
+        layer.
+    image_size: The input image size to use with the given module layer.
+    num_classes: Number of the classes to be predicted.
+
+  Returns:
+    The full classifier model.
+  """
   # TODO(b/139467904): Expose the hyperparameters below as flags.
   model = tf.keras.Sequential([
       module_layer,
-      tf.keras.layers.Dropout(rate=0.2),
-      tf.keras.layers.Dense(num_classes, activation="softmax",
-                            kernel_regularizer=tf.keras.regularizers.l2(0.0001))
+      tf.keras.layers.Dropout(rate=hparams.dropout_rate),
+      tf.keras.layers.Dense(
+          num_classes,
+          activation="softmax",
+          kernel_regularizer=tf.keras.regularizers.l2(0.0001))
   ])
   model.build((None, image_size[0], image_size[1], 3))
   print(model.summary())
   return model
 
 
-def _train_model(model, hparams, train_data_and_size, valid_data_and_size):
+def train_model(model, hparams, train_data_and_size, valid_data_and_size):
   """Trains model with the given data and hyperparameters.
 
   Args:
     model: The tf.keras.Model from _build_model().
-    hparams: A nabedtuple of hyperparameters. This function expects
+    hparams: A namedtuple of hyperparameters. This function expects
       .train_epochs: a Python integer with the number of passes over the
         training dataset;
       .learning_rate: a Python float forwarded to the optimizer;
       .momentum: a Python float forwarded to the optimizer;
       .batch_size: a Python integer, the number of examples returned by each
         call to the generators.
-    train_data_and_size: A (data, size) tuple from _get_data_with_keras().
-    valid_data_and_size: A (data, size) tuple from _get_data_with_keras().
+    train_data_and_size: A (data, size) tuple in which data is training data to
+      be fed in tf.keras.Model.fit(), size is a Python integer with the
+      numbers of training.
+    valid_data_and_size: A (data, size) tuple in which data is validation data
+      to be fed in tf.keras.Model.fit(), size is a Python integer with the
+      numbers of validation.
 
   Returns:
-    The tf.keras.callbacks.History object returned by tf.keras.Model.fit*().
+    The tf.keras.callbacks.History object returned by tf.keras.Model.fit().
   """
   train_data, train_size = train_data_and_size
   valid_data, valid_size = valid_data_and_size
+  # TODO(b/139467904): Expose this hyperparameter as a flag.
+  loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1)
   model.compile(
       optimizer=tf.keras.optimizers.SGD(
           lr=hparams.learning_rate, momentum=hparams.momentum),
-      # TODO(b/139467904): Expose this hyperparameter as a flag.
-      loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
+      loss=loss,
       metrics=["accuracy"])
   steps_per_epoch = train_size // hparams.batch_size
   validation_steps = valid_size // hparams.batch_size
-  return model.fit_generator(
-      train_data, epochs=hparams.train_epochs,
+  return model.fit(
+      train_data,
+      epochs=hparams.train_epochs,
       steps_per_epoch=steps_per_epoch,
       validation_data=valid_data,
       validation_steps=validation_steps)
@@ -232,7 +255,7 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
       image_dir, image_size, hparams.batch_size)
   print("Found", len(labels), "classes:", ", ".join(labels))
 
-  model = _build_model(module_layer, image_size, len(labels))
-  train_result = _train_model(model, hparams,
-                              train_data_and_size, valid_data_and_size)
+  model = build_model(module_layer, hparams, image_size, len(labels))
+  train_result = train_model(model, hparams, train_data_and_size,
+                             valid_data_and_size)
   return model, labels, train_result

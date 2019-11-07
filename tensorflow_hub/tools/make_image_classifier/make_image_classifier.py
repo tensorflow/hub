@@ -104,6 +104,9 @@ flags.DEFINE_float(
 flags.DEFINE_float(
     "momentum", _DEFAULT_HPARAMS.momentum,
     "The momentum parameter to use for gradient descent training.")
+flags.DEFINE_float(
+    "dropout_rate", _DEFAULT_HPARAMS.dropout_rate,
+    "The fraction of the input units to drop, used in dropout layer.")
 
 FLAGS = flags.FLAGS
 
@@ -116,7 +119,7 @@ def _get_hparams_from_flags():
       batch_size=FLAGS.batch_size,
       learning_rate=FLAGS.learning_rate,
       momentum=FLAGS.momentum,
-  )
+      dropout_rate=FLAGS.dropout_rate)
 
 
 def _check_keras_dependencies():
