@@ -76,14 +76,14 @@ Old hub.Modules can be loaded via `tf.saved_model.load`. Instead of
 
 ```python
 # DEPRECATED: TensorFlow 1
-m = hub.Module(handle, tags={"foo", "bar"})
+m = hub.Module(handle, tags=["foo", "bar"])
 tensors_out_dict = m(dict(x1=..., x2=...), signature="sig", as_dict=True)
 ```
 it is recommended to use:
 
 ```python
 # TensorFlow 2
-m = hub.load(path, tags={"foo", "bar"})
+m = hub.load(path, tags=["foo", "bar"])
 tensors_out_dict = m.signatures["sig"](x1=..., x2=...)
 ```
 
