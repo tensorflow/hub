@@ -181,5 +181,4 @@ def load_data(dataset, split, num_examples=None):
 
 
 def load_embedding_fn(module):
-  m = hub.load(module, tags=[])
-  return lambda x: m.signatures["default"](x)["default"]
+  return hub.KerasLayer(module)
