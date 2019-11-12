@@ -49,6 +49,15 @@ py_library(
 )
 
 py_test(
+    name = "utils_test",
+    srcs = ["utils_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":utils",
+    ],
+)
+
+py_test(
     name = "search_test",
     srcs = ["search_test.py"],
     python_version = "PY3",
