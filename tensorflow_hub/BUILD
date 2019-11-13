@@ -392,7 +392,7 @@ py_test(
         "testdata/hub_module_v1_mini",
         "testdata/saved_model_v2_mini",
     ],
-    python_version = "PY2",
+    python_version = "PY3",
     shard_count = 2,
     srcs_version = "PY2AND3",
     deps = [

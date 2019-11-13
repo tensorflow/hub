@@ -21,6 +21,7 @@ from __future__ import print_function
 import functools
 import json
 
+from absl import logging
 import six
 import tensorflow as tf
 
@@ -88,7 +89,8 @@ class KerasLayer(tf.keras.layers.Layer):
       Python string to load a saved model via hub.load().
       A string is required to save the Keras config of this Layer.
     trainable: Optional. A boolean controlling whether this layer is trainable.
-      Should not be set to True when using a signature (raises ValueError).
+      Must not be set to True when using a signature (raises ValueError),
+      including the use of legacy hub.Modules.
     arguments: Optional. A dict with additional keyword arguments passed
       to the callable. These must be JSON-serializable to save the Keras config
       of this layer, and are not tracked as checkpointing dependencies
@@ -192,6 +194,10 @@ class KerasLayer(tf.keras.layers.Layer):
     return lambda: loss() if self.trainable else 0.
 
   def call(self, inputs, training=None):
+    # These checks happen here and not in __init__, because self.trainable is
+    # a mutable public attribute.
+    self._check_trainability()
+
     # We basically want to call this...
     args = []
     kwargs = self._arguments.copy()
@@ -231,6 +237,39 @@ class KerasLayer(tf.keras.layers.Layer):
     # TODO(b/142213824): Remove setting shapes when shape inference works.
     result = self._apply_output_shape_if_set(inputs, result)
     return result
+
+  def _check_trainability(self):
+    """Raises or logs errors for unuspported uses of trainable=True."""
+    if not self.trainable: return  # Nothing to do.
+
+    # Training is only supported when calling a reusable TF2 SavedModel through
+    # its @tf.function __call__. Trying to train through a signature is likely
+    # to go wrong beyond the most simple cases due to a number of pitfalls:
+    # - No good support for train vs inference mode. hub.Modules used
+    #   graph versions identified by tags, but this was not a general
+    #   standard for SavedModels, and TF2 can no longer save with tags.
+    # - No support for update ops. hub.Modules had them in the UPDATE_OPS
+    #   collection, but collections are no longer loaded in TF2. General
+    #   SavedModel signatures had no support for them.
+    # - No support for regularization losses (same story).
+    # - A SavedModel without @tf.function __call__ will likely also not
+    #   provide a trainable_variables attribute.
+    if self._is_hub_module_v1:
+      raise ValueError(
+          "Setting hub.KerasLayer.trainable = True is unsupported when "
+          "loading from the hub.Module format of TensorFlow 1.")
+    elif self._signature:
+      raise ValueError(
+          "Setting hub.KerasLayer.trainable = True is unsupported when "
+          "calling a SavedModel signature.")
+    # Having zero trainable variables in an otherwise trainable model
+    # is suspicious but may be valid as a boundary case, so we just log,
+    # but at most once per layer instance.
+    if not self.trainable_weights:
+      if not hasattr(self, "_already_logged_trainable_with_zero_weights"):
+        logging.error(
+            "hub.KerasLayer is trainable but has zero trainable weights.")
+        setattr(self, "_already_logged_trainable_with_zero_weights", True)
 
   def _get_callable(self):
     """Returns a callable object."""
