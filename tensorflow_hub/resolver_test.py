@@ -281,6 +281,19 @@ class ResolverTest(tf.test.TestCase):
     second_download_thread.join(30)
     # The waiting terminates without errors.
 
+  def testModuleDownloadPermissionDenied(self):
+    readonly_dir = os.path.join(self.get_temp_dir(), "readonly")
+    os.mkdir(readonly_dir, 0o500)
+    module_dir = os.path.join(readonly_dir, "module")
+
+    def unused_download_fn(handle, tmp_dir):
+      del handle, tmp_dir
+      self.fail("This should not be called. Already writing the lockfile "
+                "is expected to raise an error.")
+
+    with self.assertRaises(tf.errors.PermissionDeniedError):
+      resolver.atomic_download("module", unused_download_fn, module_dir)
+
   def testModuleLockLostDownloadKilled(self):
     module_dir = os.path.join(self.get_temp_dir(), "module")
     download_aborted_msg = "Download aborted."
