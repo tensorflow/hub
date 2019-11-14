@@ -53,9 +53,13 @@ upper_tabs:
       - title: Image classification
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb
         status: external
+      - title: ANN index for real-time semantic similarity
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_semantic_approximate_nearest_neighbors.ipynb
+        status: external
       - title: Object detection
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/object_detection.ipynb
         status: external
+      # Tutorials - TF1
       - heading: Tutorials - TF1
       - title: Text cookbook
         path: /hub/tutorials/text_cookbook
@@ -82,6 +86,9 @@ upper_tabs:
         status: external
       - title: Image generation
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_generative_image_module.ipynb
+        status: external
+      - title: ANN index for real-time semantic similarity
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_approximate_nearest_neighbors.ipynb
         status: external
     - name: API
       skip_translation: true
