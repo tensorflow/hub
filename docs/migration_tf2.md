@@ -98,8 +98,8 @@ graph mode.)
 Retraining legacy hub.Modules with the new APIs is not supported. This is due to
 them depending on `tf.saved_model.load` converting a `flat graph view` into
 an `object view` and dropping important details. Such as: trainable variables
-are imported as such, but update ops (for batch normalization etc.) and
-regularization losses are dropped.
+are imported as such, but update ops (for batch normalization etc.),
+regularization losses and cond/while contexts for differentiation are dropped.
 
 If you need to retrain legacy hub.Modules you will need to keep using the
 1.x APIs.
