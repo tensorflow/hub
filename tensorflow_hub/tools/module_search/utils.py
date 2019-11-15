@@ -23,7 +23,6 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow_datasets as tfds
 
-
 def compute_distance_matrix(x_train, x_test, measure="squared_l2"):
   """Calculates the distance matrix between test and train.
 
@@ -40,14 +39,26 @@ def compute_distance_matrix(x_train, x_test, measure="squared_l2"):
     x_test_i and x_train_j.
   """
 
-  x_train = tf.convert_to_tensor(x_train, tf.float64)
-  x_test = tf.convert_to_tensor(x_test, tf.float64)
+  if tf.test.is_gpu_available():
+    x_train = tf.convert_to_tensor(x_train, tf.float32)
+    x_test = tf.convert_to_tensor(x_test, tf.float32)
+  else:
+    if x_train.dtype != np.float32:
+      x_train = np.float32(x_train)
+    if x_test.dtype != np.float32:
+      x_test = np.float32(x_test)
 
   if measure == "squared_l2":
-    x_xt = tf.matmul(x_test, tf.transpose(x_train)).numpy()
+    if tf.test.is_gpu_available():
+      x_xt = tf.matmul(x_test, tf.transpose(x_train)).numpy()
 
-    x_train_2 = tf.reduce_sum(tf.math.square(x_train), 1).numpy()
-    x_test_2 = tf.reduce_sum(tf.math.square(x_test), 1).numpy()
+      x_train_2 = tf.reduce_sum(tf.math.square(x_train), 1).numpy()
+      x_test_2 = tf.reduce_sum(tf.math.square(x_test), 1).numpy()
+    else:
+      x_xt = np.matmul(x_test, np.transpose(x_train))
+
+      x_train_2 = np.sum(np.square(x_train), axis=1)
+      x_test_2 = np.sum(np.square(x_test), axis=1)
 
     for i in range(np.shape(x_xt)[0]):
       x_xt[i, :] = np.multiply(x_xt[i, :], -2)
@@ -75,10 +86,17 @@ def compute_distance_matrix_loo(x, measure="squared_l2"):
     The diagonal is set to infinity
   """
 
-  x = tf.convert_to_tensor(x, tf.float64)
+  if tf.test.is_gpu_available():
+    x = tf.convert_to_tensor(x, tf.float64)
+  else:
+    if x.dtype != np.float32:
+      x = np.float32(x)
 
   if measure == "squared_l2":
-    x_xt = tf.matmul(x, tf.transpose(x)).numpy()
+    if tf.test.is_gpu_available():
+      x_xt = tf.matmul(x, tf.transpose(x)).numpy()
+    else:
+      x_xt = np.matmul(x, np.transpose(x))
     diag = np.diag(x_xt)
     d = np.copy(x_xt)
 
@@ -89,7 +107,10 @@ def compute_distance_matrix_loo(x, measure="squared_l2"):
       d[i, i] = float("inf")
 
   elif measure == "cosine":
-    d = tf.matmul(x, tf.transpose(x)).numpy()
+    if tf.test.is_gpu_available():
+      d = tf.matmul(x, tf.transpose(x)).numpy()
+    else:
+      d = np.matmul(x, np.transpose(x))
     diag_sqrt = np.sqrt(np.diag(d))
     outer = np.outer(diag_sqrt, diag_sqrt)
     d = np.ones(np.shape(d)) - np.divide(d, outer)
@@ -118,8 +139,8 @@ def knn_errorrate(d, y_train, y_test, k=1):
     indices = np.argmin(d, axis=1)
 
     cnt = 0
-    for i in range(len(indices)):
-      if y_test[i] != y_train[indices[i]]:
+    for idx, val in enumerate(indices):
+      if y_test[idx] != y_train[val]:
         cnt += 1
 
     return float(cnt) / len(indices)
@@ -127,11 +148,12 @@ def knn_errorrate(d, y_train, y_test, k=1):
   indices = np.argpartition(d, k - 1, axis=1)
   cnt = 0
   for i in range(np.shape(d)[0]):
-    cnt_i = 0
-    for j in range(k):
-      if y_test[i] != y_train[indices[i, j]]:
-        cnt_i += 1
-    if cnt_i >= k / 2.0:
+
+    # Get max vote
+    labels = y_train[indices[i, :k]]
+    keys, counts = np.unique(labels, return_counts=True)
+    maxkey = keys[np.argmax(counts)]
+    if y_test[i] != maxkey:
       cnt += 1
 
   return float(cnt) / np.shape(d)[0]
@@ -154,8 +176,8 @@ def knn_errorrate_loo(d, y, k=1):
     indices = np.argmin(d, axis=1)
 
     cnt = 0
-    for i in range(len(indices)):
-      if y[i] != y[indices[i]]:
+    for idx, val in enumerate(indices):
+      if y[idx] != y[val]:
         cnt += 1
 
     return float(cnt) / len(indices)
@@ -163,11 +185,12 @@ def knn_errorrate_loo(d, y, k=1):
   indices = np.argpartition(d, k - 1, axis=1)
   cnt = 0
   for i in range(np.shape(d)[0]):
-    cnt_i = 0
-    for j in range(k):
-      if y[i] != y[indices[i, j]]:
-        cnt_i += 1
-    if cnt_i >= k / 2.0:
+
+    # Get max vote
+    labels = y[indices[i, :k]]
+    keys, counts = np.unique(labels, return_counts=True)
+    maxkey = keys[np.argmax(counts)]
+    if y[i] != maxkey:
       cnt += 1
 
   return float(cnt) / np.shape(d)[0]

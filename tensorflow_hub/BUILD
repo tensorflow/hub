@@ -442,6 +442,12 @@ py_library(
     name = "expect_pandas_installed",
 )
 
+# We expect sklearn to already be installed on the system, e.g. via
+# `pip install sklearn`
+py_library(
+    name = "expect_sklearn_installed",
+)
+
 py_library(
     name = "module_v2",
     srcs = ["module_v2.py"],
