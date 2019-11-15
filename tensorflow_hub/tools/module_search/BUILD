@@ -52,8 +52,13 @@ py_test(
     name = "utils_test",
     srcs = ["utils_test.py"],
     python_version = "PY3",
+    tags = [
+        "noasan",  # sklearn seem to lead to asan and tsan failures.
+        "notsan",
+    ],
     deps = [
         ":utils",
+        "//tensorflow_hub:expect_sklearn_installed",
     ],
 )
 

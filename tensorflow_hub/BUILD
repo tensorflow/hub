@@ -392,7 +392,7 @@ py_test(
         "testdata/hub_module_v1_mini",
         "testdata/saved_model_v2_mini",
     ],
-    python_version = "PY2",
+    python_version = "PY3",
     shard_count = 2,
     srcs_version = "PY2AND3",
     deps = [
@@ -440,6 +440,12 @@ py_library(
 # `pip install pandas`
 py_library(
     name = "expect_pandas_installed",
+)
+
+# We expect sklearn to already be installed on the system, e.g. via
+# `pip install sklearn`
+py_library(
+    name = "expect_sklearn_installed",
 )
 
 py_library(

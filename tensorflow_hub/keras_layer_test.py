@@ -902,6 +902,35 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
         ValueError, "KerasLayer output does not contain the output key*"):
       layer(10.)
 
+  def test_keras_layer_fails_if_hub_module_trainable(self):
+    path = test_utils.get_test_data_path("hub_module_v1_mini")
+    layer = hub.KerasLayer(path, trainable=True)
+    with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
+      layer(10.)
+
+  def test_keras_layer_fails_if_signature_trainable(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    layer = hub.KerasLayer(path, signature="serving_default",
+                           signature_outputs_as_dict=True, trainable=True)
+    layer.trainable = True
+    with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
+      layer(10.)
+
+  def test_keras_layer_logs_if_training_zero_variables(self):
+    path = os.path.join(self.get_temp_dir(), "zero-variables")
+    _save_model_with_hparams(path)
+    layer = hub.KerasLayer(path, trainable=True)
+    if hasattr(self, "assertLogs"):  # New in Python 3.4.
+      with self.assertLogs(level="ERROR") as logs:
+        layer([[10.]])
+        layer([[10.]])
+      self.assertLen(logs.records, 1)  # Duplicate logging is avoided.
+      self.assertRegexpMatches(logs.records[0].msg, "zero trainable weights")
+    else:
+      # Just test that it runs at all.
+      layer([[10.]])
+      layer([[10.]])
+
 
 if __name__ == "__main__":
   # The file under test is not imported if TensorFlow is too old.
