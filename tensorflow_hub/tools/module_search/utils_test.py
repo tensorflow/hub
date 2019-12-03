@@ -115,6 +115,29 @@ class TestUtils(tf.test.TestCase):
       with self.subTest(i=idx):
         self.knn_errorrate(val)
 
+  def test_knn_errorrate_multik(self):
+    np.random.seed(seed=self.random_seed)
+    x_train = np.random.rand(self.train_samples, self.dim)
+    x_test = np.random.rand(self.test_samples, self.dim)
+
+    d = utils.compute_distance_matrix(x_train, x_test)
+
+    y_test = np.random.randint(self.classes, size=self.test_samples)
+    y_train = np.random.randint(self.classes, size=self.train_samples)
+
+    ks_input = [5, 1, 5, 3]
+    ks = [5,3,1]
+    vals = []
+    for val in ks:
+        err = utils.knn_errorrate(d, y_train, y_test, k=val)
+        vals.append(err)
+
+    comp = utils.knn_errorrate(d, y_train, y_test, k=ks_input)
+
+    self.assertEqual(len(vals), len(comp))
+    for k, v in enumerate(comp):
+        self.assertAlmostEqual(v, vals[k], places=5)
+
   def knn_errorrate_loo(self, k):
     x_train = np.random.rand(self.train_samples, self.dim)
 
@@ -142,6 +165,27 @@ class TestUtils(tf.test.TestCase):
     for idx, val in enumerate(ks):
       with self.subTest(i=idx):
         self.knn_errorrate_loo(val)
+
+  def test_knn_errorrate_loo_multik(self):
+    np.random.seed(seed=self.random_seed)
+    x_train = np.random.rand(self.train_samples, self.dim)
+
+    d = utils.compute_distance_matrix_loo(x_train)
+
+    y_train = np.random.randint(self.classes, size=self.train_samples)
+
+    ks_input = [5, 1, 5, 3]
+    ks = [5,3,1]
+    vals = []
+    for val in ks:
+        err = utils.knn_errorrate_loo(d, y_train, k=val)
+        vals.append(err)
+
+    comp = utils.knn_errorrate_loo(d, y_train, k=ks_input)
+
+    self.assertEqual(len(vals), len(comp))
+    for k, v in enumerate(comp):
+        self.assertAlmostEqual(v, vals[k], places=5)
 
 if __name__ == '__main__':
   tf.test.main()

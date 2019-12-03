@@ -146,34 +146,67 @@ def knn_errorrate(d, y_train, y_test, k=1):
     d: distance matrix
     y_train: label vector for the training samples
     y_test: label vector for the test samples
-    k: number of direct neighbors for knn
+    k: number of direct neighbors for knn or list of multiple k's to evaluate
 
   Returns:
-    knn error rate (1 - accuracy)
+    knn error rate (1 - accuracy) for every k provided in descending order
   """
 
-  if k == 1:
-    indices = np.argmin(d, axis=1)
+  return_list = True
+  if not isinstance(k, list):
+    return_list = False
+    k = [k]
 
-    cnt = 0
-    for idx, val in enumerate(indices):
-      if y_test[idx] != y_train[val]:
-        cnt += 1
+  num_elements = np.shape(d)[0]
 
-    return float(cnt) / len(indices)
+  prev_indices = None
+  res = []
+  for val_k in sorted(set(k), reverse=True):
+    if prev_indices is None:
+      sub_d = d
+    else:
+      num_rows = prev_indices.shape[0]
+      num_cols = prev_indices.shape[1]
+      rows = [x for x in range(num_rows) for _ in range(num_cols)]
+      cols = prev_indices.reshape(-1)
+      sub_d = d[rows, cols].reshape(num_rows, -1)
 
-  indices = np.argpartition(d, k - 1, axis=1)
-  cnt = 0
-  for i in range(np.shape(d)[0]):
+    if k == 1:
+      indices = np.argmin(sub_d, axis=1)
 
-    # Get max vote
-    labels = y_train[indices[i, :k]]
-    keys, counts = np.unique(labels, return_counts=True)
-    maxkey = keys[np.argmax(counts)]
-    if y_test[i] != maxkey:
-      cnt += 1
+      cnt = 0
+      for idx, val in enumerate(indices):
 
-  return float(cnt) / np.shape(d)[0]
+        if prev_indices is not None:
+          val = prev_indices[val]
+
+        if y_test[idx] != y_train[val]:
+          cnt += 1
+
+      res.append(float(cnt) / num_elements)
+
+    else:
+      indices = np.argpartition(sub_d, val_k - 1, axis=1)
+      cnt = 0
+      for i in range(num_elements):
+
+        if prev_indices is not None:
+          indices[i, :val_k] = [prev_indices[i, x] for x in indices[i, :val_k]]
+
+        # Get max vote
+        labels = y_train[indices[i, :val_k]]
+        keys, counts = np.unique(labels, return_counts=True)
+        maxkey = keys[np.argmax(counts)]
+        if y_test[i] != maxkey:
+          cnt += 1
+
+      res.append(float(cnt) / num_elements)
+      prev_indices = indices[:, :val_k]
+
+  if not return_list:
+    return res[0]
+
+  return res
 
 
 def knn_errorrate_loo(d, y, k=1):
@@ -183,34 +216,14 @@ def knn_errorrate_loo(d, y, k=1):
   Args:
     d: distance matrix, the diagonal should be infinity
     y: label matrix
-    k: number of direct neighbors for knn
+    k: number of direct neighbors for knn or list of multiple k's to evaluate
 
   Returns:
-    Expected leave-one-out knn error rate (1 - accuracy)
+    Expected leave-one-out knn error rate (1 - accuracy) for every k provided
+    in descending order
   """
 
-  if k == 1:
-    indices = np.argmin(d, axis=1)
-
-    cnt = 0
-    for idx, val in enumerate(indices):
-      if y[idx] != y[val]:
-        cnt += 1
-
-    return float(cnt) / len(indices)
-
-  indices = np.argpartition(d, k - 1, axis=1)
-  cnt = 0
-  for i in range(np.shape(d)[0]):
-
-    # Get max vote
-    labels = y[indices[i, :k]]
-    keys, counts = np.unique(labels, return_counts=True)
-    maxkey = keys[np.argmax(counts)]
-    if y[i] != maxkey:
-      cnt += 1
-
-  return float(cnt) / np.shape(d)[0]
+  return knn_errorrate(d, y, y, k)
 
 
 def load_data(dataset, split, num_examples=None):
