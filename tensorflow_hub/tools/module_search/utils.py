@@ -65,6 +65,23 @@ def compute_distance_matrix(x_train, x_test, measure="squared_l2"):
       x_xt[i, :] = np.add(x_xt[i, :], x_test_2[i])
       x_xt[i, :] = np.add(x_xt[i, :], x_train_2)
 
+  elif measure == "cosine":
+    if tf.test.is_gpu_available():
+      x_xt = tf.matmul(x_test, tf.transpose(x_train)).numpy()
+
+      x_train_2 = tf.math.sqrt(tf.reduce_sum(tf.math.square(x_train), 1))
+      x_train_2 = x_train_2.numpy()
+      x_test_2 = tf.math.sqrt(tf.reduce_sum(tf.math.square(x_test), 1))
+      x_test_2 = x_test_2.numpy()
+    else:
+      x_xt = np.matmul(x_test, np.transpose(x_train))
+
+      x_train_2 = np.sqrt(np.sum(np.square(x_train), axis=1))
+      x_test_2 = np.sqrt(np.sum(np.square(x_test), axis=1))
+
+    outer = np.outer(x_test_2, x_train_2)
+    x_xt = np.ones(np.shape(x_xt)) - np.divide(x_xt, outer)
+
   else:
     raise NotImplementedError("Method '{}' is not implemented".format(measure))
 

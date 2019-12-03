@@ -21,6 +21,7 @@ from __future__ import print_function
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
+from scipy.spatial.distance import cosine
 import tensorflow.compat.v2 as tf
 
 from tensorflow_hub.tools.module_search import utils
@@ -46,6 +47,19 @@ class TestUtils(tf.test.TestCase):
         d_ij = np.linalg.norm(x_train[j, :] - x_test[i, :])**2
         self.assertAlmostEqual(d_ij, d[i, j], places=5)
 
+  def test_compute_distance_matrix_cosine(self):
+    np.random.seed(seed=self.random_seed)
+    x_train = np.random.rand(self.train_samples, self.dim)
+    x_test = np.random.rand(self.test_samples, self.dim)
+
+    d = utils.compute_distance_matrix(x_train, x_test, measure="cosine")
+    self.assertEqual(d.shape, (self.test_samples, self.train_samples))
+
+    for i in range(self.test_samples):
+      for j in range(self.train_samples):
+        d_ij = cosine(x_test[i, :], x_train[j, :])
+        self.assertAlmostEqual(d_ij, d[i, j], places=5)
+
   def test_compute_distance_matrix_loo(self):
     np.random.seed(seed=self.random_seed)
     x_train = np.random.rand(self.train_samples, self.dim)
@@ -59,6 +73,21 @@ class TestUtils(tf.test.TestCase):
           self.assertEqual(float("inf"), d[i, j])
         else:
           d_ij = np.linalg.norm(x_train[j, :] - x_train[i, :])**2
+          self.assertAlmostEqual(d_ij, d[i, j], places=5)
+
+  def test_compute_distance_matrix_loo_cosine(self):
+    np.random.seed(seed=self.random_seed)
+    x_train = np.random.rand(self.train_samples, self.dim)
+
+    d = utils.compute_distance_matrix_loo(x_train, measure="cosine")
+    self.assertEqual(d.shape, (self.train_samples, self.train_samples))
+
+    for i in range(self.train_samples):
+      for j in range(self.train_samples):
+        if i == j:
+          self.assertEqual(float("inf"), d[i, j])
+        else:
+          d_ij = cosine(x_train[i, :], x_train[j, :])
           self.assertAlmostEqual(d_ij, d[i, j], places=5)
 
   def knn_errorrate(self, k):
