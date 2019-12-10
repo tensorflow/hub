@@ -448,6 +448,13 @@ py_library(
     name = "expect_sklearn_installed",
 )
 
+# We expect the runtime libraries for generated Python protocol messages
+# to already be installed on the system, e.g. via
+# `pip install protobuf`
+py_library(
+    name = "expect_protobuf_installed",
+)
+
 py_library(
     name = "module_v2",
     srcs = ["module_v2.py"],
