@@ -266,3 +266,56 @@ Weight regularizers on individual layers are saved (with their regularization
 strength coefficients), but weight regularization from within the optimizer
 (like `tf.keras.optimizers.Ftrl.l1_regularization_strength=...)`)
 is lost. Advise consumers of your SavedModel accordingly.
+
+### Re-exporting the fine-tuning result
+
+Following section has minimal example for fine tuning a simple text embedding module like [NNLM]("https://tfhub.dev/google/nnlm-en-dim50/2"), exporting it and reusing the module from exported path to get fine tuned embedding.
+
+Please note following facts about fine tuning a word embedding module.
+
+1. Fine Tuning will not add Out of Vocabulary Words to Exported Module. 
+2. Fine tuning modifies the Variables Associated with Hash Buckets which generate Out of Vocabulary Embeddings.
+3. Fine tuning loose generalization, if not done cautiously as explained in Fine Tuning section above.
+
+```python
+
+#Let us fine tune using a simple objective function of classification, to bring two words together.
+
+#Caution: Please note the other weights also change during fine tuning loosing generalization. Tune with Caution!
+
+
+import tensorflow as tf
+import tensorflow_hub as hub
+from tensorflow import keras
+
+
+module_obj=hub.load("https://tfhub.dev/google/nnlm-en-dim50/2")
+hub_layer=hub.KerasLayer(module_obj,trainable=True,input_shape=[], dtype=tf.string)
+
+model = keras.Sequential()
+model.add(hub_layer)
+model.add(keras.layers.Dense(16, activation='relu'))
+model.add(keras.layers.Dense(1, activation='sigmoid'))
+model.compile(optimizer='rmsprop', loss='binary_crossentropy')
+
+#A simple classification problem, briging related wordds together.
+test=['hive','hadoop','.net']
+labels=[0,0,1]
+model.fit(x=text_values_list,y=labels,epochs=50)
+model.summary()
+
+import os
+os.makedirs("finetuned_module_export", exist_ok=True)
+export_module_dir = os.path.join(os.getcwd(), "finetuned_module_export")
+tf.saved_model.save(module_obj, export_module_dir)
+
+import tensorflow_hub as hub
+import pandas as pd
+import numpy as np
+print ("export_module_dir",export_module_dir)
+finetuned_exported_hub_path=export_module_dir
+embed = hub.KerasLayer(finetuned_exported_hub_path)
+embeddings = embed(test)
+
+````
+Complete example with similiarity comparision and notes can be found [here].(https://github.com/meethariprasad/phd/blob/master/TF2_Fine_Tuning_Minimal_Coding_Experiment.ipynb)
