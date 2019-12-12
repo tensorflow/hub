@@ -225,6 +225,10 @@ augmentation, esp. for CNNs). We advise SavedModel consumers to look into
 fine-tuning only after having established a good training regime,
 and only if the SavedModel publisher recommends it.
 
+Fine-tuning changes the "continuous" model parameters that are trained.
+It does not change hard-coded transformations, such as tokenizing text
+input and mapping tokens to their corresponding entries in an embedding matrix.
+
 ### For SavedModel consumers
 
 Creating a `hub.KerasLayer` like
@@ -241,6 +245,24 @@ mode (think of dropout etc.).
 The [image classification
 colab](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
 contains an end-to-end example with optional fine-tuning.
+
+#### Re-exporting the fine-tuning result
+
+Advanced users may want to save the results of fine-tuning back into
+a SavedModel that can be used instead of the originally loaded one.
+This can be done with code like
+
+```python
+loaded_obj = hub.load("https://tfhub.dev/...")
+hub_layer = hub.KerasLayer(loaded_obj, trainable=True, ...)
+
+model = keras.Sequential([..., hub_layer, ...])
+model.compile(...)
+model.fit(...)
+
+export_module_dir = os.path.join(os.getcwd(), "finetuned_model_export")
+tf.saved_model.save(loaded_obj, export_module_dir)
+```
 
 ### For SavedModel creators
 
