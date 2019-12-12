@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-load("@protobuf_bzl//:protobuf.bzl", "py_proto_library")
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
 
 def tf_hub_proto_library(name = None, srcs = [], visibility = []):
     py_proto_library(
@@ -20,6 +20,9 @@ def tf_hub_proto_library(name = None, srcs = [], visibility = []):
         srcs = srcs,
         srcs_version = "PY2AND3",
         visibility = visibility,
-        default_runtime = "@com_google_protobuf//:protobuf_python",
+        # We pull in @com_google_protobuf to get protoc, but we want the
+        # generated Python code to pick up its runtime via
+        # `pip install protobuf`, same as if using `pip install tensorflow_hub`.
+        default_runtime = "//tensorflow_hub:expect_protobuf_installed",
         protoc = "@com_google_protobuf//:protoc",
     )

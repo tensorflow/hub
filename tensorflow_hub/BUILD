@@ -78,7 +78,7 @@ py_library(
 py_test(
     name = "estimator_test",
     srcs = ["estimator_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     tags = ["notsan"],  # b/111624588
     deps = [
@@ -102,7 +102,7 @@ py_library(
 py_test(
     name = "feature_column_test",
     srcs = ["feature_column_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":tensorflow_hub",
@@ -127,7 +127,7 @@ py_test(
     name = "compressed_module_resolver_test",
     size = "medium",
     srcs = ["compressed_module_resolver_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     tags = ["nofixdeps"],
     deps = [
@@ -151,7 +151,7 @@ py_library(
 py_test(
     name = "image_util_test",
     srcs = ["image_util_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":image_util",
@@ -179,7 +179,7 @@ py_library(
 py_test(
     name = "module_test",
     srcs = ["module_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":module",
@@ -205,7 +205,7 @@ py_library(
 py_test(
     name = "saved_model_module_test",
     srcs = ["saved_model_module_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":saved_model_lib",
@@ -233,7 +233,7 @@ py_library(
 py_test(
     name = "native_module_test",
     srcs = ["native_module_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":all_protos_py_pb2",
@@ -259,7 +259,7 @@ py_test(
     name = "resolver_test",
     size = "medium",
     srcs = ["resolver_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":resolver",
@@ -284,7 +284,7 @@ py_test(
     data = [
         "testdata/half_plus_two_v1.tar.gz",
     ],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":tensorflow_hub",
@@ -310,7 +310,7 @@ py_test(
     name = "saved_model_lib_test",
     size = "small",
     srcs = ["saved_model_lib_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":saved_model_lib",
@@ -342,7 +342,7 @@ py_test(
     name = "tensor_info_test",
     size = "small",
     srcs = ["tensor_info_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":tensor_info",
@@ -368,7 +368,7 @@ py_library(
 py_test(
     name = "registry_test",
     srcs = ["registry_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":registry",
@@ -446,6 +446,13 @@ py_library(
 # `pip install sklearn`
 py_library(
     name = "expect_sklearn_installed",
+)
+
+# We expect the runtime libraries for generated Python protocol messages
+# to already be installed on the system, e.g. via
+# `pip install protobuf`
+py_library(
+    name = "expect_protobuf_installed",
 )
 
 py_library(

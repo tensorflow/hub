@@ -80,6 +80,10 @@ def start_smart_module_server(download_url):
     import socketserver
     import urllib
 
+    class TCPServerV6(socketserver.TCPServer):
+
+      address_family = socket.AF_INET6
+
     class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
       def do_GET(self):
@@ -90,8 +94,8 @@ def start_smart_module_server(download_url):
         else:
           _do_documentation(self)
 
-    server = socketserver.TCPServer(("", 0), RequestHandler)
-    _, server_port = server.server_address
+    server = TCPServerV6(("", 0), RequestHandler)
+    _, server_port, _, _ = server.server_address
   # pylint:disable=g-import-not-at-top
 
   thread = threading.Thread(target=server.serve_forever)
@@ -126,14 +130,18 @@ def start_http_server(redirect=None):
     import http.server
     import socketserver
 
+    class TCPServerV6(socketserver.TCPServer):
+
+      address_family = socket.AF_INET6
+
     class RedirectHandler(http.server.SimpleHTTPRequestHandler):
 
       def do_GET(self):
         _do_redirect(self, redirect)
 
-    server = socketserver.TCPServer(("", 0), RedirectHandler if redirect else
-                                    http.server.SimpleHTTPRequestHandler)
-    _, server_port = server.server_address
+    server = TCPServerV6(("", 0), RedirectHandler if redirect else
+                         http.server.SimpleHTTPRequestHandler)
+    _, server_port, _, _ = server.server_address
   # pylint:disable=g-import-not-at-top
 
   thread = threading.Thread(target=server.serve_forever)
