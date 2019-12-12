@@ -144,7 +144,7 @@ def knn_errorrate(d, y_train, y_test, k=1):
 
   Args:
     d: distance matrix
-    y_train: label vector for the training samples
+    y_train: label vector for the training samples / or matrix per entry in d
     y_test: label vector for the test samples
     k: number of direct neighbors for knn or list of multiple k's to evaluate
 
@@ -157,54 +157,79 @@ def knn_errorrate(d, y_train, y_test, k=1):
     return_list = False
     k = [k]
 
+  k = sorted(set(k), reverse=True)
   num_elements = np.shape(d)[0]
 
-  prev_indices = None
-  res = []
-  for val_k in sorted(set(k), reverse=True):
-    if prev_indices is None:
-      sub_d = d
-    else:
-      num_rows = prev_indices.shape[0]
-      num_cols = prev_indices.shape[1]
-      rows = [x for x in range(num_rows) for _ in range(num_cols)]
-      cols = prev_indices.reshape(-1)
-      sub_d = d[rows, cols].reshape(num_rows, -1)
+  val_k = k[0]
+  if val_k == 1:
+    if len(k) > 1:
+        raise ValueError("No smaller value than '1' allowed for k")
 
-    if k == 1:
-      indices = np.argmin(sub_d, axis=1)
+    indices = np.argmin(d, axis=1)
 
-      cnt = 0
-      for idx, val in enumerate(indices):
+    cnt = 0
+    for idx, val in enumerate(indices):
 
-        if prev_indices is not None:
-          val = prev_indices[val]
-
+      if len(np.shape(y_train)) == 1:
         if y_test[idx] != y_train[val]:
           cnt += 1
-
-      res.append(float(cnt) / num_elements)
-
-    else:
-      indices = np.argpartition(sub_d, val_k - 1, axis=1)
-      cnt = 0
-      for i in range(num_elements):
-
-        if prev_indices is not None:
-          indices[i, :val_k] = [prev_indices[i, x] for x in indices[i, :val_k]]
-
-        # Get max vote
-        labels = y_train[indices[i, :val_k]]
-        keys, counts = np.unique(labels, return_counts=True)
-        maxkey = keys[np.argmax(counts)]
-        if y_test[i] != maxkey:
+      else:
+        if y_test[idx] != y_train[idx, val]:
           cnt += 1
 
-      res.append(float(cnt) / num_elements)
-      prev_indices = indices[:, :val_k]
+    res = float(cnt) / num_elements
+
+  else:
+    indices = np.argpartition(d, val_k - 1, axis=1)
+    cnt = 0
+    for i in range(num_elements):
+
+      # Get max vote
+      if len(np.shape(y_train)) == 1:
+        labels = y_train[indices[i, :val_k]]
+      else:
+        labels = y_train[i, indices[i, :val_k]]
+      keys, counts = np.unique(labels, return_counts=True)
+
+      # alternative if multiple max voting neighbors:
+      # maxcnts = np.where(counts == counts.max())[0]
+      # found = False
+      # for idx in maxcnts:
+      #   if y_test[i] == keys[idx]:
+      #     found = True
+      #     break
+      # if found:
+      #   cnt += (len(maxcnts) - 1.0)/float(len(maxcnts))
+      # else:
+      #   cnt += 1
+
+      maxkey = keys[np.argmax(counts)]
+      if y_test[i] != maxkey:
+        cnt += 1
+
+    res = float(cnt) / num_elements
+
+    if len(k) > 1:
+      # update sub_d and y_train_new if needed
+      num_rows = indices[:, :val_k].shape[0]
+      num_cols = indices[:, :val_k].shape[1]
+      rows = [x for x in range(num_rows) for _ in range(num_cols)]
+      cols = indices[:, :val_k].reshape(-1)
+      sub_d = d[rows, cols].reshape(num_rows, -1)
+
+      y_train_new = indices[:, :val_k]
+      for i in range(num_elements):
+        if len(np.shape(y_train)) == 1:
+          y_train_new[i, :] = y_train[y_train_new[i, :]]
+        else:
+          y_train_new[i, :] = y_train[i, y_train_new[i, :]]
 
   if not return_list:
-    return res[0]
+    return res
+
+  res = [res]
+  if len(k) > 1:
+      res.extend(knn_errorrate(sub_d, y_train_new, y_test, k[1:]))
 
   return res
 

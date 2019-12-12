@@ -22,7 +22,7 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from scipy.spatial.distance import cosine
-import tensorflow.compat.v2 as tf
+import tensorflow as tf
 
 from tensorflow_hub.tools.module_search import utils
 
