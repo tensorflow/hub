@@ -53,6 +53,7 @@ py_test(
     srcs = ["utils_test.py"],
     python_version = "PY3",
     tags = [
+        "manual",
         "noasan",  # sklearn seem to lead to asan and tsan failures.
         "notsan",
     ],
