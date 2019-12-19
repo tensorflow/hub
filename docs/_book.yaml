@@ -34,9 +34,11 @@ upper_tabs:
       # Contributing to TF-Hub - either models or code
       - heading: Contributing
       - title: Contribute on GitHub
-        path: hub/contribute
+        path: /hub/contribute
       - title: Publish models on tfhub.dev
         path: /hub/publish
+      - title: Portability & Deletion of Data
+        path: /hub/portability_and_deletion
       # Advanced developer topics
       - heading: Developer info
       - title: Build from source
