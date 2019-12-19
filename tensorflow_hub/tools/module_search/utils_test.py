@@ -19,11 +19,20 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
 import tensorflow.compat.v2 as tf
 
 from tensorflow_hub.tools.module_search import utils
+
+
+# pylint: disable=g-import-not-at-top
+if tf.executing_eagerly():
+  # Note: presubmit and continuous integrations jobs are failing on these
+  # imports when running with TF-1 which anyhow is not supported by this
+  # test.
+  from sklearn.neighbors import KNeighborsClassifier
+  from sklearn import metrics
+# pylint: enable=g-import-not-at-top
+
 
 class TestUtils(tf.test.TestCase):
 
@@ -34,6 +43,8 @@ class TestUtils(tf.test.TestCase):
   random_seed = 127
 
   def test_compute_distance_matrix(self):
+    if not tf.executing_eagerly():
+      self.skipTest("Test requires eager mode.")
     np.random.seed(seed=self.random_seed)
     x_train = np.random.rand(self.train_samples, self.dim)
     x_test = np.random.rand(self.test_samples, self.dim)
@@ -47,6 +58,8 @@ class TestUtils(tf.test.TestCase):
         self.assertAlmostEqual(d_ij, d[i, j], places=5)
 
   def test_compute_distance_matrix_loo(self):
+    if not tf.executing_eagerly():
+      self.skipTest("Test requires eager mode.")
     np.random.seed(seed=self.random_seed)
     x_train = np.random.rand(self.train_samples, self.dim)
 
@@ -62,6 +75,8 @@ class TestUtils(tf.test.TestCase):
           self.assertAlmostEqual(d_ij, d[i, j], places=5)
 
   def knn_errorrate(self, k):
+    if not tf.executing_eagerly():
+      self.skipTest("Test requires eager mode.")
     x_train = np.random.rand(self.train_samples, self.dim)
     x_test = np.random.rand(self.test_samples, self.dim)
 
@@ -80,6 +95,8 @@ class TestUtils(tf.test.TestCase):
     self.assertAlmostEqual(1.0 - err, acc, places=5)
 
   def test_knn_errorrate(self):
+    if not tf.executing_eagerly():
+      self.skipTest("Test requires eager mode.")
     np.random.seed(seed=self.random_seed)
     ks = [1, 3, 5]
     for idx, val in enumerate(ks):
@@ -87,6 +104,8 @@ class TestUtils(tf.test.TestCase):
         self.knn_errorrate(val)
 
   def knn_errorrate_loo(self, k):
+    if not tf.executing_eagerly():
+      self.skipTest("Test requires eager mode.")
     x_train = np.random.rand(self.train_samples, self.dim)
 
     d = utils.compute_distance_matrix_loo(x_train)
@@ -108,6 +127,8 @@ class TestUtils(tf.test.TestCase):
     self.assertAlmostEqual(err, cnt / self.train_samples, places=5)
 
   def test_knn_errorrate_loo(self):
+    if not tf.executing_eagerly():
+      self.skipTest("Test requires eager mode.")
     np.random.seed(seed=self.random_seed)
     ks = [1, 3, 5]
     for idx, val in enumerate(ks):
