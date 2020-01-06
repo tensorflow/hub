@@ -25,8 +25,8 @@ import sys
 
 # Can't import the module during setup.py.
 # Use execfile to find __version__.
-with open("tensorflow_hub/version.py") as in_file:
-    exec(in_file.read())
+with open('tensorflow_hub/version.py') as in_file:
+  exec(in_file.read())
 
 REQUIRED_PACKAGES = [
     'numpy >= 1.12.0',
@@ -61,12 +61,16 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     extras_require={
         'make_image_classifier': ['keras_preprocessing[image]'],
+        'make_nearest_neighbour_index': ['apache_beam', 'annoy'],
     },
     entry_points={
         'console_scripts': [
             ('make_image_classifier = '
              'tensorflow_hub.tools.make_image_classifier.'
              'make_image_classifier:run_main [make_image_classifier]'),
+            ('make_nearest_neighbour_index = tensorflow_hub.tools.'
+             'make_nearest_neighbour_index.main:main '
+             '[make_nearest_neighbour_index]'),
         ],
     },
     # PyPI package information.
