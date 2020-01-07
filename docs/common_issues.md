@@ -98,3 +98,11 @@ session.run(init_op)
 ```python
 result = session.run(embedded_text, feed_dict={text_input: ["Hello world"]})
 ```
+
+## Cannot change a model's dype (e.g., float32 to bfloat16)
+
+TensorFlow's SavedModels (shared on TF Hub or otherwise) contain
+operations that work on fixed data types (often, float32 for the weights
+and intermediate activations of neural networks). These cannot be
+changed after the fact when lodaing the SavedModel (but model publishers
+can choose to publish different models with different data types).

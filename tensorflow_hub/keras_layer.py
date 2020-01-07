@@ -84,6 +84,10 @@ class KerasLayer(tf.keras.layers.Layer):
   explicitly from Keras objects instead of relying on graph collections.
   This layer class does not support graph collections.
 
+  Note: The data types used by a saved model have been fixed at saving time.
+  Using tf.keras.mixed_precision etc. has no effect on the saved model
+  that gets loaded by a hub.KerasLayer.
+
   Attributes:
     handle: A callable object (subject to the conventions above), or a
       Python string to load a saved model via hub.load().
