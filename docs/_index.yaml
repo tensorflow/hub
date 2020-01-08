@@ -52,10 +52,10 @@ landing_page:
         path: https://tfhub.dev
     - heading: Introducing TensorFlow Hub
       image_path: /resources/images/tf-logo-card-16x9.png
-      path: https://medium.com/tensorflow/introducing-tensorflow-hub-a-library-for-reusable-machine-learning-modules-in-tensorflow-cdee41fa18f9
+      path: https://blog.tensorflow.org/2018/03/introducing-tensorflow-hub-library.html
       buttons:
       - label: Read on TensorFlow blog
-        path: https://medium.com/tensorflow/introducing-tensorflow-hub-a-library-for-reusable-machine-learning-modules-in-tensorflow-cdee41fa18f9
+        path: https://blog.tensorflow.org/2018/03/introducing-tensorflow-hub-library.html
     - heading: TensorFlow Hub at the Dev Summit
       youtube_id: rirzJ-e68cw
       buttons:
