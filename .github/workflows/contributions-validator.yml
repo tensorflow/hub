@@ -1,0 +1,28 @@
+name: External contributions validator
+
+on:
+  pull_request:
+
+jobs:
+  test-changed-md-files:
+    runs-on: ubuntu-16.04
+    name: Test changed markdown documentation files.
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.6'
+      - name: Install packages
+        run: |
+          pip install absl-py tensorflow
+          pip freeze all
+      - name: Debug information
+        run: |
+          echo $(git status)
+          echo $(git branch)
+          echo $(git remote)
+          echo $(git diff origin/master --name-only)
+          echo $(ls)
+      - name: Run validator on changed files
+        run: |
+          git diff origin/master --name-only --relative=tfhub_dev/assets | xargs python3.6 ./tfhub_dev/tools/validator.py
