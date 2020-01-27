@@ -25,4 +25,4 @@ jobs:
           echo $(ls)
       - name: Run validator on changed files
         run: |
-          git diff origin/master --name-only | xargs python3.6 ./tools/validator.py
+          git diff origin/master --name-only | xargs python3.6 ./tfhub_dev/tools/validator.py
