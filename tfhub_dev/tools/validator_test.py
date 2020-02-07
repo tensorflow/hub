@@ -45,8 +45,8 @@ Simple description spanning
 multiple lines.
 
 <!-- asset-path: %s -->
-<!-- module-type: text-embedding -->
-<!-- fine-tunable: true -->
+<!-- module-type:   text-embedding   -->
+<!-- fine-tunable:true -->
 <!-- format: saved_model_2 -->
 
 ## Overview

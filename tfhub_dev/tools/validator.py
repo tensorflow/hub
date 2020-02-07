@@ -59,7 +59,9 @@ COLLECTION_HANDLE_PATTERN = (
     r"# Collection (?P<publisher>[\w-]+)/(?P<name>(\w|-|/|&|;|\.)+)/(\d+)")
 # Regex pattern for the line of the documentation describing model metadata.
 # Example: "<!-- finetunable: true -->"
-METADATA_LINE_PATTERN = r"^<!-- (?P<key>(\w|\s|-)+): (?P<value>.+) -->$"
+# Note: Both key and value consumes free space characters, but later on these
+# are stripped.
+METADATA_LINE_PATTERN = r"^<!--(?P<key>(\w|\s|-)+):(?P<value>.+)-->$"
 
 
 class Filesystem(object):
@@ -271,8 +273,9 @@ class DocumentationParser(object):
       match = re.match(METADATA_LINE_PATTERN, self._lines[self._current_index])
       if match:
         # Add found metadata.
-        key = match.group(1)
-        value = match.group(3)
+        groups = match.groupdict()
+        key = groups.get("key").strip()
+        value = groups.get("value").strip()
         if key not in self._parsed_metadata:
           self._parsed_metadata[key] = set()
         self._parsed_metadata[key].add(value)
