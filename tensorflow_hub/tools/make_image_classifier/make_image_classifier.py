@@ -107,7 +107,12 @@ flags.DEFINE_float(
 flags.DEFINE_float(
     "dropout_rate", _DEFAULT_HPARAMS.dropout_rate,
     "The fraction of the input units to drop, used in dropout layer.")
-
+flags.DEFINE_bool(
+    "set_memory_growth", _DEFAULT_HPARAMS.set_memory_growth,
+    "If flag is set, memory growth functionality flag will be set as true for "
+    "all GPUs prior to training. "
+    "More details: https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth"
+)
 FLAGS = flags.FLAGS
 
 
@@ -119,7 +124,8 @@ def _get_hparams_from_flags():
       batch_size=FLAGS.batch_size,
       learning_rate=FLAGS.learning_rate,
       momentum=FLAGS.momentum,
-      dropout_rate=FLAGS.dropout_rate)
+      dropout_rate=FLAGS.dropout_rate,
+      set_memory_growth=FLAGS.set_memory_growth)
 
 
 def _check_keras_dependencies():
@@ -153,6 +159,18 @@ def _assert_accuracy(train_result, assert_accuracy_at_least):
   else:
     raise AssertionError("ACCURACY FAILED:", accuracy_message)
 
+def _set_gpu_memory_growth():
+  gpus = tf.config.experimental.list_physical_devices('GPU')
+  if gpus:
+    try:
+      # Currently, memory growth needs to be the same across GPUs
+      for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+      logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+      print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+      # Memory growth must be set before GPUs have been initialized
+      print(e)
 
 def main(args):
   """Main function to be called by absl.app.run() after flag parsing."""
@@ -161,6 +179,10 @@ def main(args):
   hparams = _get_hparams_from_flags()
 
   image_dir = FLAGS.image_dir or lib.get_default_image_dir()
+
+  if FLAGS.set_memory_growth:
+    _set_gpu_memory_growth()
+    print("All GPUs will scale memory steadily")
 
   model, labels, train_result = lib.make_image_classifier(
       FLAGS.tfhub_module, image_dir, hparams, FLAGS.image_size)

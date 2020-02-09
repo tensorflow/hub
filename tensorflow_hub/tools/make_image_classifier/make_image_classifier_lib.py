@@ -38,7 +38,7 @@ def get_default_image_dir():
 class HParams(
     collections.namedtuple("HParams", [
         "train_epochs", "do_fine_tuning", "batch_size", "learning_rate",
-        "momentum", "dropout_rate"
+        "momentum", "dropout_rate", "set_memory_growth"
     ])):
   """The hyperparameters for make_image_classifier.
 
@@ -60,7 +60,8 @@ def get_default_hparams():
       batch_size=32,
       learning_rate=0.005,
       momentum=0.9,
-      dropout_rate=0.2)
+      dropout_rate=0.2,
+      set_memory_growth=False)
 
 
 def _get_data_with_keras(image_dir, image_size, batch_size,
