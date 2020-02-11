@@ -31,6 +31,10 @@ class MockFilesystem(validator.Filesystem):
   def get_contents(self, filename):
     return self._files[filename]
 
+  def file_exists(self, filename):
+    """Returns whether file exists."""
+    return filename in self._files
+
   def set_contents(self, filename, contents):
     self._files[filename] = contents
 
@@ -52,10 +56,22 @@ multiple lines.
 ## Overview
 """
 
+MINIMAL_MARKDOWN_WITH_UNKNOWN_PUBLISHER = """# Module publisher-without-page/text-embedding-model/1
+Simple description spanning
+multiple lines.
+
+<!-- asset-path: /path/to/model -->
+<!-- module-type:   text-embedding   -->
+<!-- fine-tunable:true -->
+<!-- format: saved_model_2 -->
+
+## Overview
+"""
+
 MINIMAL_MARKDOWN_WITH_ALLOWED_LICENSE = """# Module google/model/1
 Simple description.
 
-<!-- asset-path: %s -->
+<!-- asset-path: /path/to/model -->
 <!-- module-type: text-embedding -->
 <!-- fine-tunable: true -->
 <!-- format: saved_model_2 -->
@@ -123,7 +139,7 @@ multiple lines.
 ## Overview
 """
 
-MINIMAL_PUBLISHER_MARKDOWN = """# Publisher some-publisher
+MINIMAL_PUBLISHER_MARKDOWN = """# Publisher %s
 Simple description spanning one line.
 
 [![Icon URL]](https://path/to/icon.png)
@@ -147,6 +163,10 @@ class ValidatorTest(tf.test.TestCase):
   def tearDown(self):
     super(tf.test.TestCase, self).tearDown()
     shutil.rmtree(self.tmp_dir)
+
+  def set_up_publisher_page(self, filesystem, publisher):
+    filesystem.set_contents("root/%s/%s.md" % (publisher, publisher),
+                            MINIMAL_PUBLISHER_MARKDOWN % publisher)
 
   def save_dummy_model(self, path):
 
@@ -176,6 +196,7 @@ class ValidatorTest(tf.test.TestCase):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/text-embedding-model/1.md",
                             self.minimal_markdown)
+    self.set_up_publisher_page(filesystem, "google")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)
 
@@ -183,6 +204,7 @@ class ValidatorTest(tf.test.TestCase):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/text-embedding-model/1.md",
                             self.minimal_markdown)
+    self.set_up_publisher_page(filesystem, "google")
     num_validated = validator.validate_documentation_files(
         documentation_dir="root",
         files_to_validate=["google/models/text-embedding-model/1.md"],
@@ -194,13 +216,13 @@ class ValidatorTest(tf.test.TestCase):
     filesystem.set_contents(
         "root/google/collections/text-embedding-collection/1.md",
         MINIMAL_COLLECTION_MARKDOWN)
+    self.set_up_publisher_page(filesystem, "google")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)
 
   def test_minimal_publisher_markdown_parsed(self):
     filesystem = MockFilesystem()
-    filesystem.set_contents("root/some-publisher/some-publisher.md",
-                            MINIMAL_PUBLISHER_MARKDOWN)
+    self.set_up_publisher_page(filesystem, "some-publisher")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)
 
@@ -221,6 +243,16 @@ class ValidatorTest(tf.test.TestCase):
       validator.validate_documentation_files(
           documentation_dir="root", filesystem=filesystem)
 
+  def test_fails_if_publisher_page_does_not_exist(self):
+    filesystem = MockFilesystem()
+    filesystem.set_contents(
+        "root/publisher-without-page/models/text-embedding-model/1.md",
+        MINIMAL_MARKDOWN_WITH_UNKNOWN_PUBLISHER)
+    with self.assertRaisesRegexp(validator.MarkdownDocumentationError,
+                                 ".*Publisher documentation does not.*"):
+      validator.validate_documentation_files(
+          documentation_dir="root", filesystem=filesystem)
+
   def test_minimal_markdown_does_not_end_with_md_fails(self):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/wrong-extension/1.mdz",
@@ -233,7 +265,7 @@ class ValidatorTest(tf.test.TestCase):
   def test_publisher_markdown_at_incorrect_location_fails(self):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/publisher.md",
-                            MINIMAL_PUBLISHER_MARKDOWN)
+                            MINIMAL_PUBLISHER_MARKDOWN % "some-publisher")
     with self.assertRaisesRegexp(validator.MarkdownDocumentationError,
                                  r".*some-publisher\.md.*"):
       validator.validate_documentation_files(
@@ -241,8 +273,7 @@ class ValidatorTest(tf.test.TestCase):
 
   def test_publisher_markdown_at_correct_location(self):
     filesystem = MockFilesystem()
-    filesystem.set_contents("root/some-publisher/some-publisher.md",
-                            MINIMAL_PUBLISHER_MARKDOWN)
+    self.set_up_publisher_page(filesystem, "some-publisher")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)
 
@@ -283,10 +314,13 @@ class ValidatorTest(tf.test.TestCase):
           documentation_dir="root", filesystem=filesystem)
 
   def test_minimal_markdown_parsed_full(self):
-    documentation_parser = validator.DocumentationParser("root")
+    filesystem = MockFilesystem()
+    filesystem.set_contents("root/google/models/text-embedding-model/1.md",
+                            self.minimal_markdown)
+    self.set_up_publisher_page(filesystem, "google")
+    documentation_parser = validator.DocumentationParser("root", filesystem)
     documentation_parser.validate(
         file_path="root/google/models/text-embedding-model/1.md",
-        documentation_content=self.minimal_markdown,
         do_smoke_test=True)
     self.assertEqual("Simple description spanning multiple lines.",
                      documentation_parser.parsed_description)
@@ -302,6 +336,7 @@ class ValidatorTest(tf.test.TestCase):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/text-embedding-model/1.md",
                             self.minimal_markdown_with_bad_model)
+    self.set_up_publisher_page(filesystem, "google")
     with self.assertRaisesRegexp(validator.MarkdownDocumentationError,
                                  ".*failed to parse.*"):
       validator.validate_documentation_files(
@@ -313,6 +348,7 @@ class ValidatorTest(tf.test.TestCase):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/model/1.md",
                             MINIMAL_MARKDOWN_WITH_ALLOWED_LICENSE)
+    self.set_up_publisher_page(filesystem, "google")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)
 
@@ -320,6 +356,7 @@ class ValidatorTest(tf.test.TestCase):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/model/1.md",
                             MINIMAL_MARKDOWN_WITH_UNKNOWN_LICENSE)
+    self.set_up_publisher_page(filesystem, "google")
     with self.assertRaisesRegexp(validator.MarkdownDocumentationError,
                                  ".*specify a license id from list.*"):
       validator.validate_documentation_files(

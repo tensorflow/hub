@@ -72,6 +72,10 @@ class Filesystem(object):
     with tf.io.gfile.GFile(filename, "r") as f:
       return f.read()
 
+  def file_exists(self, filename):
+    """Returns whether file exists."""
+    return tf.io.gfile.exists(filename)
+
   def recursive_list_dir(self, root_dir):
     """Yields all files of a root directory tree."""
     for dirname, _, filenames in tf.io.gfile.walk(root_dir):
@@ -109,6 +113,10 @@ class ParsingPolicy(object):
   @property
   def handle(self):
     return "%s/%s/%s" % (self._publisher, self._model_name, self._model_version)
+
+  @property
+  def publisher(self):
+    return self._publisher
 
   def get_expected_location(self, root_dir):
     """Returns the expected path of a documentation file."""
@@ -183,8 +191,9 @@ class CollectionParsingPolicy(ParsingPolicy):
 class DocumentationParser(object):
   """Class used for parsing model documentation strings."""
 
-  def __init__(self, documentation_dir):
+  def __init__(self, documentation_dir, filesystem):
     self._documentation_dir = documentation_dir
+    self._filesystem = filesystem
     self._parsed_metadata = dict()
     self._parsed_description = ""
 
@@ -223,6 +232,19 @@ class DocumentationParser(object):
         "\"# Module google/text-embedding-model/1\". Instead the first line "
         "is \"%s\"." % (MODEL_HANDLE_PATTERN, PUBLISHER_HANDLE_PATTERN,
                         COLLECTION_HANDLE_PATTERN, first_line))
+
+  def assert_publisher_page_exists(self):
+    """Assert that publisher page exists for the publisher of this model."""
+    # Use a publisher policy to get the expected documentation page path.
+    publisher_policy = PublisherParsingPolicy(self._parsing_policy.publisher,
+                                              self._parsing_policy.publisher,
+                                              None)
+    expected_publisher_doc_location = publisher_policy.get_expected_location(
+        self._documentation_dir)
+    if not self._filesystem.file_exists(expected_publisher_doc_location):
+      self.raise_error(
+          "Publisher documentation does not exist. It should be added to %s." %
+          expected_publisher_doc_location)
 
   def assert_correct_location(self):
     """Assert that documentation file is submitted to a correct location."""
@@ -348,9 +370,9 @@ class DocumentationParser(object):
             "README.md. Underlying reason for failure: %s." %
             (asset_path, reason))
 
-  def validate(self, file_path, documentation_content, do_smoke_test):
+  def validate(self, file_path, do_smoke_test):
     """Validate one documentation markdown file."""
-    self._raw_content = documentation_content
+    self._raw_content = self._filesystem.get_contents(file_path)
     self._lines = self._raw_content.split("\n")
     self._file_path = file_path
     self.consume_first_line()
@@ -359,6 +381,7 @@ class DocumentationParser(object):
     self.consume_metadata()
     self.assert_correct_metadata()
     self.assert_allowed_license()
+    self.assert_publisher_page_exists()
     if do_smoke_test:
       self.smoke_test_asset()
 
@@ -374,10 +397,9 @@ def validate_documentation_files(documentation_dir,
     if files_to_validate and file_path[len(documentation_dir) +
                                        1:] not in files_to_validate:
       continue
-    file_content = filesystem.get_contents(file_path)
     logging.info("Validating %s.", file_path)
-    documentation_parser = DocumentationParser(documentation_dir)
-    documentation_parser.validate(file_path, file_content, do_smoke_test)
+    documentation_parser = DocumentationParser(documentation_dir, filesystem)
+    documentation_parser.validate(file_path, do_smoke_test)
     validated += 1
   logging.info("Found %d matching files - all validated successfully.",
                validated)
