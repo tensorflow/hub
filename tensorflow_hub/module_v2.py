@@ -63,6 +63,10 @@ def load(handle, tags=None):
   on the result of `hub.resolve(handle)`. Calling this function requires
   TF 1.14 or newer. It can be called both in eager and graph mode.
 
+  Note: Using in a tf.compat.v1.Session with variables placed on parameter
+  servers requires setting `experimental.share_cluster_devices_in_session`
+  within the `tf.compat.v1.ConfigProto`. (It becomes non-experimental in TF2.2.)
+
   This function can handle the deprecated hub.Module format to the extent
   that `tf.save_model.load()` in TF2 does. In particular, the returned object
   has attributes

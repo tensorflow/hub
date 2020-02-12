@@ -51,6 +51,28 @@ Many tutorials show these APIs in action. See in particular
 If the hub.Module you use has a newer version that comes in the TF2 SavedModel
 format, we recommend to switch the API and the module version at the same time.
 
+### Using the new API in Estimator training
+
+If you use a TF2 SavedModel in an Estimator for training with parameter servers
+(or otherwise in a TF1 Session with variables placed on remote devices),
+you need to set `experimental.share_cluster_devices_in_session` in the
+tf.Session's ConfigProto, or else you will get an error like
+"Assigned device '/job:ps/replica:0/task:0/device:CPU:0'
+does not match any device."
+
+The necessary option can be set like
+
+```python
+session_config = tf.compat.v1.ConfigProto()
+session_config.experimental.share_cluster_devices_in_session = True
+run_config = tf.estimator.RunConfig(..., session_config=session_config)
+estimator = tf.estimator.Estimator(..., config=run_config)
+```
+
+Starting with TF2.2, this option is no longer experimental, and
+the `.experimental` piece can be dropped.
+
+
 ## Loading legacy hub.Modules
 
 It can happen that a new TF2 SavedModel is not yet available for your
