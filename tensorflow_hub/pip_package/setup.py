@@ -62,7 +62,8 @@ setup(
     extras_require={
         'make_image_classifier': ['keras_preprocessing[image]'],
         'make_nearest_neighbour_index': [
-            'apache_beam', 'annoy', 'avro-python3 !=1.9.2'
+            'apache_beam',
+            'annoy',
         ],
     },
     entry_points={
