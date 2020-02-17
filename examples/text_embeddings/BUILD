@@ -17,7 +17,7 @@ licenses(["notice"])  # Apache 2.0
 py_binary(
     name = "export",
     srcs = ["export.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [":export_lib"],
 )
@@ -37,7 +37,7 @@ py_library(
 py_test(
     name = "export_test",
     srcs = ["export_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":export_lib",
