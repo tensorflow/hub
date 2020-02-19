@@ -22,7 +22,7 @@ import logging
 import os
 from distutils.version import LooseVersion
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
 
 from examples.text_embeddings import export
