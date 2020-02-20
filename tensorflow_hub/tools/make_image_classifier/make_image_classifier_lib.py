@@ -180,14 +180,13 @@ def build_model(module_layer, hparams, image_size, num_classes):
   """
   # TODO(b/139467904): Expose the hyperparameters below as flags.
   model = tf.keras.Sequential([
-      module_layer,
+      tf.keras.Input(shape=(image_size[0], image_size[1], 3)), module_layer,
       tf.keras.layers.Dropout(rate=hparams.dropout_rate),
       tf.keras.layers.Dense(
           num_classes,
           activation="softmax",
           kernel_regularizer=tf.keras.regularizers.l2(0.0001))
   ])
-  model.build((None, image_size[0], image_size[1], 3))
   print(model.summary())
   return model
 
