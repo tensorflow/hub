@@ -54,6 +54,10 @@ class ModuleV2Test(tf.test.TestCase, parameterized.TestCase):
     with self.assertRaises(NotImplementedError):
       module_v2.load('dummy_module_name')
 
+  def test_load_without_string(self):
+    with self.assertRaisesRegex(ValueError, 'Expected a string, got.*'):
+      module_v2.load(0)
+
 
 if __name__ == '__main__':
   tf.test.main()

@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+import six
 
 from tensorflow_hub import native_module
 from tensorflow_hub import registry
@@ -91,6 +92,8 @@ def load(handle, tags=None):
   if not hasattr(tf_v1.saved_model, "load_v2"):
     raise NotImplementedError("hub.load() is not implemented for TF < 1.14.x, "
                               "Current version: %s" % tf.__version__)
+  if not isinstance(handle, six.string_types):
+    raise ValueError("Expected a string, got %s" % handle)
   module_path = resolve(handle)
   is_hub_module_v1 = tf.io.gfile.exists(
       native_module.get_module_proto_path(module_path))
