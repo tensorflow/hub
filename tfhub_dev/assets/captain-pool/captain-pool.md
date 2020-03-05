@@ -7,6 +7,4 @@ Machine Learning and Computer Vision Researcher.\
 ## Details
 **Github:** [https://github.com/captain-pool](https://github.com/captain-pool)\
 **LinkedIn:** [https://linkedin.com/in/captain-pool](https://linkedin.com/in/captain-pool)\
-**Twitter:** [@captain__pool](https://twitter.com/captain__pool)\
-
-
+**Twitter:** [@captain__pool](https://twitter.com/captain__pool)
