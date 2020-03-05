@@ -1,5 +1,4 @@
-
-[![Icon URL]](https://avatars2.githubusercontent.com/u/13994201)
+# Publisher: captain-pool
 
 Adrish Dey (@captain-pool)
 -------------------------------
@@ -14,3 +13,5 @@ LinkedIn: [https://linkedin.com/in/captain-pool](https://linkedin.com/in/captain
 
 Twitter: [@captain__pool](https://twitter.com/captain__pool)
 
+
+[![Icon URL]](https://avatars2.githubusercontent.com/u/13994201)
