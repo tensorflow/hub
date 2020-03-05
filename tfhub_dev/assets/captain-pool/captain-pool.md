@@ -1,4 +1,4 @@
-# Publisher: captain-pool
+# Publisher captain-pool
 
 Adrish Dey (@captain-pool)
 -------------------------------
