@@ -158,7 +158,7 @@ class ModelParsingPolicy(ParsingPolicy):
     return ["asset-path", "format", "module-type", "fine-tunable"]
 
   def get_single_valued_metadata(self):
-    return ["asset-path", "format", "fine-tunable"]
+    return ["asset-path", "format", "module-type", "fine-tunable"]
 
   def asset_tester(self):
     return smoke_test_model
@@ -340,6 +340,14 @@ class DocumentationParser(object):
           "There are duplicate metadata values. Please refer to "
           "README.md for information about markdown format. In particular the "
           "duplicated metadata are: %s" % sorted(duplicate_metadata))
+
+    if "module-type" in self._parsed_metadata:
+      allowed_prefixes = ["image-", "text-", "audio-", "video-"]
+      for value in self._parsed_metadata["module-type"]:
+        if all([not value.startswith(prefix) for prefix in allowed_prefixes]):
+          self.raise_error(
+              "The \"module-type\" metadata has to start with any of \"image-\""
+              ", \"text\", \"audio-\", \"video-\", but is: \"%s\"" % value)
 
   def assert_allowed_license(self):
     """Validate provided license."""

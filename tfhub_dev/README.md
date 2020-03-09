@@ -164,8 +164,9 @@ Currently the markdown file is expected to be structured in the following way:
    * `asset-path`: Where should the model be downloaded from at mirroring time.
      This must be a tar.gz'd model as documented in the
      [packaging](#packaging-the-model) section.
-   * `module-type`: What is the problem domain of this model. In general, any
-     value is accepted, but some good (literal) examples are:
+   * `module-type`: What is the problem domain of this model. This has to start
+     with any of the following: `image-`, `text-`, `audio-`, `video-`. In
+     general, any suffix is accepted, but some good (literal) examples are:
        * `text-embedding`
        * `text-generation`
        * `image-augmentation`
