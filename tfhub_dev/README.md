@@ -28,7 +28,7 @@ stored in GCS bucket via a query parameter:
 | ------ | --- |
 | vtab/jigsaw/1 | https://tfhub.dev/vtab/jigsaw/1?tf-hub-format=compressed |
 
-More information about the hosting protocol [here](../g3doc/hosting.md).
+More information about the hosting protocol [here](../docs/hosting.md).
 
 ## How to publish
 
