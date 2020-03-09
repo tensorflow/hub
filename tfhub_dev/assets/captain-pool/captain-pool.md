@@ -1,6 +1,6 @@
 # Publisher captain-pool
 Adrish Dey (@captain-pool)\
-Google Summer of Code Student 2019.\
+Google Summer of Code Student 2019 @ TensorFlow\
 Machine Learning and Computer Vision Researcher.\
 [![Icon URL]](https://avatars2.githubusercontent.com/u/13994201)
 
