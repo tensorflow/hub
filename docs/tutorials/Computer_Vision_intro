@@ -1,0 +1,17 @@
+Computer Vision is one of the the widest area in Machine Learning. Object Detection is one of the most popular fields in deep learning as it used in robotics, drones, self-driving cars, satellite analytics, photography, video production,motion detection etc. 
+
+The most integral part in object detection is Feature extraction.Deep Learning simplifies the process of feature extraction through the process of convolution. Convolution is a mathematical operation, which maps out an energy function, which is a measure of similarity between two signals, or in our case images. So, when we use a blue filter and convolve it with white light, the resultant energy spectrum is that of blue light. Hence, the convolution of white light with a blue filter results in blue light. Hence term Convolutional Neural Networks, where feature extraction is done via the process of convolution.
+
+A convolutional neural network(CNN) is a class of deep neural networks, most commonly applied to analyzing visual imagery. They are also known as shift invariant or space invariant artificial neural networks, based on their shared-weights architecture and translation invariance characteristics. A CNN consists of various operations:-
+
+1.Convolution :-  Initially, filters are initialized via a Gaussian distribution, randomly. These filters are defined such that each filter learns about certain patterns, and these filters learn more patterns as the network gets deeper.
+
+2.Pooling :- Pooling is a sub-sampling technique. The use of pooling is to reduce the dimension of the input image after getting convolved.
+
+3.Batch Normalization :- We add this layer initially, to normalize all the features. Technically, batch normalization normalizes the output of a previous activation layer by subtracting the batch mean and dividing by the batch standard deviation. This makes the model more flexible and dynamic and learns effectively and prevents overfitting.
+
+4.Dropout :- It is a type of regularization technique used to prevent overfitting of the models on the training data. The way this works is, the weights are randomly juggled around by very small amounts… the model ends up learning variations and again prevents overfitting. Individual nodes are either dropped out of the net with probability 1-p or kept with probability p so that a reduced network is left; incoming and outgoing edges to a dropped-out node are also removed.
+
+5.Zero_Padding:- This helps prevent dimensionality loss, during convolution. Thus, for very deep networks, we usually prefer this. The zeros don’t add to the energy quotient during the convolution and help maintain dimensionality at a required level.
+
+6.Fully Connected Layers:- The output from the convolutional layers represents high-level features in the data. While that output could be flattened and connected to the output layer, adding a fully-connected layer is a way of learning non-linear combinations of these features. 
