@@ -4,10 +4,9 @@
 This location serves for storing documentation for models to be published on
 [tfhub.dev](https://tfhub.dev).
 
-Please note that publishing to tfhub.dev is in **early testing and is currently
-invitation only**. If you are interested in publishing, please [register your
-interest here](https://www.tensorflow.org/hub/publish) and we will reach out to
-you as our publishing development progresses.
+Please note that publishing to tfhub.dev is in **early testing**. If you are
+interested in publishing, please follow the directions below and we will process
+your submission as soon as possible.
 
 ### Handles
 Model handles are alphanumeric tokens separated by slashes into logical parts.
@@ -28,7 +27,7 @@ stored in GCS bucket via a query parameter:
 | ------ | --- |
 | vtab/jigsaw/1 | https://tfhub.dev/vtab/jigsaw/1?tf-hub-format=compressed |
 
-More information about the hosting protocol [here](../g3doc/hosting.md).
+More information about the hosting protocol [here](../docs/hosting.md).
 
 ## How to publish
 
@@ -164,8 +163,9 @@ Currently the markdown file is expected to be structured in the following way:
    * `asset-path`: Where should the model be downloaded from at mirroring time.
      This must be a tar.gz'd model as documented in the
      [packaging](#packaging-the-model) section.
-   * `module-type`: What is the problem domain of this model. In general, any
-     value is accepted, but some good (literal) examples are:
+   * `module-type`: What is the problem domain of this model. This has to start
+     with any of the following: `image-`, `text-`, `audio-`, `video-`. In
+     general, any suffix is accepted, but some good (literal) examples are:
        * `text-embedding`
        * `text-generation`
        * `image-augmentation`

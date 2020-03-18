@@ -83,8 +83,20 @@ Simple description.
 MINIMAL_MARKDOWN_WITH_UNKNOWN_LICENSE = """# Module google/model/1
 Simple description.
 
-<!-- asset-path: %s -->
+<!-- asset-path: /path/to/model -->
 <!-- module-type: text-embedding -->
+<!-- fine-tunable: true -->
+<!-- format: saved_model_2 -->
+<!-- license: my_license -->
+
+## Overview
+"""
+
+MINIMAL_MARKDOWN_WITH_BAD_MODULE_TYPE = """# Module google/model/1
+Simple description.
+
+<!-- asset-path: /path/to/model -->
+<!-- module-type: something-embedding -->
 <!-- fine-tunable: true -->
 <!-- format: saved_model_2 -->
 <!-- license: my_license -->
@@ -361,6 +373,17 @@ class ValidatorTest(tf.test.TestCase):
                                  ".*specify a license id from list.*"):
       validator.validate_documentation_files(
           documentation_dir="root", filesystem=filesystem)
+
+  def test_markdown_with_bad_module_type(self):
+    filesystem = MockFilesystem()
+    filesystem.set_contents("root/google/models/model/1.md",
+                            MINIMAL_MARKDOWN_WITH_BAD_MODULE_TYPE)
+    self.set_up_publisher_page(filesystem, "google")
+    with self.assertRaisesRegexp(validator.MarkdownDocumentationError,
+                                 ".*metadata has to start with.*"):
+      validator.validate_documentation_files(
+          documentation_dir="root", filesystem=filesystem)
+
 
 if __name__ == "__main__":
   tf.compat.v1.enable_v2_behavior()
