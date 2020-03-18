@@ -56,8 +56,6 @@ else:
 _MODULE_RESOURCE_STRING = "module"
 
 
-# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
-# could however break checkpoint compatibility.
 def text_embedding_column(key, module_spec, trainable=False):
   """Uses a Module to construct a dense representation from a text feature.
 
@@ -246,8 +244,6 @@ class _TextEmbeddingColumn(
     return cls(**copied_config)
 
 
-# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
-# could however break checkpoint compatibility.
 def image_embedding_column(key, module_spec):
   """Uses a Module to get a dense 1-D representation from the pixels of images.
 

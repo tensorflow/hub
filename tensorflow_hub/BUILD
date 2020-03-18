@@ -32,6 +32,7 @@ py_library(
     deps = [
         ":estimator",
         ":feature_column",
+        ":feature_column_v2",
         ":image_util",
         ":keras_layer",
         ":module",
@@ -102,6 +103,31 @@ py_library(
 py_test(
     name = "feature_column_test",
     srcs = ["feature_column_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    deps = [
+        ":tensorflow_hub",
+        ":test_utils",
+        "//tensorflow_hub:expect_numpy_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "feature_column_v2",
+    srcs = ["feature_column_v2.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":module",
+        ":tf_v1",
+        "//tensorflow_hub:expect_tensorflow_installed",
+        #  "tensorflow/python/feature_column",
+    ],
+)
+
+py_test(
+    name = "feature_column_v2_test",
+    srcs = ["feature_column_v2_test.py"],
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
