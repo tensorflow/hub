@@ -124,8 +124,7 @@ def _get_hparams_from_flags():
       batch_size=FLAGS.batch_size,
       learning_rate=FLAGS.learning_rate,
       momentum=FLAGS.momentum,
-      dropout_rate=FLAGS.dropout_rate,
-      set_memory_growth=FLAGS.set_memory_growth)
+      dropout_rate=FLAGS.dropout_rate)
 
 
 def _check_keras_dependencies():
@@ -163,14 +162,10 @@ def _set_gpu_memory_growth():
   # Original code reference found here: https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth
   gpus = tf.config.experimental.list_physical_devices('GPU')
   if gpus:
-    try:
-      # Currently, memory growth needs to be the same across GPUs
-      for gpu in gpus:
-        tf.config.experimental.set_memory_growth(gpu, True)
-      print("All GPUs will scale memory steadily")
-    except RuntimeError as e:
-      # Memory growth must be set before GPUs have been initialized
-      print(e)
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    print("All GPUs will scale memory steadily")
   else:
     print("No GPUs found for set_memory_growth")
 
