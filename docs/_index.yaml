@@ -3,7 +3,8 @@
 # Both link to ./overview.md and ./*.md for detailed docs.
 book_path: /hub/_book.yaml
 project_path: /hub/_project.yaml
-description: <!--no description-->
+description: A repository and library for reusable machine learning. Download modules and reuse them
+ in your TensorFlow program with minimal amount of code.
 landing_page:
   custom_css_path: /site-assets/css/style.css
   rows:
