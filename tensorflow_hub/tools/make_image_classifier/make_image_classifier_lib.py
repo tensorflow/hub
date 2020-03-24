@@ -137,7 +137,7 @@ def _image_size_for_module(module_layer, requested_image_size=None):
 
   Raises:
     ValueError: If requested_image_size is set but incompatible with the module.
-    ValueError: If the module does not specify a particular inpurt size and
+    ValueError: If the module does not specify a particular input size and
        requested_image_size is not set.
   """
   # TODO(b/139530454): Use a library helper function once available.
