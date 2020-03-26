@@ -58,7 +58,7 @@ def load_module_spec(path):
 
   Raises:
     ValueError: on unexpected values in the module spec.
-    tf.OpError: on file handling exceptions.
+    tf.errors.OpError: on file handling exceptions.
   """
   path = registry.resolver(path)
   return registry.loader(path)

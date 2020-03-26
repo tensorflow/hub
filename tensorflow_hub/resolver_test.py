@@ -59,11 +59,13 @@ class PathResolverTest(tf.test.TestCase):
     # Directory doesn't exist.
     self.assertFalse(self.resolver.is_supported("bar/"))
     self.assertFalse(self.resolver.is_supported("foo/bar"))
+    self.assertFalse(self.resolver.is_supported("nope://throw-OpError"))
 
   def testGetModulePath(self):
-    tf_v1.gfile.MkDir("/tmp/1234")
-    path = self.resolver("/tmp/1234")
-    self.assertEqual(path, "/tmp/1234")
+    tmp_path = os.path.join(self.get_temp_dir(), "1234")
+    tf_v1.gfile.MkDir(tmp_path)
+    path = self.resolver(tmp_path)
+    self.assertEqual(path, tmp_path)
 
 
 class FakeResolver(resolver.Resolver):
