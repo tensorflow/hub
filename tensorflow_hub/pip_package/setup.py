@@ -72,7 +72,7 @@ setup(
              'tensorflow_hub.tools.make_image_classifier.'
              'make_image_classifier:run_main [make_image_classifier]'),
             ('make_nearest_neighbour_index = tensorflow_hub.tools.'
-             'make_nearest_neighbour_index.main:main '
+             'make_nearest_neighbour_index.make_nearest_neighbour_index:main '
              '[make_nearest_neighbour_index]'),
         ],
     },
