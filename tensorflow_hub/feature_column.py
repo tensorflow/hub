@@ -354,7 +354,9 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      self._name = "{}_hub_module_embedding".format(self.key)
+      key_name = self.key if isinstance(self.key,
+                                        six.string_types) else self.key.name
+      self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 
   def create_state(self, state_manager):

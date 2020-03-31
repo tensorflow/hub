@@ -407,6 +407,11 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
       image_column = hub.image_embedding_column("image", self.spec)
       config = image_column.get_config()
 
+  def testName(self):
+    image_column = hub.image_embedding_column(
+        tf.feature_column.numeric_column("image"), self.spec)
+    self.assertEqual("image_hub_module_embedding", image_column.name)
+
 
 class SparseTextEmbeddingColumnTest(tf.test.TestCase):
 
