@@ -13,9 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version 0.9.0-dev
-  * Under development
-
 # Current version 0.8.0
   * Implemented make_nearest_neighbour_index tool.
   * Added text FeatureColumn, hub.text_embedding_column_v2, for TF 2.x.
