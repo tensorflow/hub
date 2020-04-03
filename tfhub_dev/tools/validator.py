@@ -49,7 +49,7 @@ FLAGS = None
 # Regex pattern for the first line of the documentation of models.
 # Example: "Module google/universal-sentence-encoder/1"
 MODEL_HANDLE_PATTERN = (
-    r"# Module (?P<publisher>[\w-]+)/(?P<name>(\w|-|/|&|;|\.)+)/(?P<vers>\d+)")
+    r"# Module (?P<publisher>[\w-]+)/(?P<name>([\w\.-]+(/[\w\.-]+)*))/(?P<vers>\d+)")  # pylint: disable=line-too-long
 # Regex pattern for the first line of the documentation of publishers.
 # Example: "Publisher google"
 PUBLISHER_HANDLE_PATTERN = r"# Publisher (?P<publisher>[\w-]+)"

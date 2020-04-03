@@ -104,6 +104,17 @@ Simple description.
 ## Overview
 """
 
+MARKDOWN_WITH_DOUBLE_SLASH_IN_HANDLE = """# Module google/model//1
+Simple description.
+"""
+
+MARKDOWN_WITH_BAD_CHARS_IN_HANDLE = """# Module google/text-embedding&nbsp;/1
+Simple description.
+"""
+
+MARKDOWN_WITH_MISSING_MODEL_IN_HANDLE = """# Module google/1
+Simple description.
+"""
 
 MARKDOWN_WITHOUT_DESCRIPTION = """# Module google/text-embedding-model/1
 
@@ -288,6 +299,18 @@ class ValidatorTest(tf.test.TestCase):
     self.set_up_publisher_page(filesystem, "some-publisher")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)
+
+  def test_markdown_with_bad_handle(self):
+    for markdown in [
+        MARKDOWN_WITH_DOUBLE_SLASH_IN_HANDLE, MARKDOWN_WITH_BAD_CHARS_IN_HANDLE,
+        MARKDOWN_WITH_MISSING_MODEL_IN_HANDLE
+    ]:
+      filesystem = MockFilesystem()
+      filesystem.set_contents("root/google/models/model/1.md", markdown)
+      with self.assertRaisesRegexp(validator.MarkdownDocumentationError,
+                                   ".*First line of the documentation*"):
+        validator.validate_documentation_files(
+            documentation_dir="root", filesystem=filesystem)
 
   def test_markdown_without_description(self):
     filesystem = MockFilesystem()
