@@ -18,6 +18,9 @@
 # pylint: disable=line-too-long
 r"""Simple transfer learning with image modules from TensorFlow Hub.
 
+WARNING: This code is deprecated in favor of
+https://github.com/tensorflow/hub/tree/master/tensorflow_hub/tools/make_image_classifier
+
 This example shows how to train an image classifier based on any
 TensorFlow Hub module that computes image feature vectors. By default,
 it uses the feature vectors computed by Inception V3 trained on ImageNet.
@@ -994,6 +997,10 @@ def main(_):
   # See https://github.com/tensorflow/tensorflow/issues/3047
   logging_verbosity = logging_level_verbosity(FLAGS.logging_verbosity)
   logging.set_verbosity(logging_verbosity)
+
+  logging.error('WARNING: This tool is deprecated in favor of '
+                'https://github.com/tensorflow/hub/tree/master/'
+                'tensorflow_hub/tools/make_image_classifier')
 
   if not FLAGS.image_dir:
     logging.error('Must set flag --image_dir.')

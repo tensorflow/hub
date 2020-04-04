@@ -83,6 +83,13 @@ class KerasLayer(tf.keras.layers.Layer):
   for guidance on how to pick up trainable variables, losses and updates
   explicitly from Keras objects instead of relying on graph collections.
   This layer class does not support graph collections.
+  Distributed training of the Estimator requires setting the option
+  `session_config.experimental.share_cluster_devices_in_session` within
+  the `tf.estimator.RunConfig`. (It becomes non-experimental in TF2.2.)
+
+  Note: The data types used by a saved model have been fixed at saving time.
+  Using tf.keras.mixed_precision etc. has no effect on the saved model
+  that gets loaded by a hub.KerasLayer.
 
   Attributes:
     handle: A callable object (subject to the conventions above), or a

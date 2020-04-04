@@ -23,5 +23,6 @@ sh_binary(
     data = [
         "//tensorflow_hub",
         "//tensorflow_hub/tools/make_image_classifier",
+        "//tensorflow_hub/tools/make_nearest_neighbour_index",
     ],
 )

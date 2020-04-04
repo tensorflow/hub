@@ -283,8 +283,10 @@ class TFHubStatelessModuleTest(tf.test.TestCase):
       p = tf_v1.placeholder(dtype=tf.int32)
       c = lambda i, x: tf.less(i, p)
       b = lambda i, x: (tf.add(i, 1), m(x))
-      oi, ox = tf.while_loop(c, b, [i, x])
-      dox = tf.gradients(ox, x)[0]
+      oi, ox = tf.while_loop(c, b, [i, x])  # ox = v**p * x
+      v = m.variables[0]
+      dodv = tf.gradients(ox, v)[0]  # d ox / dv = p*v**(p-1) * x
+      dodx = tf.gradients(ox, x)[0]  # d ox / dx = v**p
       with tf_v1.Session() as sess:
         sess.run(tf_v1.global_variables_initializer())
         self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 1}), [1, 20])
@@ -292,9 +294,21 @@ class TFHubStatelessModuleTest(tf.test.TestCase):
         self.assertAllEqual(sess.run([oi, ox], feed_dict={p: 4}), [4, 160])
         # Gradients also use the control flow structures setup earlier.
         # Also check they are working properly.
-        self.assertAllEqual(sess.run([dox], feed_dict={p: 1}), [2])
-        self.assertAllEqual(sess.run([dox], feed_dict={p: 2}), [4])
-        self.assertAllEqual(sess.run([dox], feed_dict={p: 4}), [16])
+        self.assertAllEqual(sess.run([dodv, dodx], feed_dict={p: 1}), [10, 2])
+        self.assertAllEqual(sess.run([dodv, dodx], feed_dict={p: 2}), [40, 4])
+        self.assertAllEqual(sess.run([dodv, dodx], feed_dict={p: 4}), [320, 16])
+
+  # tf.map_fn() is merely a wrapper around tf.while(), but just to be sure...
+  @test_util.run_v1_only("b/138681007")
+  def testUseWithinMap(self):
+    with tf.Graph().as_default():
+      spec = hub.create_module_spec(double_module_fn)
+      m = hub.Module(spec)
+      x = tf.constant([1.0, 11.0, 101.0])
+      y = tf.map_fn(m, x)
+      with tf_v1.Session() as sess:
+        sess.run(tf_v1.global_variables_initializer())
+        self.assertAllEqual(sess.run(y), [2, 22, 202])
 
   def testClearControlDependenciesForModuleStateButNotApplyGraphs(self):
     module_spec = hub.create_module_spec(stateless_module_fn)

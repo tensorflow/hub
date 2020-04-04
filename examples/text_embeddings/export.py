@@ -36,7 +36,7 @@ import sys
 import tempfile
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
 
 FLAGS = None

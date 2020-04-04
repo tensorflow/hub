@@ -23,7 +23,7 @@ import os
 import subprocess
 from distutils.version import LooseVersion
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
 
 from tensorflow_hub import test_utils

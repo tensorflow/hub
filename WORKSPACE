@@ -17,43 +17,27 @@ workspace(name = "org_tensorflow_hub")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+# For use by //tensorflow_hub:protos.bzl.
 git_repository(
-    name = "protobuf_bzl",
-    # v3.6.1.3
-    commit = "66dc42d891a4fc8e9190c524fd67961688a37bbe",
+    name = "com_google_protobuf",
+    # v3.8.0
+    commit = "09745575a923640154bcf307fba8aedff47f240a",
     remote = "https://github.com/google/protobuf.git",
 )
-bind(
-    name = "protobuf",
-    actual = "@protobuf_bzl//:protobuf",
-)
-bind(
-    name = "protobuf_python",
-    actual = "@protobuf_bzl//:protobuf_python",
-)
-bind(
-    name = "protobuf_python_genproto",
-    actual = "@protobuf_bzl//:protobuf_python_genproto",
-)
-bind(
-    name = "protoc",
-    actual = "@protobuf_bzl//:protoc",
-)
-# Using protobuf version 3.6.1.3
+
+# Required by protobuf 3.8.0.
 http_archive(
-    name = "com_google_protobuf",
-    strip_prefix = "protobuf-3.6.1.3",
-    urls = ["https://github.com/google/protobuf/archive/v3.6.1.3.zip"],
+    name = "zlib",
+    build_file = "@com_google_protobuf//:third_party/zlib.BUILD",
+    sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+    strip_prefix = "zlib-1.2.11",
+    urls = ["https://zlib.net/zlib-1.2.11.tar.gz"],
 )
 
-# required by protobuf_python
+# Required by protobuf 3.8.0.
 http_archive(
-    name = "six_archive",
-    build_file = "@protobuf_bzl//:six.BUILD",
-    sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",
-    url = "https://pypi.python.org/packages/source/s/six/six-1.10.0.tar.gz#md5=34eed507548117b2ab523ab14b2f8b55",
-)
-bind(
-    name = "six",
-    actual = "@six_archive//:six",
+    name = "bazel_skylib",
+    sha256 = "bbccf674aa441c266df9894182d80de104cabd19be98be002f6d478aaa31574d",
+    strip_prefix = "bazel-skylib-2169ae1c374aab4a09aa90e65efe1a3aad4e279b",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/2169ae1c374aab4a09aa90e65efe1a3aad4e279b.tar.gz"],
 )

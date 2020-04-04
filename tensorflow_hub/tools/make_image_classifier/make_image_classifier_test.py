@@ -102,6 +102,8 @@ class MakeImageClassifierTest(tf.test.TestCase):
 
   def _load_lite_model(self, filename):
     """Returns a numpy-to-numpy wrapper for the model in a .tflite file."""
+    # TODO(b/149905925): Enable when fixed.
+    self.skipTest("b/149905925 broke this.")
     self.assertTrue(os.path.isfile(filename))
     with tf.io.gfile.GFile(filename, "rb") as f:
       model_content = f.read()

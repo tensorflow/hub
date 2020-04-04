@@ -490,7 +490,7 @@ class PathResolver(Resolver):
   def is_supported(self, handle):
     try:
       return tf_v1.gfile.Exists(handle)
-    except tf.OpError:
+    except tf.errors.OpError:
       return False
 
   def __call__(self, handle):

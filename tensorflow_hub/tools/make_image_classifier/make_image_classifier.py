@@ -107,7 +107,13 @@ flags.DEFINE_float(
 flags.DEFINE_float(
     "dropout_rate", _DEFAULT_HPARAMS.dropout_rate,
     "The fraction of the input units to drop, used in dropout layer.")
-
+flags.DEFINE_bool(
+    "set_memory_growth", False,
+    "If flag is set, memory growth functionality flag will be set as true for "
+    "all GPUs prior to training. "
+    "More details: "
+    "https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth"
+)
 FLAGS = flags.FLAGS
 
 
@@ -154,6 +160,19 @@ def _assert_accuracy(train_result, assert_accuracy_at_least):
     raise AssertionError("ACCURACY FAILED:", accuracy_message)
 
 
+def _set_gpu_memory_growth():
+  # Original code reference found here:
+  # https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth
+  gpus = tf.config.experimental.list_physical_devices("GPU")
+  if gpus:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    print("All GPUs will scale memory steadily")
+  else:
+    print("No GPUs found for set_memory_growth")
+
+
 def main(args):
   """Main function to be called by absl.app.run() after flag parsing."""
   del args
@@ -161,6 +180,9 @@ def main(args):
   hparams = _get_hparams_from_flags()
 
   image_dir = FLAGS.image_dir or lib.get_default_image_dir()
+
+  if FLAGS.set_memory_growth:
+    _set_gpu_memory_growth()
 
   model, labels, train_result = lib.make_image_classifier(
       FLAGS.tfhub_module, image_dir, hparams, FLAGS.image_size)

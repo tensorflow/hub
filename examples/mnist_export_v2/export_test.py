@@ -35,7 +35,7 @@ class ExportTest(tf.test.TestCase):
     super(ExportTest, self).setUp()
     def create_image_and_label(index):
       image = tf.cast(255 * tf.random.normal([1, 28, 28, 1]), tf.uint8)
-      return dict(image=image, label=index)
+      return dict(image=image, label=[index])
     self.mock_dataset = tf.data.Dataset.range(5).map(create_image_and_label)
 
   def test_model_exporting(self):
