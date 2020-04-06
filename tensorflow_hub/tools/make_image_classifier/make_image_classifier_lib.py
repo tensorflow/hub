@@ -191,7 +191,7 @@ def build_model(module_layer, hparams, image_size, num_classes):
   return model
 
 
-def train_model(model, hparams, train_data_and_size, valid_data_and_size, log_dir):
+def train_model(model, hparams, train_data_and_size, valid_data_and_size, log_dir=None):
   """Trains model with the given data and hyperparameters.
 
   Args:
@@ -209,7 +209,8 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size, log_di
     valid_data_and_size: A (data, size) tuple in which data is validation data
       to be fed in tf.keras.Model.fit(), size is a Python integer with the
       numbers of validation.
-    log_dir: A directory to write logs for TensorBoard into.
+    log_dir: A directory to write logs for TensorBoard into (defaults to None,
+      no logs will then be written).
 
   Returns:
     The tf.keras.callbacks.History object returned by tf.keras.Model.fit().
@@ -237,8 +238,9 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size, log_di
       callbacks=callbacks)
 
 
-def make_image_classifier(tfhub_module, image_dir, hparams, log_dir=None,
-                          requested_image_size=None):
+def make_image_classifier(tfhub_module, image_dir, hparams,
+                          requested_image_size=None,
+                          log_dir=None):
   """Builds and trains a TensorFLow model for image classification.
 
   Args:
@@ -249,6 +251,8 @@ def make_image_classifier(tfhub_module, image_dir, hparams, log_dir=None,
     requested_image_size: A Python integer controlling the size of images to
       feed into the Hub module. If the module has a fixed input size, this
       must be omitted or set to that same value.
+    log_dir: A directory to write logs for TensorBoard into (defaults to None,
+      no logs will then be written).
   """
   module_layer = hub.KerasLayer(tfhub_module,
                                 trainable=hparams.do_fine_tuning)
