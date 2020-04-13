@@ -188,7 +188,7 @@ def main(args):
     _set_gpu_memory_growth()
 
   model, labels, train_result = lib.make_image_classifier(
-      FLAGS.tfhub_module, image_dir, hparams, FLAGS.summaries_dir, FLAGS.image_size)
+      FLAGS.tfhub_module, image_dir, hparams, FLAGS.image_size, FLAGS.summaries_dir)
   if FLAGS.assert_accuracy_at_least:
     _assert_accuracy(train_result, FLAGS.assert_accuracy_at_least)
   print("Done with training.")
