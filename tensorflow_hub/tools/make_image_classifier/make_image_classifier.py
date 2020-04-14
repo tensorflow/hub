@@ -80,6 +80,9 @@ flags.DEFINE_string(
     "Where to save the labels (that is, names of image subdirectories). "
     "The lines in this file appear in the same order as the predictions "
     "of the model.")
+flags.DEFINE_string(
+    "summaries_dir", None,
+    "Where to save summary logs for TensorBoard.")
 flags.DEFINE_float(
     "assert_accuracy_at_least", None,
     "If set, the program fails if the validation accuracy at the end of "
@@ -185,7 +188,8 @@ def main(args):
     _set_gpu_memory_growth()
 
   model, labels, train_result = lib.make_image_classifier(
-      FLAGS.tfhub_module, image_dir, hparams, FLAGS.image_size)
+      FLAGS.tfhub_module, image_dir, hparams, FLAGS.image_size,
+      FLAGS.summaries_dir)
   if FLAGS.assert_accuracy_at_least:
     _assert_accuracy(train_result, FLAGS.assert_accuracy_at_least)
   print("Done with training.")
