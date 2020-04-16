@@ -207,6 +207,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     estimator.predict(input_fn)
 
   def testWorksWithDNNEstimatorAndDataset(self):
+    self.skipTest("b/154115879 - needs more investigation for timeout.")
     description_embeddings = hub.text_embedding_column_v2(
         "descriptions", self.model_returning_dicts, output_key="outputs")
 
