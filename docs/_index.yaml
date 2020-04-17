@@ -58,10 +58,10 @@ landing_page:
       - label: Read on TensorFlow blog
         path: https://blog.tensorflow.org/2018/03/introducing-tensorflow-hub-library.html
     - heading: TensorFlow Hub at the Dev Summit
-      youtube_id: rirzJ-e68cw
+      youtube_id: 3seWxHGnDqM
       buttons:
       - label: Watch the video
-        path: https://www.youtube.com/watch?v=rirzJ-e68cw
+        path: https://www.youtube.com/watch?v=3seWxHGnDqM
     - heading: TensorFlow Hub on GitHub
       image_path: /resources/images/github-card-16x9.png
       path: https://github.com/tensorflow/hub
