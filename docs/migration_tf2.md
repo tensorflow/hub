@@ -17,7 +17,7 @@ It can only load assets in the hub.Module format.
 The new API of `hub.load()` (and `hub.KerasLayer`, which wraps it for Keras)
 works for TensorFlow 1.15 (in eager and graph mode) and in TensorFlow 2.
 This new API can load the new TF2 SavedModel assets, and, with
-the restrictions laid out below, for the older hub.Module assets.
+the restrictions laid out below, for the legacy hub.Module assets.
 
 In general, it is recommended to use new API wherever possible.
 
@@ -43,7 +43,7 @@ model = tf.keras.Sequential([
     ...])
 ```
 
-Hub's tutorials are being updated to the new APIs. See in particular
+Many tutorials show these APIs in action. See in particular
 
   * [Text classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
   * [Image classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
@@ -51,53 +51,61 @@ Hub's tutorials are being updated to the new APIs. See in particular
 If the hub.Module you use has a newer version that comes in the TF2 SavedModel
 format, we recommend to switch the API and the module version at the same time.
 
-## Loading old hub.Modules
+### Using the new API in Estimator training
+
+If you use a TF2 SavedModel in an Estimator for training with parameter servers
+(or otherwise in a TF1 Session with variables placed on remote devices),
+you need to set `experimental.share_cluster_devices_in_session` in the
+tf.Session's ConfigProto, or else you will get an error like
+"Assigned device '/job:ps/replica:0/task:0/device:CPU:0'
+does not match any device."
+
+The necessary option can be set like
+
+```python
+session_config = tf.compat.v1.ConfigProto()
+session_config.experimental.share_cluster_devices_in_session = True
+run_config = tf.estimator.RunConfig(..., session_config=session_config)
+estimator = tf.estimator.Estimator(..., config=run_config)
+```
+
+Starting with TF2.2, this option is no longer experimental, and
+the `.experimental` piece can be dropped.
+
+
+## Loading legacy hub.Modules
 
 It can happen that a new TF2 SavedModel is not yet available for your
-use-case and you need to load an old hub.Module.
-
-If you use Keras, please wait for `tensorflow_hub` release 0.7, which will
-support this in `hub.KerasLayer` soon.
-
-As of this writing, only `hub.load()` supports loading of the hub.Modules
-of TF1 into a TF2 program. The code is similar to calling a serving signature.
-
-Instead of
+use-case and you need to load an legacy hub.Module. Starting in `tensorflow_hub`
+release 0.7, you can use legacy hub.Modules together with `hub.KerasLayer` as
+shown below:
 
 ```python
-# DEPRECATED: TensorFlow 1
-m = hub.Module(handle)
+m = hub.KerasLayer(handle)
 tensor_out = m(tensor_in)
-with tf.train.SingularMonitoredSession() as sess:
-  print(sess.run(tensor_out))
 ```
 
-you can write
+Additionally `KerasLayer` exposes the ability to specify `tags`, `signature`,
+`output_key` and `signature_outputs_as_dict` for more specific usages of
+legacy hub.Modules and legacy SavedModels.
 
-```python
-# TensorFlow 2
-m = hub.load(handle, tags=[])
-tensors_out_dict = m.signatures["default"](tensor_in)
-tensor_out = tensors_out_dict["default"]
-print(tensor_out.numpy())  # If executing in eager mode.
-```
+Note: `trainable=True` is NOT supported when loading old hub.Modules.
 
-by spelling out the default tag set, signature name and output tensor key
-of a hub.Module.
 
-More generally, instead of
+## Using lower level APIs
+
+Old hub.Modules can be loaded via `tf.saved_model.load`. Instead of
 
 ```python
 # DEPRECATED: TensorFlow 1
 m = hub.Module(handle, tags={"foo", "bar"})
 tensors_out_dict = m(dict(x1=..., x2=...), signature="sig", as_dict=True)
 ```
-
-you can write
+it is recommended to use:
 
 ```python
 # TensorFlow 2
-m = hub.load(handle, tags={"foo", "bar"})
+m = hub.load(path, tags={"foo", "bar"})
 tensors_out_dict = m.signatures["sig"](x1=..., x2=...)
 ```
 
@@ -107,8 +115,13 @@ keyed by signature names. Calling such a function computes all its outputs,
 even if unused. (This is different from the lazy evaluation of TF1's
 graph mode.)
 
-Retraining hub.Modules loaded via `hub.load()` is not supported:
-Trainable variables are imported as such, but update ops (for batch
-normalization etc.) and regularization losses are dropped.
-Be sure to *not* capture the trainable variables of `m` in a gradient tape
-or otherwise in an optimizer. Do *not* import `tags={"train"}`.
+## Retraining legacy hub.Modules
+
+Retraining legacy hub.Modules with the new APIs is not supported. This is due to
+them depending on `tf.saved_model.load` converting a `flat graph view` into
+an `object view` and dropping important details. Such as: trainable variables
+are imported as such, but update ops (for batch normalization etc.),
+regularization losses and cond/while contexts for differentiation are dropped.
+
+If you need to retrain legacy hub.Modules you will need to keep using the
+1.x APIs.

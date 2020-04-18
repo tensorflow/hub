@@ -19,8 +19,20 @@ py_binary(
     srcs = ["search.py"],
     python_version = "PY3",
     deps = [
+        ":search_lib",
         ":utils",
         "//tensorflow_hub:expect_numpy_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "search_lib",
+    srcs = ["search.py"],
+    deps = [
+        ":utils",
+        "//tensorflow_hub:expect_numpy_installed",
+        "//tensorflow_hub:expect_pandas_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -33,5 +45,31 @@ py_library(
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub:expect_tensorflow_datasets_installed",
         "//tensorflow_hub",
+    ],
+)
+
+py_test(
+    name = "utils_test",
+    srcs = ["utils_test.py"],
+    python_version = "PY3",
+    tags = [
+        "noasan",  # sklearn seem to lead to asan and tsan failures.
+        "notsan",
+    ],
+    deps = [
+        ":utils",
+        "//tensorflow_hub:expect_sklearn_installed",
+    ],
+)
+
+py_test(
+    name = "search_test",
+    srcs = ["search_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":search_lib",
+        "//tensorflow_hub:expect_absl_py_installed",  # "/testing:flagsaver"
+        "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub:expect_tensorflow_datasets_installed",
     ],
 )

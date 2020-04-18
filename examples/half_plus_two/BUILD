@@ -17,7 +17,8 @@ licenses(["notice"])  # Apache 2.0 License
 py_binary(
     name = "export",
     srcs = ["export.py"],
-    python_version = "PY2",
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",
@@ -28,7 +29,8 @@ py_test(
     name = "half_plus_two_test",
     srcs = ["half_plus_two_test.py"],
     data = [":export"],
-    python_version = "PY2",
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",

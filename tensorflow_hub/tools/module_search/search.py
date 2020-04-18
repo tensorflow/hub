@@ -20,9 +20,8 @@ from __future__ import print_function
 
 from absl import app
 from absl import flags
-
-import pandas as pd
 import numpy as np
+import pandas as pd
 import tensorflow.compat.v2 as tf
 
 from tensorflow_hub.tools.module_search import utils
@@ -76,7 +75,7 @@ def compute_score(module_spec, data_spec):
 
 def main(argv):
   if len(argv) > 1:
-    raise app.UsageError('Too many command-line arguments.')
+    raise app.UsageError("Too many command-line arguments.")
 
   if not FLAGS.dataset:
     raise app.UsageError("--dataset is a required argument.")
@@ -88,11 +87,15 @@ def main(argv):
   if FLAGS.module_list:
     with tf.io.gfile.GFile(FLAGS.module_list) as f:
       lines = f.read().split("\n")
-      module_list.extend([l for l in lines if l != "" and not l.startswith("#")])
+      module_list.extend([l for l in lines if l and not l.startswith("#")])
+
+  if not module_list:
+    raise app.UsageError(
+        "Use --module or --module_list to define which modules to search.")
 
   ds_sections = FLAGS.dataset.split("#")
   dataset = ds_sections[0]
-  train_examples = int(ds_sections[1]) if len(ds_sections) != 0 else None
+  train_examples = int(ds_sections[1]) if len(ds_sections) != 1 else None
   data_spec = {
     "dataset": dataset,
     "split": "train",
@@ -122,5 +125,5 @@ def main(argv):
     print(df)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.run(main)

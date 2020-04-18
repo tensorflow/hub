@@ -363,6 +363,7 @@ def atomic_download(handle,
 
   Raises:
     ValueError: if the Module is not found.
+    tf.errors.OpError: file I/O failures raise the appropriate subtype.
   """
   lock_file = _lock_filename(module_dir)
   task_uid = uuid.uuid4().hex
@@ -383,8 +384,20 @@ def atomic_download(handle,
           # Lock file will be deleted in the finally-clause.
           return module_dir
         break  # Proceed to downloading the module.
-      except tf.errors.NotFoundError:
+      # These errors are believed to be permanent problems with the
+      # module_dir that justify failing the download.
+      except (tf.errors.NotFoundError,
+              tf.errors.PermissionDeniedError,
+              tf.errors.UnauthenticatedError,
+              tf.errors.ResourceExhaustedError,
+              tf.errors.InternalError,
+              tf.errors.InvalidArgumentError,
+              tf.errors.UnimplementedError):
         raise
+      # All other errors are retried.
+      # TODO(b/144424849): Retrying an AlreadyExistsError from the atomic write
+      # should be good enough, but see discussion about misc filesystem types.
+      # TODO(b/144475403): How atomic is the overwrite=False check?
       except tf.errors.OpError:
         pass
 
@@ -477,7 +490,7 @@ class PathResolver(Resolver):
   def is_supported(self, handle):
     try:
       return tf_v1.gfile.Exists(handle)
-    except tf.OpError:
+    except tf.errors.OpError:
       return False
 
   def __call__(self, handle):

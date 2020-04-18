@@ -18,12 +18,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
 import os
 
 from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+
+from tensorflow_hub import test_utils
+
 
 # NOTE: A Hub-style SavedModel can either be constructed manually, or by
 # relying on tf.saved_model.save(keras_model, ...) to put in the expected
@@ -32,6 +36,7 @@ import tensorflow_hub as hub
 # The big exception are SavedModels with hyperparameters: There is no generic
 # helper code yet to bridge between optional tensor inputs and properties
 # in Keras model objects.
+
 
 # A series of code changes implemented the necessary Keras functionality
 # up to TF 2.0.0-beta1. For this test to work, we need them up to and including
@@ -51,6 +56,10 @@ def _skip_if_no_tf_asset(test_case):
     test_case.skipTest(
         "Your TensorFlow version (%s) looks too old for creating SavedModels "
         " with assets." % tf.__version__)
+
+
+def _json_cycle(x):
+  return json.loads(json.dumps(x))
 
 
 def _save_half_plus_one_model(export_dir, save_from_keras=False):
@@ -180,6 +189,55 @@ def _save_model_with_custom_attributes(export_dir, temp_dir,
   tf.saved_model.save(model, export_dir)
   tf.io.gfile.remove(asset_source_file_name)
   return export_dir
+
+
+def _save_model_with_dict_input_output(export_dir):
+  """Writes SavedModel using dicts to compute x+y, x+2y and maybe x-y."""
+  @tf.function
+  def call_fn(d, return_dict=False):
+    x = d["x"]
+    y = d["y"]
+    sigma = tf.concat([tf.add(x, y), tf.add(x, 2*y)], axis=-1)
+    if return_dict:
+      return dict(sigma=sigma, delta=tf.subtract(x, y))
+    else:
+      return sigma
+  # Trigger traces.
+  d_spec = dict(x=tf.TensorSpec(shape=(None, 1), dtype=tf.float32),
+                y=tf.TensorSpec(shape=(None, 1), dtype=tf.float32))
+  for return_dict in (False, True):
+    call_fn.get_concrete_function(d_spec, return_dict=return_dict)
+
+  obj = tf.train.Checkpoint()
+  obj.__call__ = call_fn
+  tf.saved_model.save(obj, export_dir)
+
+
+def _save_model_with_obscurely_shaped_list_output(export_dir):
+  """Writes SavedModel with hard-to-predict output shapes."""
+  def broadcast_obscurely_to(input, shape):
+    """Like tf.broadcast_to(), but hostile to static shape propagation."""
+    obscured_shape = tf.cast(tf.cast(shape, tf.float32)
+                             # Add small random noise that gets rounded away.
+                             + 0.1*tf.sin(tf.random.uniform((), -3, +3)) + 0.3,
+                             tf.int32)
+    return tf.broadcast_to(input, obscured_shape)
+
+  @tf.function(
+      input_signature=[tf.TensorSpec(shape=(None, 1), dtype=tf.float32)])
+  def call_fn(x):
+    # For each batch element x, the three outputs are
+    #   value x with shape (1)
+    #   value 2*x broadcast to shape (2,2)
+    #   value 3*x broadcast to shape (3,3,3)
+    batch_size = tf.shape(x)[0]
+    return [broadcast_obscurely_to(tf.reshape(i*x, [batch_size] + [1]*i),
+                                   tf.concat([[batch_size], [i]*i], axis=0))
+            for i in range(1, 4)]
+
+  obj = tf.train.Checkpoint()
+  obj.__call__ = call_fn
+  tf.saved_model.save(obj, export_dir)
 
 
 class KerasTest(tf.test.TestCase, parameterized.TestCase):
@@ -329,6 +387,90 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     actual_outputs = imported(inputs).numpy()
     self.assertAllEqual(expected_outputs, actual_outputs)
 
+  @parameterized.named_parameters(("NoOutputShapes", False),
+                                  ("WithOutputShapes", True))
+  def testInputOutputDict(self, pass_output_shapes):
+    """Tests use of input/output dicts."""
+    # Create a SavedModel to compute sigma=[x+y, x+2y] and maybe delta=x-y.
+    export_dir = os.path.join(self.get_temp_dir(), "with-dicts")
+    _save_model_with_dict_input_output(export_dir)
+    # Build a Model from it using Keras' "functional" API.
+    x_in = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+    y_in = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+    dict_in = dict(x=x_in, y=y_in)
+    kwargs = dict(arguments=dict(return_dict=True))  # For the SavedModel.
+    if pass_output_shapes:
+      # Shape inference works without this, but we pass it anyways to exercise
+      # that code path and see that map_structure is called correctly
+      # and calls Tensor.set_shape() with compatible values.
+      kwargs["output_shape"] = dict(sigma=(2,), delta=(1,))
+    imported = hub.KerasLayer(export_dir, **kwargs)
+    dict_out = imported(dict_in)
+    delta_out = dict_out["delta"]
+    sigma_out = dict_out["sigma"]
+    concat_out = tf.keras.layers.concatenate([delta_out, sigma_out])
+    model = tf.keras.Model(dict_in, [delta_out, sigma_out, concat_out])
+    # Test the model.
+    x = np.array([[11.], [22.], [33.]], dtype=np.float32)
+    y = np.array([[1.], [2.], [3.]], dtype=np.float32)
+    outputs = model(dict(x=x, y=y))
+    self.assertLen(outputs, 3)
+    delta, sigma, concat = [x.numpy() for x in outputs]
+    self.assertAllClose(delta,
+                        np.array([[10.], [20.], [30.]]))
+    self.assertAllClose(sigma,
+                        np.array([[12., 13.], [24., 26.], [36., 39.]]))
+    self.assertAllClose(
+        concat,
+        np.array([[10., 12., 13.], [20., 24., 26.], [30., 36., 39.]]))
+    # Test round-trip through config.
+    config = imported.get_config()
+    new_layer = hub.KerasLayer.from_config(_json_cycle(config))
+    if pass_output_shapes:
+      self.assertEqual(new_layer._output_shape, imported._output_shape)
+    else:
+      self.assertFalse(hasattr(new_layer, "_output_shape"))
+
+  @parameterized.named_parameters(("NoOutputShapes", False),
+                                  ("WithOutputShapes", True))
+  def testOutputShapeList(self, pass_output_shapes):
+    export_dir = os.path.join(self.get_temp_dir(), "obscurely-shaped")
+    _save_model_with_obscurely_shaped_list_output(export_dir)
+
+    kwargs = {}
+    if pass_output_shapes:
+      kwargs["output_shape"] = [[1], [2, 2], [3, 3, 3]]
+    inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+    imported = hub.KerasLayer(export_dir, **kwargs)
+    outp = imported(inp)
+    model = tf.keras.Model(inp, outp)
+
+    x = np.array([[1.], [10.]], dtype=np.float32)
+    outputs = model(x)
+    self.assertLen(outputs, 3)
+    single, double, triple = [x.numpy() for x in outputs]
+    # The outputs above are eager Tensors with concrete values,
+    # so they always have a fully defined shape. However, running
+    # without crash verifies that no incompatible shapes were set.
+    # See EstimatorTest below for graph-mode Tensors.
+    self.assertAllClose(single, np.array([[1.], [10.]]))
+    self.assertAllClose(double, np.array([[[2., 2.], [2., 2.]],
+                                          [[20., 20.], [20., 20.]]]))
+    self.assertAllClose(triple, np.array(
+        [[[[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]]],
+         [[[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]]]]))
+    # Test round-trip through config.
+    config = imported.get_config()
+    new_layer = hub.KerasLayer.from_config(_json_cycle(config))
+    if pass_output_shapes:
+      self.assertEqual(new_layer._output_shape, imported._output_shape)
+    else:
+      self.assertFalse(hasattr(new_layer, "_output_shape"))
+
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testComputeOutputShape(self, save_from_keras):
     if save_from_keras: _skip_if_keras_save_too_old(self)
@@ -337,6 +479,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     layer = hub.KerasLayer(export_dir, output_shape=[1])
     self.assertEqual([10, 1],
                      layer.compute_output_shape(tuple([10, 1])).as_list())
+    layer.get_config()
 
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testGetConfigFromConfig(self, save_from_keras):
@@ -348,7 +491,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     result = layer(in_value).numpy()
 
     config = layer.get_config()
-    new_layer = hub.KerasLayer.from_config(config)
+    new_layer = hub.KerasLayer.from_config(_json_cycle(config))
     new_result = new_layer(in_value).numpy()
     self.assertEqual(result, new_result)
 
@@ -364,7 +507,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllEqual(expected_result, result)
 
     config = layer.get_config()
-    new_layer = hub.KerasLayer.from_config(config)
+    new_layer = hub.KerasLayer.from_config(_json_cycle(config))
     new_result = new_layer(in_value).numpy()
     self.assertAllEqual(result, new_result)
 
@@ -591,6 +734,202 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(predictions["mean"], np.array([0.0]))
     self.assertAllClose(predictions["variance"], np.array([1.0]))
     self.assertAllClose(predictions["output"], np.array(y))
+
+  def _output_shape_list_model_fn(self, features, labels, mode, params):
+    inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
+    kwargs = {}
+    if "output_shape" in params:
+      kwargs["output_shape"] = params["output_shape"]
+    imported = hub.KerasLayer(params["hub_module"], **kwargs)
+    outp = imported(inp)
+    model = tf.keras.Model(inp, outp)
+
+    out_list = model(features, training=(mode == tf.estimator.ModeKeys.TRAIN))
+    for j, out in enumerate(out_list):
+      i = j+1  # Sample shapes count from one.
+      actual_shape = out.shape.as_list()[1:]  # Without batch size.
+      expected_shape = [i]*i if "output_shape" in params else [None]*i
+      self.assertEqual(actual_shape, expected_shape)
+    predictions = {["one", "two", "three"][i]: out_list[i] for i in range(3)}
+    imported.get_config()
+
+    return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions,
+                                      loss=None, train_op=None)
+
+  @parameterized.named_parameters(("NoOutputShapes", False),
+                                  ("WithOutputShapes", True))
+  def testOutputShapeList(self, pass_output_shapes):
+    export_dir = os.path.join(self.get_temp_dir(), "obscurely-shaped")
+    _save_model_with_obscurely_shaped_list_output(export_dir)
+
+    params = dict(hub_module=export_dir)
+    if pass_output_shapes:
+      params["output_shape"] = [[1], [2, 2], [3, 3, 3]]
+    estimator = tf.estimator.Estimator(
+        model_fn=self._output_shape_list_model_fn,
+        params=params)
+    x = [[1.], [10.]]
+    input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+        np.array(x, dtype=np.float32),
+        batch_size=len(x), num_epochs=None, shuffle=False)
+    predictions = next(estimator.predict(input_fn, yield_single_examples=False))
+    single = predictions["one"]
+    double = predictions["two"]
+    triple = predictions["three"]
+    self.assertAllClose(single, np.array([[1.], [10.]]))
+    self.assertAllClose(double, np.array([[[2., 2.], [2., 2.]],
+                                          [[20., 20.], [20., 20.]]]))
+    self.assertAllClose(triple, np.array(
+        [[[[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]]],
+         [[[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]]]]))
+
+
+class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
+  """Unit tests for KerasLayer."""
+
+  @parameterized.named_parameters(
+      ("v1_implicit_tags", "hub_module_v1_mini"),
+      ("v2_implicit_tags", "saved_model_v2_mini"),
+      )
+  def test_load_with_defaults(self, module_name):
+    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
+    path = test_utils.get_test_data_path(module_name)
+    layer = hub.KerasLayer(path)
+    output = layer(inputs)
+    self.assertEqual(output, expected_outputs)
+
+  @parameterized.parameters(
+      ("hub_module_v1_mini", None, None, True),
+      ("hub_module_v1_mini", None, None, False),
+      ("hub_module_v1_mini", "default", None, True),
+      ("hub_module_v1_mini", None, "default", False),
+      ("hub_module_v1_mini", "default", "default", False),
+      )
+  def test_load_legacy_hub_module_v1_with_signature(
+      self, module_name, signature, output_key, as_dict):
+    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
+    path = test_utils.get_test_data_path(module_name)
+    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+                           signature_outputs_as_dict=as_dict)
+    output = layer(inputs)
+    if as_dict:
+      self.assertEqual(output, {"default": expected_outputs})
+    else:
+      self.assertEqual(output, expected_outputs)
+
+  @parameterized.parameters(
+      ("saved_model_v2_mini", None, None, False),
+      ("saved_model_v2_mini", "serving_default", None, True),
+      ("saved_model_v2_mini", "serving_default", "output_0", False),
+      )
+  def test_load_callable_saved_model_v2_with_signature(
+      self, module_name, signature, output_key, as_dict):
+    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
+    path = test_utils.get_test_data_path(module_name)
+    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+                           signature_outputs_as_dict=as_dict)
+    output = layer(inputs)
+    if as_dict:
+      self.assertIsInstance(output, dict)
+      self.assertEqual(output["output_0"], expected_outputs)
+    else:
+      self.assertEqual(output, expected_outputs)
+
+  @parameterized.parameters(
+      ("hub_module_v1_mini", None, None, True),
+      ("hub_module_v1_mini", None, None, False),
+      ("hub_module_v1_mini", "default", None, True),
+      ("hub_module_v1_mini", None, "default", False),
+      ("hub_module_v1_mini", "default", "default", False),
+      ("saved_model_v2_mini", None, None, False),
+      ("saved_model_v2_mini", "serving_default", None, True),
+      ("saved_model_v2_mini", "serving_default", "output_0", False),
+      )
+  def test_keras_layer_get_config(
+      self, module_name, signature, output_key, as_dict):
+    inputs = 10.  # Test modules perform increment op.
+    path = test_utils.get_test_data_path(module_name)
+    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+                           signature_outputs_as_dict=as_dict)
+    outputs = layer(inputs)
+    config = layer.get_config()
+    new_layer = hub.KerasLayer.from_config(_json_cycle(config))
+    new_outputs = new_layer(inputs)
+    self.assertEqual(outputs, new_outputs)
+
+  def test_keras_layer_fails_if_signature_output_not_specified(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    with self.assertRaisesRegex(
+        ValueError, "When using a signature, either output_key or "
+        "signature_outputs_as_dict=True should be set."):
+      hub.KerasLayer(path, signature="serving_default")
+
+  def test_keras_layer_fails_if_with_outputs_as_dict_but_no_signature(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    with self.assertRaisesRegex(
+        ValueError,
+        "signature_outputs_as_dict is only valid if specifying a signature *"):
+      hub.KerasLayer(path, signature_outputs_as_dict=True)
+
+  def test_keras_layer_fails_if_saved_model_v2_with_tags(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    with self.assertRaises(ValueError):
+      hub.KerasLayer(path, signature=None, tags=["train"])
+
+  def test_keras_layer_fails_if_setting_both_output_key_and_as_dict(self):
+    path = test_utils.get_test_data_path("hub_module_v1_mini")
+    with self.assertRaisesRegex(
+        ValueError, "When using a signature, either output_key or "
+        "signature_outputs_as_dict=True should be set."):
+      hub.KerasLayer(path, signature="default",
+                     signature_outputs_as_dict=True, output_key="output")
+
+  def test_keras_layer_fails_if_output_is_not_dict(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    layer = hub.KerasLayer(path, output_key="output_0")
+    with self.assertRaisesRegex(
+        ValueError, "Specifying `output_key` is forbidden if output type *"):
+      layer(10.)
+
+  def test_keras_layer_fails_if_output_key_not_in_layer_outputs(self):
+    path = test_utils.get_test_data_path("hub_module_v1_mini")
+    layer = hub.KerasLayer(path, output_key="unknown")
+    with self.assertRaisesRegex(
+        ValueError, "KerasLayer output does not contain the output key*"):
+      layer(10.)
+
+  def test_keras_layer_fails_if_hub_module_trainable(self):
+    path = test_utils.get_test_data_path("hub_module_v1_mini")
+    layer = hub.KerasLayer(path, trainable=True)
+    with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
+      layer(10.)
+
+  def test_keras_layer_fails_if_signature_trainable(self):
+    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    layer = hub.KerasLayer(path, signature="serving_default",
+                           signature_outputs_as_dict=True, trainable=True)
+    layer.trainable = True
+    with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
+      layer(10.)
+
+  def test_keras_layer_logs_if_training_zero_variables(self):
+    path = os.path.join(self.get_temp_dir(), "zero-variables")
+    _save_model_with_hparams(path)
+    layer = hub.KerasLayer(path, trainable=True)
+    if hasattr(self, "assertLogs"):  # New in Python 3.4.
+      with self.assertLogs(level="ERROR") as logs:
+        layer([[10.]])
+        layer([[10.]])
+      self.assertLen(logs.records, 1)  # Duplicate logging is avoided.
+      self.assertRegexpMatches(logs.records[0].msg, "zero trainable weights")
+    else:
+      # Just test that it runs at all.
+      layer([[10.]])
+      layer([[10.]])
 
 
 if __name__ == "__main__":

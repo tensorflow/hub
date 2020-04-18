@@ -56,8 +56,6 @@ else:
 _MODULE_RESOURCE_STRING = "module"
 
 
-# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
-# could however break checkpoint compatibility.
 def text_embedding_column(key, module_spec, trainable=False):
   """Uses a Module to construct a dense representation from a text feature.
 
@@ -241,13 +239,11 @@ class _TextEmbeddingColumn(
     return config
 
   @classmethod
-  def from_config(cls, config):
+  def from_config(cls, config, custom_objects=None, columns_by_name=None):
     copied_config = config.copy()
     return cls(**copied_config)
 
 
-# TODO(b/131678043): Use hub.load to make it possible to load v2 modules. This
-# could however break checkpoint compatibility.
 def image_embedding_column(key, module_spec):
   """Uses a Module to get a dense 1-D representation from the pixels of images.
 
@@ -358,7 +354,9 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      self._name = "{}_hub_module_embedding".format(self.key)
+      key_name = self.key if isinstance(self.key,
+                                        six.string_types) else self.key.name
+      self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 
   def create_state(self, state_manager):
@@ -420,7 +418,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     return config
 
   @classmethod
-  def from_config(cls, config):
+  def from_config(cls, config, custom_objects=None, columns_by_name=None):
     copied_config = config.copy()
     return cls(**copied_config)
 

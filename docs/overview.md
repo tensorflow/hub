@@ -13,7 +13,7 @@ Get started with TensorFlow Hub:
 -   [Legacy: TensorFlow Hub in TF1](tf1_hub_module.md)
 -   Tutorials:
     -   [Text classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
-    -   [Image classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
+    -   [Image classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
     -   Additional examples
         [on GitHub](https://github.com/tensorflow/hub/blob/master/examples/README.md)
 -   Find models on [tfhub.dev](https://tfhub.dev)

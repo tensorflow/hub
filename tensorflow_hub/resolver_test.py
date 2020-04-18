@@ -59,11 +59,13 @@ class PathResolverTest(tf.test.TestCase):
     # Directory doesn't exist.
     self.assertFalse(self.resolver.is_supported("bar/"))
     self.assertFalse(self.resolver.is_supported("foo/bar"))
+    self.assertFalse(self.resolver.is_supported("nope://throw-OpError"))
 
   def testGetModulePath(self):
-    tf_v1.gfile.MkDir("/tmp/1234")
-    path = self.resolver("/tmp/1234")
-    self.assertEqual(path, "/tmp/1234")
+    tmp_path = os.path.join(self.get_temp_dir(), "1234")
+    tf_v1.gfile.MkDir(tmp_path)
+    path = self.resolver(tmp_path)
+    self.assertEqual(path, tmp_path)
 
 
 class FakeResolver(resolver.Resolver):
@@ -280,6 +282,19 @@ class ResolverTest(tf.test.TestCase):
                                               module_dir))
     second_download_thread.join(30)
     # The waiting terminates without errors.
+
+  def testModuleDownloadPermissionDenied(self):
+    readonly_dir = os.path.join(self.get_temp_dir(), "readonly")
+    os.mkdir(readonly_dir, 0o500)
+    module_dir = os.path.join(readonly_dir, "module")
+
+    def unused_download_fn(handle, tmp_dir):
+      del handle, tmp_dir
+      self.fail("This should not be called. Already writing the lockfile "
+                "is expected to raise an error.")
+
+    with self.assertRaises(tf.errors.PermissionDeniedError):
+      resolver.atomic_download("module", unused_download_fn, module_dir)
 
   def testModuleLockLostDownloadKilled(self):
     module_dir = os.path.join(self.get_temp_dir(), "module")

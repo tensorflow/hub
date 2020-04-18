@@ -61,13 +61,37 @@ $ python
 
 ## Running inference on a pre-initialized module
 
-If you are applying a module over data multiple times (e.g. to serve user
-requests) you should use TensorFlow Session.run to avoid the overhead of
-constructing and initializing parts of the graph multiple times.
+If you are writing a Python program that applies a module many times on input
+data, you can apply the following recipes. (Note: For serving requests in
+production servives, consider go/servo or other scalable, Python-free
+solutions.)
 
 Assuming your use-case model is **initialization** and subsequent **requests**
 (for example Django, Flask, custom HTTP server, etc.), you can set-up the
 serving as follows:
+
+### TF2 SavedModels
+
+*   In the initialization part:
+    *   Load the TF2.0 model.
+
+```python
+import tensorflow_hub as hub
+
+embedding_fn = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+```
+
+*   In the request part:
+    *   Use the embedding function to run inference.
+
+```python
+embedding_fn(["Hello world"])
+```
+
+This call of a tf.function is optimized for performance, see
+[tf.function guide](https://www.tensorflow.org/guide/function).
+
+### TF1 Hub modules
 
 *   In the initialization part:
     *   Build the graph with a **placeholder** - entry point into the graph.
@@ -98,3 +122,11 @@ session.run(init_op)
 ```python
 result = session.run(embedded_text, feed_dict={text_input: ["Hello world"]})
 ```
+
+## Cannot change a model's dype (e.g., float32 to bfloat16)
+
+TensorFlow's SavedModels (shared on TF Hub or otherwise) contain
+operations that work on fixed data types (often, float32 for the weights
+and intermediate activations of neural networks). These cannot be
+changed after the fact when lodaing the SavedModel (but model publishers
+can choose to publish different models with different data types).

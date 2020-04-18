@@ -13,10 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version 0.7.0-dev
+# Current version 0.9.0-dev
+  * Under development
+
+# Current version 0.8.0
+  * Implemented make_nearest_neighbour_index tool.
+  * Added text FeatureColumn, hub.text_embedding_column_v2, for TF 2.x.
+  * CORD-19 embedding colab.
+  * Documentation improvements.
+  * Bug fixes.
+
+# Release 0.7.0
+  * Added support for HubModule v1 in KerasLayer with default tags/signatures.
+  * Added support for the KerasLayer to specify tags, signature, as_dict, and
+    output_key arguments.
+  * Miscellaneous fixes to `hub.KerasLayer`
   * Documentation update for TensorFlow 2.
       * Use `hub.load()` and `hub.KerasLayer` with TF2 (also works in 1.15).
-      * For TF1, `hub.Module` and is associated APIs remain available.
+      * For TF1, `hub.Module` and it's associated APIs remain available.
 
 # Release 0.6.0
   * Added two examples for exporting of Hub/TF2 modules.

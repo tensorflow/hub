@@ -209,10 +209,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         ]),
     }
     labels = np.array([[1], [0]])
-    if hasattr(tf.compat, "v1"):
-      numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
-    else:
-      numpy_input_fn = tf_v1.estimator.inputs.numpy_input_fn
+    numpy_input_fn = tf_v1.estimator.inputs.numpy_input_fn
     input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
@@ -390,10 +387,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
             np.array([[20], [1]]),
     }
     labels = np.array([[1], [0]])
-    if hasattr(tf.compat, "v1"):
-      numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
-    else:
-      numpy_input_fn = tf_v1.estimator.inputs.numpy_input_fn
+    numpy_input_fn = tf_v1.estimator.inputs.numpy_input_fn
     input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
@@ -412,6 +406,11 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     with self.assertRaisesRegexp(NotImplementedError, "Can only generate"):
       image_column = hub.image_embedding_column("image", self.spec)
       config = image_column.get_config()
+
+  def testName(self):
+    image_column = hub.image_embedding_column(
+        tf.feature_column.numeric_column("image"), self.spec)
+    self.assertEqual("image_hub_module_embedding", image_column.name)
 
 
 class SparseTextEmbeddingColumnTest(tf.test.TestCase):

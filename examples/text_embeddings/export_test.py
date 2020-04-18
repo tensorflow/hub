@@ -22,7 +22,7 @@ import logging
 import os
 from distutils.version import LooseVersion
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
 
 from examples.text_embeddings import export
@@ -123,12 +123,9 @@ class ExportTokenEmbeddingTest(tf.test.TestCase):
 
 
 if __name__ == "__main__":
-  # This test is only supported in TF 1.x.
-  if (LooseVersion(tf.__version__) <
-      LooseVersion("2.0.0")):
-    logging.info("Using TF version: %s", tf.__version__)
-    tf.test.main()
-  else:
-    logging.warning("Skipping running tests for TF Version: %s",
+  # This test is only supported in graph mode.
+  if tf.executing_eagerly():
+    logging.warning("Skipping running tests for TF Version: %s running eagerly.",
                     tf.__version__)
-
+  else:
+    tf.test.main()

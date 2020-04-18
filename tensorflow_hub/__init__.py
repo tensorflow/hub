@@ -31,6 +31,7 @@ from tensorflow_hub.estimator import register_module_for_export
 from tensorflow_hub.feature_column import image_embedding_column
 from tensorflow_hub.feature_column import sparse_text_embedding_column
 from tensorflow_hub.feature_column import text_embedding_column
+from tensorflow_hub.feature_column_v2 import text_embedding_column_v2
 from tensorflow_hub.image_util import attach_image_module_info
 from tensorflow_hub.image_util import get_expected_image_size
 from tensorflow_hub.image_util import get_num_image_channels
@@ -77,6 +78,7 @@ __all__ = [
     "image_embedding_column",
     "sparse_text_embedding_column",
     "text_embedding_column",
+    "text_embedding_column_v2",
     "attach_image_module_info",
     "get_expected_image_size",
     "get_num_image_channels",

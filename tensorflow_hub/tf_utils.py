@@ -129,11 +129,8 @@ def get_temp_export_dir(timestamped_export_dir):
   Returns:
     A sister directory prefixed with 'temp-', e.g. /foo/bar/temp-<timestamp>.
   """
-  (dirname, basename) = os.path.split(timestamped_export_dir)
-  temp_export_dir = os.path.join(
-      tf.compat.as_bytes(dirname),
-      tf.compat.as_bytes("temp-{}".format(basename)))
-  return temp_export_dir
+  dirname, basename = os.path.split(tf.compat.as_bytes(timestamped_export_dir))
+  return os.path.join(dirname, b"temp-" + basename)
 
 
 # Note: This is written from scratch to mimic the pattern in:
@@ -207,7 +204,7 @@ def absolute_path(path):
   This implementation avoids calling os.path.abspath(path) if 'path' already
   represents an absolute Tensorflow filesystem location (e.g. <fs type>://).
   """
-  return path if "://" in str(path) else os.path.abspath(path)
+  return path if b"://" in tf.compat.as_bytes(path) else os.path.abspath(path)
 
 
 def fc2_implements_resources():

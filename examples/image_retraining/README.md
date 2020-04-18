@@ -1,9 +1,12 @@
-`retrain.py` is an example script that shows how one can adapt a pretrained
-network for other classification problems. A detailed overview of this script
-can be found at: https://www.tensorflow.org/hub/tutorials/image_retraining
+WARNING: This code is deprecated.
 
-The script also shows how one can train layers
-with quantized weights and activations instead of taking a pre-trained floating
-point model and then quantizing weights and activations.
-The output `GraphDef` produced by this script is compatible with the TensorFlow
-Lite Optimizing Converter and can be converted to TFLite format.
+The `retrain.py` tool from this directory has been replaced by the
+[`make_image_classifier`](https://github.com/tensorflow/hub/tree/master/tensorflow_hub/tools/make_image_classifier)
+tool that gets
+[installed](https://www.tensorflow.org/hub/installation) as a command-line tool
+by the PIP package `tensorflow-hub[make_image_classifier]`.
+The new tool uses TensorFlow 2 and supports fine-tuning.
+
+The Colab notebook
+[tf2_image_retraining.ipynb](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
+explains the basic technique behind that tool: transfer learning with TF Hub.

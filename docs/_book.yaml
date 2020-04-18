@@ -29,14 +29,16 @@ upper_tabs:
       - heading: Asset types
       - title: SavedModels for TensorFlow 2
         path: /hub/tf2_saved_model
-      - title: Deprecated: hub.Modules for TensorFlow 1
+      - title: "Deprecated: hub.Modules for TensorFlow 1"
         path: /hub/tf1_hub_module
       # Contributing to TF-Hub - either models or code
       - heading: Contributing
       - title: Contribute on GitHub
-      - path: hub/contribute
+        path: /hub/contribute
       - title: Publish models on tfhub.dev
-      - path: /hub/publish
+        path: /hub/publish
+      - title: Portability & Deletion of Data
+        path: /hub/portability_and_deletion
       # Advanced developer topics
       - heading: Developer info
       - title: Build from source
@@ -46,40 +48,49 @@ upper_tabs:
       - title: Reusable SavedModels
         path: /hub/reusable_saved_models
       # Tutorials
-      - title: Text classification - TF2
+      - heading: Tutorials - TF2
+      - title: Text classification
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb
         status: external
-      - title: Image classification - TF2
+      - title: Image classification
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb
         status: external
-      - title: Object detection - TF2
+      - title: ANN index for real-time semantic similarity
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_semantic_approximate_nearest_neighbors.ipynb
+        status: external
+      - title: Object detection
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/object_detection.ipynb
         status: external
-      - title: Text cookbook - TF1
+      # Tutorials - TF1
+      - heading: Tutorials - TF1
+      - title: Text cookbook
         path: /hub/tutorials/text_cookbook
-      - title: Action recognition - TF1
+      - title: Action recognition
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/action_recognition_with_tf_hub.ipynb
         status: external
-      - title: BigGAN image generation - TF1
+      - title: BigGAN image generation
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/biggan_generation_with_tf_hub.ipynb
         status: external
-      - title: Multilingual universal sentence encoder - TF1
+      - title: Multilingual universal sentence encoder
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder.ipynb
         status: external
-      - title: Semantic similarity - TF1
+      - title: Semantic similarity
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_similarity_with_tf_hub_universal_encoder.ipynb
         status: external
-      - title: Semantic similarity lite - TF1
+      - title: Semantic similarity lite
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_similarity_with_tf_hub_universal_encoder_lite.ipynb
         status: external
-      - title: Text classification on Kaggle - TF1
+      - title: Text classification on Kaggle
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/text_classification_with_tf_hub_on_kaggle.ipynb
         status: external
-      - title: Image feature matching - TF1
+      - title: Image feature matching
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_delf_module.ipynb
         status: external
-      - title: Image generation - TF1
+      - title: Image generation
         path: https://github.com/tensorflow/hub/blob/master/examples/colab/tf_hub_generative_image_module.ipynb
+        status: external
+      - title: ANN index for real-time semantic similarity
+        path: https://github.com/tensorflow/hub/blob/master/examples/colab/semantic_approximate_nearest_neighbors.ipynb
         status: external
     - name: API
       skip_translation: true

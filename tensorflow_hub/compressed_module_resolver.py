@@ -107,7 +107,7 @@ class GcsCompressedFileResolver(resolver.Resolver):
 
     def download(handle, tmp_dir):
       return resolver.DownloadManager(handle).download_and_uncompress(
-          tf_v1.gfile.GFile(handle, "r"), tmp_dir)
+          tf_v1.gfile.GFile(handle, "rb"), tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
                                     LOCK_FILE_TIMEOUT_SEC)
