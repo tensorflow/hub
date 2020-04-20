@@ -98,15 +98,8 @@ def _ensure_tf2():
   Raises:
     ImportError: If tensorflow is too old for proper TF2 behavior.
   """
-  print("Running with tensorflow %s (git version %s)", tf.__version__,
-        tf.__git_version__)
-  if tf.__version__.startswith("1."):
-    if tf.__git_version__ == "unknown":  # For internal testing use.
-      try:
-        tf.compat.v1.enable_v2_behavior()
-        return
-      except AttributeError:
-        pass  # Fail below for missing enabler function.
+  print("Running with tensorflow %s", tf.__version__)
+  if not tf.executing_eagerly():
     raise ImportError("Sorry, this program needs TensorFlow 2.")
 
 
