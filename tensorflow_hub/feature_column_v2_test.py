@@ -177,6 +177,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       model_2.load_weights(checkpoint_path).assert_consumed()
 
   def testWorksWithTF2DnnClassifier(self):
+    self.skipTest("b/154115879 - needs more investigation for timeout.")
     comment_embedding_column = hub.text_embedding_column_v2(
         "comment", self.model, trainable=False)
     upvotes = tf.feature_column.numeric_column("upvotes")
