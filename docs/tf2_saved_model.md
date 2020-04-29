@@ -173,7 +173,7 @@ uses the former approach for BERT (see
 and [nlp/bert/export_tfhub.py](https://github.com/tensorflow/models/blob/master/official/nlp/bert/export_tfhub.py),
 note the split between `core_model` and `pretrain_model`)
 and the the latter approach for ResNet (see
-[vision/image_classification/tfhub_export.py](https://github.com/tensorflow/models/blob/master/official/vision/image_classification/tfhub_export.py)).
+[vision/image_classification/tfhub_export.py](https://github.com/tensorflow/models/blob/master/official/vision/image_classification/resnet/tfhub_export.py)).
 
 
 ### Saving from low-level TensorFlow
