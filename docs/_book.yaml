@@ -12,7 +12,7 @@ upper_tabs:
     # Subsite tabs
     other:
     # [Guide]
-    - name: Guide
+    - name: "Guide"
       contents:
       # Python library usage information
       - heading: Using the library
@@ -32,6 +32,7 @@ upper_tabs:
         path: /hub/tf2_saved_model
       - title: "Deprecated: hub.Modules for TensorFlow 1"
         path: /hub/tf1_hub_module
+        status: deprecated
       # Contributing to TF-Hub - either models or code
       - heading: Contributing
       - title: Contribute on GitHub

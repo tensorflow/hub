@@ -1,35 +1,38 @@
 toc:
-- title: "Text Tutorials"
-  section:
-  - title: Text classification
-    path: /hub/tutorials/tf2_text_classification
-  - title: Nearest neighbor index for real-time semantic search
-    path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
-- title: "Image Tutorials"
-  section:
-  - title: Retraining an image classifier
-    path: /hub/tutorials/tf2_image_retraining
-  - title: Object detection
-    path: /hub/tutorials/object_detection
-  - title: Action recognition
-    path: /hub/tutorials/action_recognition_with_tf_hub
-  - title: BigGAN image generation
-    path: /hub/tutorials/biggan_generation_with_tf_hub
-  - title: DELF image feature matching
-    path: /hub/tutorials/tf_hub_delf_module
-  - title: Image generation
-    path: /hub/tutorials/tf_hub_generative_image_module
+- heading: "Text Tutorials"
+- break: true
+- title: Text classification
+  path: /hub/tutorials/tf2_text_classification
+- title: Text cookbook
+  path: /hub/tutorials/text_cookbook
+- title: Nearest neighbor index for real-time semantic search
+  path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
+- title: Semantic similarity
+  path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
+- title: Text classification on Kaggle
+  path: /hub/tutorials/text_classification_with_tf_hub_on_kaggle
+- title: Multilingual universal sentence encoder
+  status: external
+  path: https://colab.sandbox.google.com/github/tensorflow/hub/blob/master/examples/colab/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder.ipynb
+- heading: "Image Tutorials"
+- break: true
+- title: Retraining an image classifier
+  path: /hub/tutorials/tf2_image_retraining
+- title: Object detection
+  path: /hub/tutorials/object_detection
+- title: Action recognition
+  path: /hub/tutorials/action_recognition_with_tf_hub
+- title: BigGAN image generation
+  path: /hub/tutorials/biggan_generation_with_tf_hub
+- title: DELF image feature matching
+  path: /hub/tutorials/tf_hub_delf_module
+- title: Image generation
+  path: /hub/tutorials/tf_hub_generative_image_module
 - title: "Tutorials (TF1)"
+  style: accordion
+  status: deprecated
   section:
   - title: Image classification
     path: /hub/tutorials/image_feature_vector
-  - title: Text cookbook
-    path: /hub/tutorials/text_cookbook
-  - title: Multilingual universal sentence encoder
-    path: /hub/tutorials/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder
-  - title: Semantic similarity
-    path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
   - title: Nearest neighbor index for real-time semantic search
     path: /hub/tutorials/semantic_approximate_nearest_neighbors
-  - title: Text classification on Kaggle
-    path: /hub/tutorials/text_classification_with_tf_hub_on_kaggle
