@@ -9,11 +9,20 @@ toc:
   path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
 - title: Semantic similarity
   path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
+- title: Semantic similarity lite
+  path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder_lite
 - title: Text classification on Kaggle
   path: /hub/tutorials/text_classification_with_tf_hub_on_kaggle
+- title: Bangla article classifier
+  path: /hub/tutorials/bangla_article_classifier
+- title: Explore text embeddings
+  path: /hub/tutorials/cord_19_embeddings_keras
+- title: Retrieval based question answering
+  path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
 - title: Multilingual universal sentence encoder
   status: external
-  path: https://colab.sandbox.google.com/github/tensorflow/hub/blob/master/examples/colab/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder.ipynb
+  path: https://github.com/tensorflow/hub/blob/master/examples/colab/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder.ipynb
+
 - heading: "Image Tutorials"
 - break: true
 - title: Retraining an image classifier
@@ -24,10 +33,19 @@ toc:
   path: /hub/tutorials/action_recognition_with_tf_hub
 - title: BigGAN image generation
   path: /hub/tutorials/biggan_generation_with_tf_hub
-- title: DELF image feature matching
+- title: BigBiGAN image generation
+  path: /hub/tutorials/bigbigan_with_tf_hub
+- title: S3 GAN image generation
+  path: /hub/tutorials/s3gan_generation_with_tf_hub
+- title: Arbitrary image stylization
+  path: /hub/tutorials/tf2_arbitrary_image_stylization
+- title: image feature matching
   path: /hub/tutorials/tf_hub_delf_module
-- title: Image generation
+- title: Face generation and embedding
   path: /hub/tutorials/tf_hub_generative_image_module
+- title: Video interpolation
+  path: /hub/tutorials/tweening_conv3d
+
 - title: "Tutorials (TF1)"
   style: accordion
   status: deprecated
@@ -36,3 +54,5 @@ toc:
     path: /hub/tutorials/image_feature_vector
   - title: Nearest neighbor index for real-time semantic search
     path: /hub/tutorials/semantic_approximate_nearest_neighbors
+  - title: Explore text embeddings
+    path: /hub/tutorials/cord_19_embeddings
