@@ -54,3 +54,5 @@ toc:
     path: /hub/tutorials/semantic_approximate_nearest_neighbors
   - title: Explore text embeddings
     path: /hub/tutorials/cord_19_embeddings
+  - title: Wiki40B Language Models
+    path: /hub/tutorials/wiki40b_lm
