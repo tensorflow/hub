@@ -8,6 +8,10 @@ Please note that publishing to tfhub.dev is in **early testing**. If you are
 interested in publishing, please follow the directions below and we will process
 your submission as soon as possible.
 
+### Terms of service
+By submitting a model for publication, you agree to the TensorFlow Hub Terms
+of Service at [https://tfhub.dev/terms](https://tfhub.dev/terms).
+
 ### Handles
 Model handles are alphanumeric tokens separated by slashes into logical parts.
 
