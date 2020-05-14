@@ -144,7 +144,8 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      # We want to test with dense_features_v2.DenseFeatures.
+      # We want to test with dense_features_v2.DenseFeatures. This symbol was
+      # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
       feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf_v1.train.MonitoredSession() as sess:
@@ -163,7 +164,8 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      # We want to test with dense_features_v2.DenseFeatures.
+      # We want to test with dense_features_v2.DenseFeatures. This symbol was
+      # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
       feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
       feature_layer_out_1 = feature_layer(features)
       feature_layer_out_2 = feature_layer(features)
@@ -335,7 +337,8 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      # We want to test with dense_features_v2.DenseFeatures.
+      # We want to test with dense_features_v2.DenseFeatures. This symbol was
+      # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
       feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf_v1.train.MonitoredSession() as sess:
@@ -356,7 +359,8 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
       self.skipTest("Resources not implemented in the state manager of feature "
                     "column v2.")
     with tf.Graph().as_default():
-      # We want to test with dense_features_v2.DenseFeatures.
+      # We want to test with dense_features_v2.DenseFeatures. This symbol was
+      # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
       feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
       feature_layer_out_1 = feature_layer(features)
       feature_layer_out_2 = feature_layer(features)
