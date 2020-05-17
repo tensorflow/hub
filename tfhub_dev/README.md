@@ -66,7 +66,7 @@ including:
 
 <details>
 <summary>Best practices for SavedModel publishing</summary>
-#### Best practices for SavedModel publishing
+<h4> Best practices for SavedModel publishing </h4>
 
 ##### Align with an existing model type (if applicable)
 
