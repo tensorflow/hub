@@ -12,19 +12,5 @@ A group of computer vision scientists (sometimes also denoted models) from the L
 [Milan Sulc](http://cmp.felk.cvut.cz/~sulcmila/)
 
 
-## Change Log
-
-#### Version 2
-
-* Lightweight MobileNetV3 model added.
-* Description completed.
-* Changed logo for transparent one.
-
-#### Version 1
-
-* Initial release of baseline model - InceptionV4.
-
-
-
 
 
