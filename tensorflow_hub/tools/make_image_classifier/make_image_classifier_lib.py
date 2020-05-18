@@ -184,7 +184,6 @@ def build_model(module_layer, hparams, image_size, num_classes):
       tf.keras.layers.Dropout(rate=hparams.dropout_rate),
       tf.keras.layers.Dense(
           num_classes,
-          activation="softmax",
           kernel_regularizer=tf.keras.regularizers.l2(0.0001))
   ])
   print(model.summary())
@@ -219,7 +218,7 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size,
   train_data, train_size = train_data_and_size
   valid_data, valid_size = valid_data_and_size
   # TODO(b/139467904): Expose this hyperparameter as a flag.
-  loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1)
+  loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True, label_smoothing=0.1)
   model.compile(
       optimizer=tf.keras.optimizers.SGD(
           lr=hparams.learning_rate, momentum=hparams.momentum),
