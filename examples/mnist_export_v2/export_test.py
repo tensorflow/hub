@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import logging
 import os
-from distutils.version import LooseVersion
 
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -34,7 +33,8 @@ class ExportTest(tf.test.TestCase):
   def setUp(self):
     super(ExportTest, self).setUp()
     def create_image_and_label(index):
-      image = tf.cast(255 * tf.random.normal([1, 28, 28, 1]), tf.uint8)
+      image = tf.image.convert_image_dtype(
+          255 * tf.random.normal([1, 28, 28, 1]), dtype=tf.uint8, saturate=True)
       return dict(image=image, label=[index])
     self.mock_dataset = tf.data.Dataset.range(5).map(create_image_and_label)
 
@@ -57,9 +57,8 @@ class ExportTest(tf.test.TestCase):
 
 if __name__ == "__main__":
   # This test is only supported in TF 2.0.
-  if LooseVersion(tf.__version__) >= LooseVersion("2.0.0-beta0"):
+  if tf.executing_eagerly():
     logging.info("Using TF version: %s", tf.__version__)
     tf.test.main()
   else:
     logging.warning("Skipping running tests for TF Version: %s", tf.__version__)
-

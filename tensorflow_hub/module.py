@@ -39,19 +39,24 @@ def as_module_spec(spec):
 
 
 def load_module_spec(path):
-  """Loads a ModuleSpec from the filesystem.
+  """Loads a ModuleSpec from a TF Hub service or the filesystem.
 
   DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
-  For TF2, switch to plain SavedModels and hub.load().
+  For TF2, switch to plain SavedModels and hub.load(); see also hub.resolve().
 
   Args:
     path: string describing the location of a module. There are several
-          supported path encoding schemes:
-          a) URL location specifying an archived module
-            (e.g. http://domain/module.tgz)
-          b) Any filesystem location of a module directory (e.g. /module_dir
-             for a local filesystem). All filesystems implementations provided
-             by Tensorflow are supported.
+      supported path encoding schemes:
+        a) A URL like "https://tfhub.dev/the/module/1" referring to tfhub.dev or
+           another service implementing https://www.tensorflow.org/hub/hosting.
+        b) A URL like "https://example.com/module.tar.gz" that points to a
+           compressed tarball directly, as long as that web server ignores
+           the query parameters added by https://www.tensorflow.org/hub/hosting.
+        c) Any filesystem location of a module directory (e.g. /module_dir
+           for a local filesystem). All filesystems implementations provided
+           by Tensorflow are supported.
+        d) Private name resolution schemes added by the maintainer of your
+           local installation of the tensorflow_hub library (usually none).
 
   Returns:
     A ModuleSpec.
