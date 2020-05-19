@@ -1,22 +1,17 @@
 # Publisher bohemian-visual-recognition-alliance
 Bohemian Visual Recognition Alliance
 
-[![Icon URL]](https://drive.google.com/uc?id=13tPTblosZIERFimPVxckNtBZi2xe5r6G)
+[![Icon URL]](http://ptak.felk.cvut.cz/personal/picekluk/DanishSvampeAtlas/logo_transparent.png)
 
 
-## [Bohemian Visual Recognition Alliance]
+## Bohemian Visual Recognition Alliance
+A group of computer vision scientists (sometimes also denoted models) from the Lands of the Bohemian Crown.
 
-Syndicate solving real world issues.
+### Members:
 
-
-###Members:
-
-prof. Jiri Matas
-
-Lukas Picek
-
-Milan Sulc
-
+[Lukas Picek](https://sites.google.com/view/picekl/)
+[Jiri Matas](http://cmp.felk.cvut.cz/~matas/)
+[Milan Sulc](http://cmp.felk.cvut.cz/~sulcmila/)
 
 
 
