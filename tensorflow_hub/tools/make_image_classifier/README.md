@@ -142,4 +142,4 @@ There is other hyperparameters for regularization such as
 such as `--rotation_range` and `--horizontal_flip`. Generally, the
 default values can give a good performance. You can find a full list
 of hyperparameters available in `make_image_classifier.py` and their
-default values in `make_image_classifier_lib`.
+default values in `make_image_classifier_lib.py`.
