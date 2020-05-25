@@ -26,6 +26,11 @@ import collections
 import tensorflow as tf
 import tensorflow_hub as hub
 
+import pathlib
+import os
+import functools
+import numpy as np
+
 _DEFAULT_IMAGE_URL = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
 
 
@@ -130,6 +135,60 @@ def _get_data_with_keras(image_dir, image_size, batch_size, validation_split,
   return ((train_generator, train_generator.samples),
           (valid_generator, valid_generator.samples),
           sorted_labels)
+
+
+def _get_label(file_path, class_names):
+  # convert the path to a list of path components
+  parts = tf.strings.split(file_path, os.path.sep)
+  # The second to last is the class-directory
+  return parts[-2] == class_names
+
+
+def _decode_img(img, image_size):
+  # convert the compressed string to a 3D uint8 tensor
+  img = tf.image.decode_jpeg(img, channels=3)
+  # Use `convert_image_dtype` to convert to floats in the [0,1] range.
+  img = tf.image.convert_image_dtype(img, tf.float32)
+  # resize the image to the desired size.
+  return tf.image.resize(img, image_size)
+
+
+def _process_path(file_path, image_size, class_names):
+  label = _get_label(file_path, class_names)
+  # load the raw data from the file as a string
+  img = tf.io.read_file(file_path)
+  img = _decode_img(img, image_size)
+  return img, label
+
+
+def _get_data_with_keras_new(image_dir, image_size, batch_size, validation_split, 
+                             do_data_augmentation, augmentation_params):
+  AUTOTUNE = tf.data.experimental.AUTOTUNE
+  image_dir = pathlib.Path(image_dir)
+  class_names = np.array([item.name for item in image_dir.glob('*') 
+                          if item.name != 'LICENSE.txt'])
+  image_count = len(list(image_dir.glob('*/*')))
+  list_ds = tf.data.Dataset.list_files(str(image_dir/'*/*'))
+  labeled_ds = list_ds.map(
+      functools.partial(_process_path, image_size=image_size, class_names=class_names), 
+      num_parallel_calls=AUTOTUNE).shuffle()
+  valid_size = int(image_count * validation_split)
+  train_size = image_count - valid_size
+  valid_ds = labeled_ds.take(valid_size).batch(batch_size).shuffle(buffer_size=AUTOTUNE).prefetch(buffer_size=AUTOTUNE)
+  train_ds = labeled_ds.skip(valid_size).prefetch(buffer_size=AUTOTUNE)
+
+  # TODO(jin): Move to build_model func.
+  # aug_preprocessor = None
+  # if do_data_augmentation:
+  #   aug_preprocessor = tf.keras.Sequential(
+  #     tf.keras.layers.experimental.preprocessing.RandomRotation(factor=augmentation_params['rotation_range']),
+  #     tf.keras.layers.experimental.preprocessing.RandomWidth(factor=augmentation_params['width_shift_range']),
+  #     tf.keras.layers.experimental.preprocessing.RandomHeight(factor=augmentation_params['height_shift_range']),
+  #     tf.keras.layers.experimental.preprocessing.RandomZoom(factor=augmentation_params['zoom_range']),
+  #     tf.keras.layers.experimental.preprocessing.RandomFlip(mode='horizontal')
+  #   )
+
+  return (train_ds, train_size), (valid_ds, valid_size), class_names
 
 
 def _image_size_for_module(module_layer, requested_image_size=None):
