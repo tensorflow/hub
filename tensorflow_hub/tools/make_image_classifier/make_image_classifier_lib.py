@@ -171,11 +171,13 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size, validation_split
   list_ds = tf.data.Dataset.list_files(str(image_dir/'*/*'))
   labeled_ds = list_ds.map(
       functools.partial(_process_path, image_size=image_size, class_names=class_names), 
-      num_parallel_calls=AUTOTUNE).shuffle()
+      num_parallel_calls=AUTOTUNE).shuffle(buffer_size=1000)
   valid_size = int(image_count * validation_split)
   train_size = image_count - valid_size
-  valid_ds = labeled_ds.take(valid_size).batch(batch_size).shuffle(buffer_size=AUTOTUNE).prefetch(buffer_size=AUTOTUNE)
-  train_ds = labeled_ds.skip(valid_size).prefetch(buffer_size=AUTOTUNE)
+  valid_ds = labeled_ds.take(valid_size)
+  valid_ds = valid_ds.cache().batch(batch_size).prefetch(buffer_size=AUTOTUNE)
+  train_ds = labeled_ds.skip(valid_size)
+  train_ds = train_ds.cache().shuffle(buffer_size=1000).repeat().batch(batch_size).prefetch(buffer_size=AUTOTUNE)
 
   # TODO(jin): Move to build_model func.
   # aug_preprocessor = None
@@ -338,10 +340,12 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
       height_shift_range=hparams.height_shift_range,
       shear_range=hparams.shear_range,
       zoom_range=hparams.zoom_range)
-  train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
+  train_data_and_size, valid_data_and_size, labels = _get_data_with_keras_new(
       image_dir, image_size, hparams.batch_size, hparams.validation_split,
       hparams.do_data_augmentation, augmentation_params)
   print("Found", len(labels), "classes:", ", ".join(labels))
+  print("Dataset size: %s (training) %s (validation)" % 
+      (train_data_and_size[1], valid_data_and_size[1]))
 
   model = build_model(module_layer, hparams, image_size, len(labels))
   train_result = train_model(model, hparams, train_data_and_size,
