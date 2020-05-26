@@ -1,4 +1,7 @@
 toc:
+- heading: "Getting started"
+- title: Overview
+  path: /hub/tutorials/_index.yaml
 - heading: "Text Tutorials"
 - title: Text classification
   path: /hub/tutorials/tf2_text_classification
@@ -27,8 +30,6 @@ toc:
   path: /hub/tutorials/tf2_image_retraining
 - title: Object detection
   path: /hub/tutorials/object_detection
-- title: Action recognition
-  path: /hub/tutorials/action_recognition_with_tf_hub
 - title: BigGAN image generation
   path: /hub/tutorials/biggan_generation_with_tf_hub
 - title: BigBiGAN image generation
@@ -37,10 +38,14 @@ toc:
   path: /hub/tutorials/s3gan_generation_with_tf_hub
 - title: Arbitrary image stylization
   path: /hub/tutorials/tf2_arbitrary_image_stylization
-- title: image feature matching
+- title: Image feature matching
   path: /hub/tutorials/tf_hub_delf_module
 - title: Face generation and embedding
   path: /hub/tutorials/tf_hub_generative_image_module
+
+- heading: "Video Tutorials"
+- title: Action recognition
+  path: /hub/tutorials/action_recognition_with_tf_hub
 - title: Video interpolation
   path: /hub/tutorials/tweening_conv3d
 

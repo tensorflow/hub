@@ -51,6 +51,7 @@ upper_tabs:
         path: /hub/reusable_saved_models
     # [Tutorials]
     - name: Tutorials
+      path: /hub/tutorials
       contents:
       - include: /hub/tutorials/_toc.yaml
     # [API]
