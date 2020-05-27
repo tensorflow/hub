@@ -11,8 +11,6 @@ toc:
   path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
 - title: Semantic similarity
   path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
-- title: Semantic similarity lite
-  path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder_lite
 - title: Text classification on Kaggle
   path: /hub/tutorials/text_classification_with_tf_hub_on_kaggle
 - title: Bangla article classifier
@@ -30,12 +28,6 @@ toc:
   path: /hub/tutorials/tf2_image_retraining
 - title: Object detection
   path: /hub/tutorials/object_detection
-- title: BigGAN image generation
-  path: /hub/tutorials/biggan_generation_with_tf_hub
-- title: BigBiGAN image generation
-  path: /hub/tutorials/bigbigan_with_tf_hub
-- title: S3 GAN image generation
-  path: /hub/tutorials/s3gan_generation_with_tf_hub
 - title: Arbitrary image stylization
   path: /hub/tutorials/tf2_arbitrary_image_stylization
 - title: Image feature matching
@@ -55,6 +47,14 @@ toc:
   section:
   - title: Image classification
     path: /hub/tutorials/image_feature_vector
+  - title: BigGAN image generation
+    path: /hub/tutorials/biggan_generation_with_tf_hub
+  - title: BigBiGAN image generation
+    path: /hub/tutorials/bigbigan_with_tf_hub
+  - title: S3 GAN image generation
+    path: /hub/tutorials/s3gan_generation_with_tf_hub
+  - title: Semantic similarity lite
+    path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder_lite
   - title: Nearest neighbor index for real-time semantic search
     path: /hub/tutorials/semantic_approximate_nearest_neighbors
   - title: Explore text embeddings
