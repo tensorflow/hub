@@ -173,10 +173,13 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size,
   class_names = np.array([item.name for item in image_dir.glob('*') 
                           if item.name != 'LICENSE.txt'])
   image_count = len(list(image_dir.glob('*/*')))
+  # 8 * batch_size is a good choice for shuffle buffer size.
+  buffer_size = batch_size * 8
   list_ds = tf.data.Dataset.list_files(str(image_dir/'*/*'))
   labeled_ds = list_ds.map(
-      functools.partial(_process_path, image_size=image_size, class_names=class_names), 
-      num_parallel_calls=AUTOTUNE).shuffle(buffer_size=1000)
+      functools.partial(
+          _process_path, image_size=image_size, class_names=class_names), 
+      num_parallel_calls=AUTOTUNE).shuffle(buffer_size=buffer_size)
   valid_size = int(image_count * validation_split)
   train_size = image_count - valid_size
   valid_ds = labeled_ds.take(valid_size)
@@ -186,7 +189,8 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size,
     train_ds = train_ds.cache()
 
   valid_ds = valid_ds.batch(batch_size).prefetch(buffer_size=AUTOTUNE)
-  train_ds = train_ds.shuffle(buffer_size=1000).repeat().batch(batch_size).prefetch(buffer_size=AUTOTUNE)
+  train_ds = train_ds.shuffle(buffer_size=buffer_size).repeat()\
+      .batch(batch_size).prefetch(buffer_size=AUTOTUNE)
 
   return (train_ds, train_size), (valid_ds, valid_size), class_names
 
@@ -249,7 +253,8 @@ def build_model(module_layer, hparams, image_size, num_classes,
   Returns:
     The full classifier model.
   """
-  model = tf.keras.Sequential([tf.keras.Input(shape=(image_size[0], image_size[1], 3)),])
+  model = tf.keras.Sequential([
+      tf.keras.Input(shape=(image_size[0], image_size[1], 3)),])
 
   aug_preprocessor = None
   if do_data_augmentation:
