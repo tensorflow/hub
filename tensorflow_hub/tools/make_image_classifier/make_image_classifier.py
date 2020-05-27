@@ -122,11 +122,21 @@ flags.DEFINE_float(
     "Coefficient of L1 regularization applied on model weights.")
 flags.DEFINE_float(
     "l2_regularizer", _DEFAULT_HPARAMS.l2_regularizer,
-    "Coefficient of L2 regularization applied on model weights.")
-flags.DEFINE_float("label_smoothing", _DEFAULT_HPARAMS.label_smoothing,
-                   "Coefficient of label smoothing used in loss function.")
-flags.DEFINE_float("validation_split", _DEFAULT_HPARAMS.validation_split,
-                   "The fractin of the dataset splitted into a validation set")
+    "Coefficient of L2 regularization applied on model weights."
+)
+flags.DEFINE_float(
+    "label_smoothing", _DEFAULT_HPARAMS.label_smoothing,
+    "Coefficient of label smoothing used in loss function."
+)
+flags.DEFINE_bool(
+    "cache", _DEFAULT_HPARAMS.cache,
+    "Cache datasets to speed up data loading. Set to true only if"
+    "your dataset is able to be loaded to the memory completely."
+)
+flags.DEFINE_float(
+    "validation_split", _DEFAULT_HPARAMS.validation_split,
+    "The fractin of the dataset splitted into a validation set"
+)
 flags.DEFINE_bool(
     "do_data_augmentation", _DEFAULT_HPARAMS.do_data_augmentation,
     "Whether do data augmentation on training set."
@@ -140,11 +150,21 @@ flags.DEFINE_float(
     "Shift images horizontally by pixels(if >=1) or by ratio(if <1).")
 flags.DEFINE_float(
     "height_shift_range", _DEFAULT_HPARAMS.height_shift_range,
-    "Shift images vertically by pixels(if >=1) or by ratio(if <1).")
-flags.DEFINE_float("shear_range", _DEFAULT_HPARAMS.shear_range,
-                   "Shear angle in counter-clockwise direction in degrees.")
-flags.DEFINE_float("zoom_range", _DEFAULT_HPARAMS.zoom_range,
-                   "Range for random zoom.")
+    "Shift images vertically by pixels(if >=1) or by ratio(if <1)."
+)
+flags.DEFINE_float(
+    "shear_range", _DEFAULT_HPARAMS.shear_range,
+    "Shear angle in counter-clockwise direction in degrees."
+)
+flags.DEFINE_float(
+    "zoom_range", _DEFAULT_HPARAMS.zoom_range,
+    "Range for random zoom."
+)
+flags.DEFINE_string(
+    "strategy", "default",
+    "Strategy for distributed training. Currently multi-GPU"
+    "(mirroredstrategy) and single CPU/GPU(default) are supported."
+)
 FLAGS = flags.FLAGS
 
 
@@ -161,13 +181,15 @@ def _get_hparams_from_flags():
       l2_regularizer=FLAGS.l2_regularizer,
       label_smoothing=FLAGS.label_smoothing,
       validation_split=FLAGS.validation_split,
+      cache=FLAGS.cache,
       do_data_augmentation=FLAGS.do_data_augmentation,
       rotation_range=FLAGS.rotation_range,
       horizontal_flip=FLAGS.horizontal_flip,
       width_shift_range=FLAGS.width_shift_range,
       height_shift_range=FLAGS.height_shift_range,
       shear_range=FLAGS.shear_range,
-      zoom_range=FLAGS.zoom_range)
+      zoom_range=FLAGS.zoom_range,
+      strategy=FLAGS.strategy)
 
 
 def _check_keras_dependencies():

@@ -32,7 +32,9 @@ import functools
 import numpy as np
 
 _DEFAULT_IMAGE_URL = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
-
+_DEFAULT_STRATEGY = tf.distribute.OneDeviceStrategy(
+    '/gpu:0' if tf.config.list_physical_devices('GPU')
+    else '/cpu:0')
 
 def get_default_image_dir():
   """Returns the path to a default image dataset, downloading it if needed."""
@@ -43,10 +45,10 @@ def get_default_image_dir():
 class HParams(
     collections.namedtuple("HParams", [
         "train_epochs", "do_fine_tuning", "batch_size", "learning_rate",
-        "momentum", "dropout_rate", "l1_regularizer", "l2_regularizer",
-        "label_smoothing", "validation_split", "do_data_augmentation",
-        "rotation_range", "horizontal_flip", "width_shift_range",
-        "height_shift_range", "shear_range", "zoom_range"
+        "momentum", "dropout_rate", "l1_regularizer", "l2_regularizer", 
+        "label_smoothing", "validation_split", "cache", "do_data_augmentation", 
+        "rotation_range", "horizontal_flip", "width_shift_range", 
+        "height_shift_range", "shear_range", "zoom_range", "strategy"
     ])):
   """The hyperparameters for make_image_classifier.
 
@@ -73,13 +75,15 @@ def get_default_hparams():
       l2_regularizer=0.0001,
       label_smoothing=0.1,
       validation_split=0.2,
+      cache=False,
       do_data_augmentation=False,
       rotation_range=40,
       horizontal_flip=True,
       width_shift_range=0.2,
       height_shift_range=0.2,
       shear_range=0.2,
-      zoom_range=0.2)
+      zoom_range=0.2,
+      strategy='default')
 
 
 def _get_data_with_keras(image_dir, image_size, batch_size, validation_split,
@@ -148,6 +152,8 @@ def _decode_img(img, image_size):
   # convert the compressed string to a 3D uint8 tensor
   img = tf.image.decode_jpeg(img, channels=3)
   # Use `convert_image_dtype` to convert to floats in the [0,1] range.
+  # Rescale is no longer needed, as this convert will automatically
+  # scale to [0, 1] when dtype is float.
   img = tf.image.convert_image_dtype(img, tf.float32)
   # resize the image to the desired size.
   return tf.image.resize(img, image_size)
@@ -160,9 +166,8 @@ def _process_path(file_path, image_size, class_names):
   img = _decode_img(img, image_size)
   return img, label
 
-
-def _get_data_with_keras_new(image_dir, image_size, batch_size, validation_split, 
-                             do_data_augmentation, augmentation_params):
+def _get_data_with_keras_new(image_dir, image_size, batch_size, 
+                             validation_split, cache):
   AUTOTUNE = tf.data.experimental.AUTOTUNE
   image_dir = pathlib.Path(image_dir)
   class_names = np.array([item.name for item in image_dir.glob('*') 
@@ -175,20 +180,13 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size, validation_split
   valid_size = int(image_count * validation_split)
   train_size = image_count - valid_size
   valid_ds = labeled_ds.take(valid_size)
-  valid_ds = valid_ds.cache().batch(batch_size).prefetch(buffer_size=AUTOTUNE)
   train_ds = labeled_ds.skip(valid_size)
-  train_ds = train_ds.cache().shuffle(buffer_size=1000).repeat().batch(batch_size).prefetch(buffer_size=AUTOTUNE)
+  if cache:
+    valid_ds = valid_ds.cache()
+    train_ds = train_ds.cache()
 
-  # TODO(jin): Move to build_model func.
-  # aug_preprocessor = None
-  # if do_data_augmentation:
-  #   aug_preprocessor = tf.keras.Sequential(
-  #     tf.keras.layers.experimental.preprocessing.RandomRotation(factor=augmentation_params['rotation_range']),
-  #     tf.keras.layers.experimental.preprocessing.RandomWidth(factor=augmentation_params['width_shift_range']),
-  #     tf.keras.layers.experimental.preprocessing.RandomHeight(factor=augmentation_params['height_shift_range']),
-  #     tf.keras.layers.experimental.preprocessing.RandomZoom(factor=augmentation_params['zoom_range']),
-  #     tf.keras.layers.experimental.preprocessing.RandomFlip(mode='horizontal')
-  #   )
+  valid_ds = valid_ds.batch(batch_size).prefetch(buffer_size=AUTOTUNE)
+  train_ds = train_ds.shuffle(buffer_size=1000).repeat().batch(batch_size).prefetch(buffer_size=AUTOTUNE)
 
   return (train_ds, train_size), (valid_ds, valid_size), class_names
 
@@ -236,7 +234,8 @@ def _image_size_for_module(module_layer, requested_image_size=None):
                            tuple(requested_image_size.as_list())))
 
 
-def build_model(module_layer, hparams, image_size, num_classes):
+def build_model(module_layer, hparams, image_size, num_classes, 
+                do_data_augmentation, augment_params):
   """Builds the full classifier model from the given module_layer.
 
   Args:
@@ -250,8 +249,22 @@ def build_model(module_layer, hparams, image_size, num_classes):
   Returns:
     The full classifier model.
   """
-  model = tf.keras.Sequential([
-      tf.keras.Input(shape=(image_size[0], image_size[1], 3)), module_layer,
+  model = tf.keras.Sequential([tf.keras.Input(shape=(image_size[0], image_size[1], 3)),])
+
+  aug_preprocessor = None
+  if do_data_augmentation:
+    preprocessing = tf.keras.layers.experimental.preprocessing
+    aug_preprocessor = tf.keras.Sequential(
+      preprocessing.RandomRotation(factor=augment_params['rotation_range']),
+      preprocessing.RandomWidth(factor=augment_params['width_shift_range']),
+      preprocessing.RandomHeight(factor=augment_params['height_shift_range']),
+      preprocessing.RandomZoom(factor=augment_params['zoom_range']),
+      preprocessing.RandomFlip(mode='horizontal')
+    )
+    model.add(aug_preprocessor)
+
+  model.add(tf.keras.Sequential([
+      module_layer,
       tf.keras.layers.Dropout(rate=hparams.dropout_rate),
       tf.keras.layers.Dense(
           num_classes,
@@ -290,19 +303,18 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size,
   """
   train_data, train_size = train_data_and_size
   valid_data, valid_size = valid_data_and_size
-  loss = tf.keras.losses.CategoricalCrossentropy(
-      label_smoothing=hparams.label_smoothing)
-  model.compile(
-      optimizer=tf.keras.optimizers.SGD(
-          lr=hparams.learning_rate, momentum=hparams.momentum),
-      loss=loss,
-      metrics=["accuracy"])
+  loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=hparams.label_smoothing)
   steps_per_epoch = train_size // hparams.batch_size
   validation_steps = valid_size // hparams.batch_size
   callbacks = []
   if log_dir != None:
     callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                     histogram_freq=1))
+  model.compile(
+      optimizer=tf.keras.optimizers.SGD(
+          lr=hparams.learning_rate, momentum=hparams.momentum),
+      loss=loss,
+      metrics=["accuracy"])
   return model.fit(
       train_data,
       epochs=hparams.train_epochs,
@@ -328,26 +340,42 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
     log_dir: A directory to write logs for TensorBoard into (defaults to None,
       no logs will then be written).
   """
-  module_layer = hub.KerasLayer(tfhub_module,
-                                trainable=hparams.do_fine_tuning)
-  image_size = _image_size_for_module(module_layer, requested_image_size)
-  print("Using module {} with image size {}".format(
-      tfhub_module, image_size))
-  augmentation_params = dict(
-      rotation_range=hparams.rotation_range,
-      horizontal_flip=hparams.horizontal_flip,
-      width_shift_range=hparams.width_shift_range,
-      height_shift_range=hparams.height_shift_range,
-      shear_range=hparams.shear_range,
-      zoom_range=hparams.zoom_range)
-  train_data_and_size, valid_data_and_size, labels = _get_data_with_keras_new(
-      image_dir, image_size, hparams.batch_size, hparams.validation_split,
-      hparams.do_data_augmentation, augmentation_params)
-  print("Found", len(labels), "classes:", ", ".join(labels))
-  print("Dataset size: %s (training) %s (validation)" % 
-      (train_data_and_size[1], valid_data_and_size[1]))
+  if hparams.strategy == 'default':
+    strategy = _DEFAULT_STRATEGY
+  elif hparams.strategy == 'mirroredstrategy':
+    strategy = tf.distribute.MirroredStrategy()
+  else:
+    raise NotImplementedError("Currently only support OneDeviceStrategy(default)"
+      "and MirroredStrategy(mirroredstrategy).")
 
-  model = build_model(module_layer, hparams, image_size, len(labels))
-  train_result = train_model(model, hparams, train_data_and_size,
-                             valid_data_and_size, log_dir)
+  # scale batch size according to replicas available
+  if strategy.num_replicas_in_sync > 1:
+    batch_size = hparams.batch_size * strategy.num_replicas_in_sync
+    print("Found {} replicas, increase the batch size from {} to {}".format(
+      strategy.num_replicas_in_sync, hparams.batch_size, batch_size
+    ))
+    hparams = hparams._replace(batch_size=batch_size)
+
+  augment_params = dict(rotation_range=hparams.rotation_range,
+    horizontal_flip=hparams.horizontal_flip,
+    width_shift_range=hparams.width_shift_range,
+    height_shift_range=hparams.height_shift_range,
+    shear_range=hparams.shear_range,
+    zoom_range=hparams.zoom_range)
+
+  with strategy.scope():
+    module_layer = hub.KerasLayer(tfhub_module, trainable=hparams.do_fine_tuning)
+    image_size = _image_size_for_module(module_layer, requested_image_size)
+    print("Using module {} with image size {}".format( tfhub_module, image_size))
+
+    train_data_and_size, valid_data_and_size, labels = _get_data_with_keras_new(
+        image_dir, image_size, hparams.batch_size, hparams.validation_split, hparams.cache)
+    print("Found", len(labels), "classes:", ", ".join(labels))
+    print("Dataset size: %s (training) %s (validation)" % 
+        (train_data_and_size[1], valid_data_and_size[1]))
+
+    model = build_model(module_layer, hparams, image_size, len(labels), 
+                        hparams.do_data_augmentation, augment_params)
+    train_result = train_model(model, hparams, train_data_and_size,
+                              valid_data_and_size, log_dir)
   return model, labels, train_result
