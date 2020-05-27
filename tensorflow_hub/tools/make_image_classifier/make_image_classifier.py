@@ -130,7 +130,7 @@ flags.DEFINE_float(
 )
 flags.DEFINE_bool(
     "cache", _DEFAULT_HPARAMS.cache,
-    "Cache datasets to speed up data loading. Set to true only if"
+    "Cache datasets to speed up data loading. Set to true only if "
     "your dataset is able to be loaded to the memory completely."
 )
 flags.DEFINE_float(
@@ -139,12 +139,17 @@ flags.DEFINE_float(
 )
 flags.DEFINE_bool(
     "do_data_augmentation", _DEFAULT_HPARAMS.do_data_augmentation,
-    "Whether do data augmentation on training set."
-    "Can use default augmentation params or specifying them.")
-flags.DEFINE_integer("rotation_range", _DEFAULT_HPARAMS.rotation_range,
-                     "Degree range for random rotation.")
-flags.DEFINE_bool("horizontal_flip", _DEFAULT_HPARAMS.horizontal_flip,
-                  "Horizontally flip images.")
+    "Whether do data augmentation on training set. "
+    "Can use default augmentation params or specifying them."
+)
+flags.DEFINE_integer(
+    "rotation_range", _DEFAULT_HPARAMS.rotation_range,
+    "Degree range for random rotation."
+)
+flags.DEFINE_bool(
+    "horizontal_flip", _DEFAULT_HPARAMS.horizontal_flip,
+    "Horizontally flip images."
+)
 flags.DEFINE_float(
     "width_shift_range", _DEFAULT_HPARAMS.width_shift_range,
     "Shift images horizontally by pixels(if >=1) or by ratio(if <1).")
