@@ -256,27 +256,23 @@ def build_model(module_layer, hparams, image_size, num_classes,
   model = tf.keras.Sequential([
       tf.keras.Input(shape=(image_size[0], image_size[1], 3)),])
 
-  aug_preprocessor = None
   if do_data_augmentation:
+    # TODO(jin): seems preprocessing layers cannot be used inside a strategy.
     preprocessing = tf.keras.layers.experimental.preprocessing
-    aug_preprocessor = tf.keras.Sequential(
-      preprocessing.RandomRotation(factor=augment_params['rotation_range']),
-      preprocessing.RandomWidth(factor=augment_params['width_shift_range']),
-      preprocessing.RandomHeight(factor=augment_params['height_shift_range']),
-      preprocessing.RandomZoom(factor=augment_params['zoom_range']),
-      preprocessing.RandomFlip(mode='horizontal')
-    )
-    model.add(aug_preprocessor)
+    model.add(preprocessing.RandomRotation(factor=augment_params['rotation_range']))
+    model.add(preprocessing.RandomWidth(factor=augment_params['width_shift_range']))
+    model.add(preprocessing.RandomHeight(factor=augment_params['height_shift_range']))
+    model.add(preprocessing.RandomZoom(factor=augment_params['zoom_range']))
+    model.add(preprocessing.RandomFlip(mode='horizontal'))
 
-  model.add(tf.keras.Sequential([
-      module_layer,
-      tf.keras.layers.Dropout(rate=hparams.dropout_rate),
-      tf.keras.layers.Dense(
-          num_classes,
-          activation="softmax",
-          kernel_regularizer=tf.keras.regularizers.l1_l2(
-              l1=hparams.l1_regularizer, l2=hparams.l2_regularizer))
-  ])
+  model.add(module_layer)
+  model.add(tf.keras.layers.Dropout(rate=hparams.dropout_rate))
+  model.add(tf.keras.layers.Dense(
+      num_classes,
+      activation="softmax",
+      kernel_regularizer=tf.keras.regularizers.l1_l2(l1=hparams.l1_regularizer,
+                                                     l2=hparams.l2_regularizer)))
+
   print(model.summary())
   return model
 
