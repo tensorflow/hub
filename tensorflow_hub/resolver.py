@@ -380,7 +380,10 @@ def atomic_download(handle,
                                              overwrite=False)
         # Must test condition again, since another process could have created
         # the module and deleted the old lock file since last test.
-        if tf_v1.gfile.Exists(module_dir):
+        if tf_v1.gfile.Exists(module_dir) and (
+          tf_v1.gfile.Exists(os.path.join(module_dir, "saved_model.pbtxt")) or
+          tf_v1.gfile.Exists(os.path.join(module_dir, "saved_model.pb"))
+        ):
           # Lock file will be deleted in the finally-clause.
           return module_dir
         break  # Proceed to downloading the module.
