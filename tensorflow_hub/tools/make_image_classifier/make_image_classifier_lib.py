@@ -142,6 +142,15 @@ def _get_data_with_keras(image_dir, image_size, batch_size, validation_split,
 
 
 def _get_label(file_path, class_names):
+  """Obtain the label of an image from its path.
+
+  Args:
+    file_path: A path string to an image example.
+    class_names: A np.array containing all class names.
+
+  Returns:
+    a one-hot encoded label.
+  """
   # convert the path to a list of path components
   parts = tf.strings.split(file_path, os.path.sep)
   # The second to last is the class-directory
@@ -149,6 +158,7 @@ def _get_label(file_path, class_names):
 
 
 def _decode_img(img, image_size):
+  """Decode an image, convert to float, and resize it to the expected size."""
   # convert the compressed string to a 3D uint8 tensor
   img = tf.image.decode_jpeg(img, channels=3)
   # Use `convert_image_dtype` to convert to floats in the [0,1] range.
@@ -160,6 +170,16 @@ def _decode_img(img, image_size):
 
 
 def _process_path(file_path, image_size, class_names):
+  """map an image path string to a (image, label) pair.
+
+  args:
+    file_path: A path string to an image example.
+    image_size: A list specifying the size of an image ([H, W]).
+    class_names: A np.array containing all class names.
+
+  Returns:
+    an image, label pair.
+  """
   label = _get_label(file_path, class_names)
   # load the raw data from the file as a string
   img = tf.io.read_file(file_path)
@@ -168,6 +188,36 @@ def _process_path(file_path, image_size, class_names):
 
 def _get_data_with_keras_new(image_dir, image_size, batch_size, 
                              validation_split, cache):
+  """Gets training and validation data via keras_preprocessing.
+
+  Args:
+    image_dir: A Python string with the name of a directory that contains
+      subdirectories of images, one per class.
+    image_size: A list or tuple with 2 Python integers specifying
+      the fixed height and width to which input images are resized.
+    batch_size: A Python integer with the number of images per batch of
+      training and validation data.
+    validation_split: a float in [0, 1] specifying the percentage of validation
+      set to be splitted from the dataset.
+    cache: a bool value specifying whether or not caching datasets. Caching a
+      dataset can speed up the data loading but will take memory. Set it to
+      true only if the dataset can be fit into memory"
+    
+
+  Returns:
+    A nested tuple ((train_data, train_size),
+                    (valid_data, valid_size), labels) where:
+    train_data, valid_data: tf.data.Dataset for use with Model.fit,
+      each yielding a batch of tuples (images, labels) where
+        images is a float32 Tensor of shape [batch_size, height, width, 3]
+          with pixel values in range [0,1],
+        labels is a float32 Tensor of shape [batch_size, num_classes]
+          with one-hot encoded classes.
+    train_size, valid_size: Python integers with the numbers of training
+      and validation examples, respectively.
+    labels: A tuple of strings with the class labels (subdirectory names).
+      The index of a label in this tuple is the numeric class id.
+  """
   AUTOTUNE = tf.data.experimental.AUTOTUNE
   image_dir = pathlib.Path(image_dir)
   class_names = np.array([item.name for item in image_dir.glob('*') 
@@ -249,6 +299,9 @@ def build_model(module_layer, hparams, image_size, num_classes,
         layer.
     image_size: The input image size to use with the given module layer.
     num_classes: Number of the classes to be predicted.
+    do_data_augmentation: A bool specifying whether or not add preprocessing
+      layers.
+    augment_params: a dict of augmentation methods and corresponding params.
 
   Returns:
     The full classifier model.
