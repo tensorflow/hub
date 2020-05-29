@@ -186,6 +186,7 @@ def _process_path(file_path, image_size, class_names):
   img = _decode_img(img, image_size)
   return img, label
 
+
 def _get_data_with_keras_new(image_dir, image_size, batch_size, 
                              validation_split, cache):
   """Gets training and validation data via keras_preprocessing.
@@ -309,8 +310,9 @@ def build_model(module_layer, hparams, image_size, num_classes,
   model = tf.keras.Sequential([
       tf.keras.Input(shape=(image_size[0], image_size[1], 3)),])
 
-  if do_data_augmentation:
-    # TODO(jin): seems preprocessing layers cannot be used inside a strategy.
+  if do_data_augmentation and False:
+    # TODO(jin): disable augmentation, since seems preprocessing layers cannot 
+    # be used inside a strategy.
     preprocessing = tf.keras.layers.experimental.preprocessing
     model.add(preprocessing.RandomRotation(factor=augment_params['rotation_range']))
     model.add(preprocessing.RandomWidth(factor=augment_params['width_shift_range']))
@@ -423,7 +425,11 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
     print("Using module {} with image size {}".format( tfhub_module, image_size))
 
     train_data_and_size, valid_data_and_size, labels = _get_data_with_keras_new(
-        image_dir, image_size, hparams.batch_size, hparams.validation_split, hparams.cache)
+        image_dir, image_size, hparams.batch_size, hparams.validation_split, 
+        hparams.cache)
+    # train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
+    #     image_dir, image_size, hparams.batch_size, hparams.validation_split, 
+    #     hparams.do_data_augmentation, augment_params)
     print("Found", len(labels), "classes:", ", ".join(labels))
     print("Dataset size: %s (training) %s (validation)" % 
         (train_data_and_size[1], valid_data_and_size[1]))
