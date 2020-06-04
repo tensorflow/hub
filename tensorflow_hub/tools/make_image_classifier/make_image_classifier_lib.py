@@ -188,7 +188,8 @@ def _process_path(file_path, image_size, class_names):
 
 
 def _get_data_with_keras_new(image_dir, image_size, batch_size, 
-                             validation_split, cache):
+                             validation_split, cache,
+                             do_data_augmentation, augment_params):
   """Gets training and validation data via keras_preprocessing.
 
   Args:
@@ -226,6 +227,7 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size,
   image_count = len(list(image_dir.glob('*/*')))
   # 8 * batch_size is a good choice for shuffle buffer size.
   buffer_size = batch_size * 8
+  # shuffle here to avoid val dataset containing a single type of examples.
   list_ds = tf.data.Dataset.list_files(str(image_dir/'*/*'))
   labeled_ds = list_ds.map(
       functools.partial(
@@ -289,8 +291,7 @@ def _image_size_for_module(module_layer, requested_image_size=None):
                            tuple(requested_image_size.as_list())))
 
 
-def build_model(module_layer, hparams, image_size, num_classes, 
-                do_data_augmentation, augment_params):
+def build_model(module_layer, hparams, image_size, num_classes):
   """Builds the full classifier model from the given module_layer.
 
   Args:
@@ -300,34 +301,19 @@ def build_model(module_layer, hparams, image_size, num_classes,
         layer.
     image_size: The input image size to use with the given module layer.
     num_classes: Number of the classes to be predicted.
-    do_data_augmentation: A bool specifying whether or not add preprocessing
-      layers.
-    augment_params: a dict of augmentation methods and corresponding params.
 
   Returns:
     The full classifier model.
   """
   model = tf.keras.Sequential([
-      tf.keras.Input(shape=(image_size[0], image_size[1], 3)),])
-
-  if do_data_augmentation and False:
-    # TODO(jin): disable augmentation, since seems preprocessing layers cannot 
-    # be used inside a strategy.
-    preprocessing = tf.keras.layers.experimental.preprocessing
-    model.add(preprocessing.RandomRotation(factor=augment_params['rotation_range']))
-    model.add(preprocessing.RandomWidth(factor=augment_params['width_shift_range']))
-    model.add(preprocessing.RandomHeight(factor=augment_params['height_shift_range']))
-    model.add(preprocessing.RandomZoom(factor=augment_params['zoom_range']))
-    model.add(preprocessing.RandomFlip(mode='horizontal'))
-
-  model.add(module_layer)
-  model.add(tf.keras.layers.Dropout(rate=hparams.dropout_rate))
-  model.add(tf.keras.layers.Dense(
-      num_classes,
-      activation="softmax",
-      kernel_regularizer=tf.keras.regularizers.l1_l2(l1=hparams.l1_regularizer,
-                                                     l2=hparams.l2_regularizer)))
-
+      tf.keras.Input(shape=(image_size[0], image_size[1], 3)), module_layer,
+      tf.keras.layers.Dropout(rate=hparams.dropout_rate),
+      tf.keras.layers.Dense(
+          num_classes,
+          activation="softmax",
+          kernel_regularizer=tf.keras.regularizers.l1_l2(l1=hparams.l1_regularizer,
+                                                         l2=hparams.l2_regularizer))
+  ])
   print(model.summary())
   return model
 
@@ -426,16 +412,12 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
 
     train_data_and_size, valid_data_and_size, labels = _get_data_with_keras_new(
         image_dir, image_size, hparams.batch_size, hparams.validation_split, 
-        hparams.cache)
-    # train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
-    #     image_dir, image_size, hparams.batch_size, hparams.validation_split, 
-    #     hparams.do_data_augmentation, augment_params)
+        hparams.cache, hparams.do_data_augmentation, augment_params)
     print("Found", len(labels), "classes:", ", ".join(labels))
     print("Dataset size: %s (training) %s (validation)" % 
         (train_data_and_size[1], valid_data_and_size[1]))
 
-    model = build_model(module_layer, hparams, image_size, len(labels), 
-                        hparams.do_data_augmentation, augment_params)
+    model = build_model(module_layer, hparams, image_size, len(labels))
     train_result = train_model(model, hparams, train_data_and_size,
                               valid_data_and_size, log_dir)
   return model, labels, train_result
