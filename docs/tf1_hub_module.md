@@ -72,12 +72,11 @@ signatures. The call above applies the signature named `"default"`. Any
 signature can be selected by passing its name to the optional `signature=`
 argument.
 
-If a signature has multiple inputs, they must be passed as a dict,
-with the keys defined by the signature. Likewise, if a signature has
-multiple outputs, these can be retrieved as a dict by passing `as_dict=True`,
-under the keys defined by the signature. (The key `"default"` is for the
-single output returned if `as_dict=False`.)
-So the most general form of applying a Module looks like:
+If a signature has multiple inputs, they must be passed as a dict, with the keys
+defined by the signature. Likewise, if a signature has multiple outputs, these
+can be retrieved as a dict by passing `as_dict=True`, under the keys defined by
+the signature (the key `"default"` is for the single output returned if
+`as_dict=False`). So the most general form of applying a Module looks like:
 
 ```python
 outputs = m(dict(apples=x1, oranges=x2), signature="fruit_to_pet", as_dict=True)
