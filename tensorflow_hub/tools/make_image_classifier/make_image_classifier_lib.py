@@ -25,6 +25,7 @@ import collections
 
 import tensorflow as tf
 import tensorflow_hub as hub
+from tensorflow.python.keras.layers.preprocessing import image_preprocessing as img_prep
 
 import pathlib
 import os
@@ -187,6 +188,71 @@ def _process_path(file_path, image_size, class_names):
   return img, label
 
 
+def rotate(inputs, lower=-10, upper=10):
+  inputs_shape = tf.shape(inputs)
+  batch_size = inputs_shape[0]
+  h_axis, w_axis = 1, 2
+  img_hd = tf.cast(inputs_shape[h_axis], tf.float32)
+  img_wd = tf.cast(inputs_shape[w_axis], tf.float32)
+  min_angle = lower / 360.0 * 2 * np.pi
+  max_angle = upper / 360.0 * 2 * np.pi
+  angles = tf.random.uniform(
+      shape=[batch_size], 
+      minval=min_angle, 
+      maxval=max_angle)
+  return img_prep.transform(
+      inputs,
+      img_prep.get_rotation_matrix(angles, img_hd, img_wd),
+      interpolation='bilinear')
+
+
+def zoom(inputs, h_lower=-0.2, h_upper=0.2):
+  inputs_shape = tf.shape(inputs)
+  batch_size = inputs_shape[0]
+  h_axis, w_axis = 1, 2
+  img_hd = tf.cast(inputs_shape[h_axis], tf.float32)
+  img_wd = tf.cast(inputs_shape[w_axis], tf.float32)
+  height_zoom = tf.random.uniform(
+      shape=[batch_size, 1], 
+      minval=1. + h_lower, 
+      maxval=1. + h_upper)
+  width_zoom = height_zoom
+  zooms = tf.cast(
+      tf.concat([width_zoom, height_zoom], axis=1), 
+      dtype=inputs.dtype)
+  return img_prep.transform(
+      inputs, img_prep.get_zoom_matrix(zooms, img_hd, img_wd),
+      interpolation='bilinear')
+
+
+def image_augmentation(img, labels, augment_params):
+  """Image data augmentation utilities based on tf.image.ops.
+
+  Functions here is heavily borrowed from 
+  `tf.keras.layers.experimental.preprocessing`. This is a workaround since 
+  currently `tf.keras.layers.experimental.preprocessing` layers don't support
+  DistributeStrategy. We should move the augmentation steps to the preprocessing
+  layers after they can be used inside DistributeStrategy. See
+  https://github.com/tensorflow/tensorflow/issues/39991 to monitor the progress.
+  """
+  batch_size, img_hd, img_wd, channel = img.shape
+  if augment_params['horizontal_flip']:
+    print("\n\nflip\n\n")
+    img = tf.image.random_flip_left_right(img)
+  # if augment_params['random_crop']:
+    # img = tf.image.resize(img, size=[256, 256])
+    # img = tf.image.random_crop(img, size=[batch_size, img_hd, img_wd, channel])
+  if augment_params['rotation_range'] and augment_params['rotation_range'] != 0:
+    print("\n\nrotate\n\n")
+    upper = augment_params['rotation_range']
+    img = rotate(img, -upper, upper)
+  if augment_params['zoom_range'] and augment_params['zoom_range'] != 0:
+    print("\n\nzoom\n\n")
+    upper = augment_params['zoom_range']
+    img = zoom(img, -upper, upper)
+  return img, labels
+
+
 def _get_data_with_keras_new(image_dir, image_size, batch_size, 
                              validation_split, cache,
                              do_data_augmentation, augment_params):
@@ -244,6 +310,12 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size,
   valid_ds = valid_ds.batch(batch_size).prefetch(buffer_size=AUTOTUNE)
   train_ds = train_ds.shuffle(buffer_size=buffer_size).repeat()\
       .batch(batch_size).prefetch(buffer_size=AUTOTUNE)
+
+  if do_data_augmentation:
+    train_ds = train_ds.map(
+        functools.partial(
+            image_augmentation, augment_params=augment_params),
+        num_parallel_calls=AUTOTUNE)
 
   return (train_ds, train_size), (valid_ds, valid_size), class_names
 
