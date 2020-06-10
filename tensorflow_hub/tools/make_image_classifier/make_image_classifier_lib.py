@@ -294,11 +294,11 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size,
   # 8 * batch_size is a good choice for shuffle buffer size.
   buffer_size = batch_size * 8
   # shuffle here to avoid val dataset containing a single type of examples.
-  list_ds = tf.data.Dataset.list_files(str(image_dir/'*/*'))
+  list_ds = tf.data.Dataset.list_files(str(image_dir/'*/*'), shuffle=True)
   labeled_ds = list_ds.map(
       functools.partial(
           _process_path, image_size=image_size, class_names=class_names), 
-      num_parallel_calls=AUTOTUNE).shuffle(buffer_size=buffer_size)
+      num_parallel_calls=AUTOTUNE)
   valid_size = int(image_count * validation_split)
   train_size = image_count - valid_size
   valid_ds = labeled_ds.take(valid_size)
