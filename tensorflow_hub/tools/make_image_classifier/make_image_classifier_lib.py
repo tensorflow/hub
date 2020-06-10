@@ -87,61 +87,6 @@ def get_default_hparams():
       strategy='default')
 
 
-def _get_data_with_keras(image_dir, image_size, batch_size, validation_split,
-                         do_data_augmentation, augmentation_params):
-  """Gets training and validation data via keras_preprocessing.
-
-  Args:
-    image_dir: A Python string with the name of a directory that contains
-      subdirectories of images, one per class.
-    image_size: A list or tuple with 2 Python integers specifying
-      the fixed height and width to which input images are resized.
-    batch_size: A Python integer with the number of images per batch of
-      training and validation data.
-    do_data_augmentation: An optional boolean, controlling whether the
-      training dataset is augmented by randomly distorting input images.
-
-  Returns:
-    A nested tuple ((train_data, train_size),
-                    (valid_data, valid_size), labels) where:
-    train_data, valid_data: Generators for use with Model.fit_generator,
-      each yielding tuples (images, labels) where
-        images is a float32 Tensor of shape [batch_size, height, width, 3]
-          with pixel values in range [0,1],
-        labels is a float32 Tensor of shape [batch_size, num_classes]
-          with one-hot encoded classes.
-    train_size, valid_size: Python integers with the numbers of training
-      and validation examples, respectively.
-    labels: A tuple of strings with the class labels (subdirectory names).
-      The index of a label in this tuple is the numeric class id.
-  """
-  datagen_kwargs = dict(rescale=1. / 255, validation_split=validation_split)
-  dataflow_kwargs = dict(target_size=image_size, batch_size=batch_size,
-                         interpolation="bilinear")
-
-  valid_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-      **datagen_kwargs)
-  valid_generator = valid_datagen.flow_from_directory(
-      image_dir, subset="validation", shuffle=False, **dataflow_kwargs)
-
-  if do_data_augmentation and len(augmentation_params):
-    datagen_kwargs.update(**augmentation_params)
-    train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-        **datagen_kwargs)
-  else:
-    train_datagen = valid_datagen
-  train_generator = train_datagen.flow_from_directory(
-      image_dir, subset="training", shuffle=True, **dataflow_kwargs)
-
-  indexed_labels = [(index, label)
-                    for label, index in train_generator.class_indices.items()]
-  sorted_indices, sorted_labels = zip(*sorted(indexed_labels))
-  assert sorted_indices == tuple(range(len(sorted_labels)))
-  return ((train_generator, train_generator.samples),
-          (valid_generator, valid_generator.samples),
-          sorted_labels)
-
-
 def _get_label(file_path, class_names):
   """Obtain the label of an image from its path.
 
@@ -163,15 +108,14 @@ def _decode_img(img, image_size):
   # convert the compressed string to a 3D uint8 tensor
   img = tf.image.decode_jpeg(img, channels=3)
   # Use `convert_image_dtype` to convert to floats in the [0,1] range.
-  # Rescale is no longer needed, as this convert will automatically
+  # Rescale is no longer needed, as this conversion will automatically
   # scale to [0, 1] when dtype is float.
   img = tf.image.convert_image_dtype(img, tf.float32)
-  # resize the image to the desired size.
   return tf.image.resize(img, image_size)
 
 
 def _process_path(file_path, image_size, class_names):
-  """map an image path string to a (image, label) pair.
+  """Map an image path string to a (image, label) pair.
 
   args:
     file_path: A path string to an image example.
@@ -189,6 +133,7 @@ def _process_path(file_path, image_size, class_names):
 
 
 def rotate(inputs, lower=-10, upper=10):
+  """Randomly rotate a batch of images by a degree within [lower, upper]."""
   inputs_shape = tf.shape(inputs)
   batch_size = inputs_shape[0]
   h_axis, w_axis = 1, 2
@@ -207,6 +152,9 @@ def rotate(inputs, lower=-10, upper=10):
 
 
 def zoom(inputs, h_lower=-0.2, h_upper=0.2):
+  """Randomly zoom in a batch of images by a scale within [h_lower, h_upper].
+  The height and width are zoomed by the same scale.
+  """
   inputs_shape = tf.shape(inputs)
   batch_size = inputs_shape[0]
   h_axis, w_axis = 1, 2
@@ -231,32 +179,34 @@ def image_augmentation(img, labels, augment_params):
   Functions here is heavily borrowed from 
   `tf.keras.layers.experimental.preprocessing`. This is a workaround since 
   currently `tf.keras.layers.experimental.preprocessing` layers don't support
-  DistributeStrategy. We should move the augmentation steps to the preprocessing
+  DistributeStrategy. We can move the augmentation steps to preprocessing
   layers after they can be used inside DistributeStrategy. See
   https://github.com/tensorflow/tensorflow/issues/39991 to monitor the progress.
+
+  Args:
+    img: A batch of images whose shape is [batch_size, height, width, channel].
+    labels: A batch of one-hot encoded labels.
+    augment_params: A dict containing augmentation-related parameters.
+
+  Returns:
+    img: The same batch of images that are augmented.
+    labels: The same batch of labels.
   """
-  batch_size, img_hd, img_wd, channel = img.shape
   if augment_params['horizontal_flip']:
-    print("\n\nflip\n\n")
     img = tf.image.random_flip_left_right(img)
-  # if augment_params['random_crop']:
-    # img = tf.image.resize(img, size=[256, 256])
-    # img = tf.image.random_crop(img, size=[batch_size, img_hd, img_wd, channel])
   if augment_params['rotation_range'] and augment_params['rotation_range'] != 0:
-    print("\n\nrotate\n\n")
     upper = augment_params['rotation_range']
     img = rotate(img, -upper, upper)
   if augment_params['zoom_range'] and augment_params['zoom_range'] != 0:
-    print("\n\nzoom\n\n")
     upper = augment_params['zoom_range']
     img = zoom(img, -upper, upper)
   return img, labels
 
 
-def _get_data_with_keras_new(image_dir, image_size, batch_size, 
+def _get_data_with_keras(image_dir, image_size, batch_size, 
                              validation_split, cache,
                              do_data_augmentation, augment_params):
-  """Gets training and validation data via keras_preprocessing.
+  """Gets training and validation data via tf.data.Dataset.
 
   Args:
     image_dir: A Python string with the name of a directory that contains
@@ -265,12 +215,13 @@ def _get_data_with_keras_new(image_dir, image_size, batch_size,
       the fixed height and width to which input images are resized.
     batch_size: A Python integer with the number of images per batch of
       training and validation data.
-    validation_split: a float in [0, 1] specifying the percentage of validation
+    validation_split: A float in [0, 1] specifying the percentage of validation
       set to be splitted from the dataset.
-    cache: a bool value specifying whether or not caching datasets. Caching a
+    cache: A bool value specifying whether or not caching datasets. Caching a
       dataset can speed up the data loading but will take memory. Set it to
       true only if the dataset can be fit into memory"
-    
+    do_data_augmentation: A bool value specifying whether doing augmentation.
+    augment_params: A dict containing augmentation-related parameters.
 
   Returns:
     A nested tuple ((train_data, train_size),
@@ -482,7 +433,7 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
     image_size = _image_size_for_module(module_layer, requested_image_size)
     print("Using module {} with image size {}".format( tfhub_module, image_size))
 
-    train_data_and_size, valid_data_and_size, labels = _get_data_with_keras_new(
+    train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
         image_dir, image_size, hparams.batch_size, hparams.validation_split, 
         hparams.cache, hparams.do_data_augmentation, augment_params)
     print("Found", len(labels), "classes:", ", ".join(labels))
