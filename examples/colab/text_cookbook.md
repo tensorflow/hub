@@ -15,17 +15,17 @@ When we want to predict a class for a given example, for example **sentiment**,
 The tutorials below are solving the same task from different perspectives and
 using different tools.
 
-### Estimator
-
-[Text classification](https://www.tensorflow.org/hub/tutorials/text_classification_with_tf_hub) -
-example for building an IMDB sentiment classifier with Estimator. Contains
-multiple tips for improvement and a module comparison section.
-
 ### Keras
 
 [Text classification with Keras](https://www.tensorflow.org/tutorials/keras/text_classification_with_hub) -
 example for building an IMDB sentiment classifier with Keras and TensorFlow
 Datasets.
+
+### Estimator
+
+[Text classification](https://github.com/tensorflow/hub/blob/master/docs/tutorials/text_classification_with_tf_hub.ipynb) -
+example for building an IMDB sentiment classifier with Estimator. Contains
+multiple tips for improvement and a module comparison section.
 
 ### BERT
 [Predicting Movie Review Sentiment with BERT on TF Hub](https://github.com/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb) -
