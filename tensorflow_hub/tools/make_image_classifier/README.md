@@ -44,12 +44,13 @@ Basic usage of the tool looks like
 
 ```shell
 $ make_image_classifier \
-  --image_dir my_image dir \
+  --image_dir my_image_dir \
   --tfhub_module https://tfhub.dev/google/tf2-preview/mobilenet_v2/feature_vector/4 \
   --image_size 224 \
   --saved_model_dir my_dir/new_model \
   --labels_output_file class_labels.txt \
-  --tflite_output_file new_mobile_model.tflite
+  --tflite_output_file new_mobile_model.tflite \
+  --summaries_dir my_log_dir
 ```
 
 The `--image_dir` is a directory of subdirectories of images, defining
@@ -58,7 +59,7 @@ classify your photos of pets to be cat, dog or rabbit. Then you would
 arrange JPEG files of such photos in a directory structure like
 
 ```
-my image_dir
+my_image_dir
 |-- cat
 |   |-- a_feline_photo.jpg
 |   |-- another_cat_pic.jpg
@@ -110,6 +111,10 @@ is written to that file in TensorFlow Lite's model format ("flatbuffers").
 This can be deployed to TF Lite on mobile devices.
 If you are not deploying to TF Lite, you can simply omit this flag.
 
+If `--summaries_dir` is given, you can monitor your model training
+on TensorBoard. See [this guide](https://www.tensorflow.org/tensorboard/get_started)
+on how to enable TensorBoard.
+
 If you set all the flags as in the example above, you can test the
 resulting TF Lite model with
 [tensorflow/lite/examples/python/label_image.py](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/examples/python/label_image.py)
@@ -127,7 +132,14 @@ python label_image.py \
 
 Additional command-line flags let you control the training process.
 In particular, you can increase `--train_epochs` to train more,
-and set the `--learning_rate` for the SGD optimizer.
+and set the `--learning_rate` and `--momentum` for the SGD optimizer.
 
 Also, you can set `--do_fine_tuning` to train the TensorFlow Hub
 module together with the classifier.
+
+There is other hyperparameters for regularization such as
+`--l1_regularizer` and `--l2_regularizer`, and for data augmentations
+such as `--rotation_range` and `--horizontal_flip`. Generally, the
+default values can give a good performance. You can find a full list
+of hyperparameters available in `make_image_classifier.py` and their
+default values in `make_image_classifier_lib.py`.

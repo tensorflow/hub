@@ -38,7 +38,10 @@ def get_default_image_dir():
 class HParams(
     collections.namedtuple("HParams", [
         "train_epochs", "do_fine_tuning", "batch_size", "learning_rate",
-        "momentum", "dropout_rate"
+        "momentum", "dropout_rate", "l1_regularizer", "l2_regularizer",
+        "label_smoothing", "validation_split", "do_data_augmentation",
+        "rotation_range", "horizontal_flip", "width_shift_range",
+        "height_shift_range", "shear_range", "zoom_range"
     ])):
   """The hyperparameters for make_image_classifier.
 
@@ -49,7 +52,7 @@ class HParams(
   learning_rate: The learning rate to use for gradient descent training.
   momentum: The momentum parameter to use for gradient descent training.
   dropout_rate: The fraction of the input units to drop, used in dropout layer.
-"""
+  """
 
 
 def get_default_hparams():
@@ -60,11 +63,22 @@ def get_default_hparams():
       batch_size=32,
       learning_rate=0.005,
       momentum=0.9,
-      dropout_rate=0.2)
+      dropout_rate=0.2,
+      l1_regularizer=0.0,
+      l2_regularizer=0.0001,
+      label_smoothing=0.1,
+      validation_split=0.2,
+      do_data_augmentation=False,
+      rotation_range=40,
+      horizontal_flip=True,
+      width_shift_range=0.2,
+      height_shift_range=0.2,
+      shear_range=0.2,
+      zoom_range=0.2)
 
 
-def _get_data_with_keras(image_dir, image_size, batch_size,
-                         do_data_augmentation=False):
+def _get_data_with_keras(image_dir, image_size, batch_size, validation_split,
+                         do_data_augmentation, augmentation_params):
   """Gets training and validation data via keras_preprocessing.
 
   Args:
@@ -91,9 +105,7 @@ def _get_data_with_keras(image_dir, image_size, batch_size,
     labels: A tuple of strings with the class labels (subdirectory names).
       The index of a label in this tuple is the numeric class id.
   """
-  datagen_kwargs = dict(rescale=1./255,
-                        # TODO(b/139467904): Expose this as a flag.
-                        validation_split=.20)
+  datagen_kwargs = dict(rescale=1. / 255, validation_split=validation_split)
   dataflow_kwargs = dict(target_size=image_size, batch_size=batch_size,
                          interpolation="bilinear")
 
@@ -102,11 +114,9 @@ def _get_data_with_keras(image_dir, image_size, batch_size,
   valid_generator = valid_datagen.flow_from_directory(
       image_dir, subset="validation", shuffle=False, **dataflow_kwargs)
 
-  if do_data_augmentation:
-    # TODO(b/139467904): Expose the following constants as flags.
+  if do_data_augmentation and len(augmentation_params):
+    datagen_kwargs.update(**augmentation_params)
     train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-        rotation_range=40, horizontal_flip=True, width_shift_range=0.2,
-        height_shift_range=0.2, shear_range=0.2, zoom_range=0.2,
         **datagen_kwargs)
   else:
     train_datagen = valid_datagen
@@ -153,7 +163,8 @@ def _image_size_for_module(module_layer, requested_image_size=None):
     else:
       return module_image_size
   else:
-    requested_image_size = tf.TensorShape([requested_image_size, requested_image_size])
+    requested_image_size = tf.TensorShape(
+        [requested_image_size, requested_image_size])
     assert requested_image_size.is_fully_defined()
     if requested_image_size.is_compatible_with(module_image_size):
       return tuple(requested_image_size.as_list())
@@ -178,14 +189,14 @@ def build_model(module_layer, hparams, image_size, num_classes):
   Returns:
     The full classifier model.
   """
-  # TODO(b/139467904): Expose the hyperparameters below as flags.
   model = tf.keras.Sequential([
       tf.keras.Input(shape=(image_size[0], image_size[1], 3)), module_layer,
       tf.keras.layers.Dropout(rate=hparams.dropout_rate),
       tf.keras.layers.Dense(
           num_classes,
           activation="softmax",
-          kernel_regularizer=tf.keras.regularizers.l2(0.0001))
+          kernel_regularizer=tf.keras.regularizers.l1_l2(
+              l1=hparams.l1_regularizer, l2=hparams.l2_regularizer))
   ])
   print(model.summary())
   return model
@@ -218,8 +229,8 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size,
   """
   train_data, train_size = train_data_and_size
   valid_data, valid_size = valid_data_and_size
-  # TODO(b/139467904): Expose this hyperparameter as a flag.
-  loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1)
+  loss = tf.keras.losses.CategoricalCrossentropy(
+      label_smoothing=hparams.label_smoothing)
   model.compile(
       optimizer=tf.keras.optimizers.SGD(
           lr=hparams.learning_rate, momentum=hparams.momentum),
@@ -261,8 +272,16 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
   image_size = _image_size_for_module(module_layer, requested_image_size)
   print("Using module {} with image size {}".format(
       tfhub_module, image_size))
+  augmentation_params = dict(
+      rotation_range=hparams.rotation_range,
+      horizontal_flip=hparams.horizontal_flip,
+      width_shift_range=hparams.width_shift_range,
+      height_shift_range=hparams.height_shift_range,
+      shear_range=hparams.shear_range,
+      zoom_range=hparams.zoom_range)
   train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
-      image_dir, image_size, hparams.batch_size)
+      image_dir, image_size, hparams.batch_size, hparams.validation_split,
+      hparams.do_data_augmentation, augmentation_params)
   print("Found", len(labels), "classes:", ", ".join(labels))
 
   model = build_model(module_layer, hparams, image_size, len(labels))

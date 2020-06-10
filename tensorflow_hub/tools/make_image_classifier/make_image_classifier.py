@@ -117,6 +117,34 @@ flags.DEFINE_bool(
     "More details: "
     "https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth"
 )
+flags.DEFINE_float(
+    "l1_regularizer", _DEFAULT_HPARAMS.l1_regularizer,
+    "Coefficient of L1 regularization applied on model weights.")
+flags.DEFINE_float(
+    "l2_regularizer", _DEFAULT_HPARAMS.l2_regularizer,
+    "Coefficient of L2 regularization applied on model weights.")
+flags.DEFINE_float("label_smoothing", _DEFAULT_HPARAMS.label_smoothing,
+                   "Coefficient of label smoothing used in loss function.")
+flags.DEFINE_float("validation_split", _DEFAULT_HPARAMS.validation_split,
+                   "The fractin of the dataset splitted into a validation set")
+flags.DEFINE_bool(
+    "do_data_augmentation", _DEFAULT_HPARAMS.do_data_augmentation,
+    "Whether do data augmentation on training set."
+    "Can use default augmentation params or specifying them.")
+flags.DEFINE_integer("rotation_range", _DEFAULT_HPARAMS.rotation_range,
+                     "Degree range for random rotation.")
+flags.DEFINE_bool("horizontal_flip", _DEFAULT_HPARAMS.horizontal_flip,
+                  "Horizontally flip images.")
+flags.DEFINE_float(
+    "width_shift_range", _DEFAULT_HPARAMS.width_shift_range,
+    "Shift images horizontally by pixels(if >=1) or by ratio(if <1).")
+flags.DEFINE_float(
+    "height_shift_range", _DEFAULT_HPARAMS.height_shift_range,
+    "Shift images vertically by pixels(if >=1) or by ratio(if <1).")
+flags.DEFINE_float("shear_range", _DEFAULT_HPARAMS.shear_range,
+                   "Shear angle in counter-clockwise direction in degrees.")
+flags.DEFINE_float("zoom_range", _DEFAULT_HPARAMS.zoom_range,
+                   "Range for random zoom.")
 FLAGS = flags.FLAGS
 
 
@@ -128,7 +156,18 @@ def _get_hparams_from_flags():
       batch_size=FLAGS.batch_size,
       learning_rate=FLAGS.learning_rate,
       momentum=FLAGS.momentum,
-      dropout_rate=FLAGS.dropout_rate)
+      dropout_rate=FLAGS.dropout_rate,
+      l1_regularizer=FLAGS.l1_regularizer,
+      l2_regularizer=FLAGS.l2_regularizer,
+      label_smoothing=FLAGS.label_smoothing,
+      validation_split=FLAGS.validation_split,
+      do_data_augmentation=FLAGS.do_data_augmentation,
+      rotation_range=FLAGS.rotation_range,
+      horizontal_flip=FLAGS.horizontal_flip,
+      width_shift_range=FLAGS.width_shift_range,
+      height_shift_range=FLAGS.height_shift_range,
+      shear_range=FLAGS.shear_range,
+      zoom_range=FLAGS.zoom_range)
 
 
 def _check_keras_dependencies():
