@@ -132,7 +132,7 @@ def _process_path(file_path, image_size, class_names):
   return img, label
 
 
-def rotate(inputs, lower=-10, upper=10):
+def rotate(inputs, lower, upper):
   """Randomly rotate a batch of images by a degree within [lower, upper]."""
   inputs_shape = tf.shape(inputs)
   batch_size = inputs_shape[0]
@@ -151,7 +151,7 @@ def rotate(inputs, lower=-10, upper=10):
       interpolation='bilinear')
 
 
-def zoom(inputs, h_lower=-0.2, h_upper=0.2):
+def zoom(inputs, h_lower, h_upper):
   """Randomly zoom in a batch of images by a scale within [h_lower, h_upper].
   The height and width are zoomed by the same scale.
   """
@@ -334,8 +334,8 @@ def build_model(module_layer, hparams, image_size, num_classes):
       tf.keras.layers.Dense(
           num_classes,
           activation="softmax",
-          kernel_regularizer=tf.keras.regularizers.l1_l2(l1=hparams.l1_regularizer,
-                                                         l2=hparams.l2_regularizer))
+          kernel_regularizer=tf.keras.regularizers.l1_l2(
+              l1=hparams.l1_regularizer, l2=hparams.l2_regularizer))
   ])
   print(model.summary())
   return model
@@ -368,18 +368,19 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size,
   """
   train_data, train_size = train_data_and_size
   valid_data, valid_size = valid_data_and_size
-  loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=hparams.label_smoothing)
+  loss = tf.keras.losses.CategoricalCrossentropy(
+      label_smoothing=hparams.label_smoothing)
+  model.compile(
+      optimizer=tf.keras.optimizers.SGD(
+          lr=hparams.learning_rate, momentum=hparams.momentum),
+      loss=loss,
+      metrics=["accuracy"])
   steps_per_epoch = train_size // hparams.batch_size
   validation_steps = valid_size // hparams.batch_size
   callbacks = []
   if log_dir != None:
     callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                     histogram_freq=1))
-  model.compile(
-      optimizer=tf.keras.optimizers.SGD(
-          lr=hparams.learning_rate, momentum=hparams.momentum),
-      loss=loss,
-      metrics=["accuracy"])
   return model.fit(
       train_data,
       epochs=hparams.train_epochs,
