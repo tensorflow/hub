@@ -239,8 +239,8 @@ def _get_data_with_keras(image_dir, image_size, batch_size,
   """
   AUTOTUNE = tf.data.experimental.AUTOTUNE
   image_dir = pathlib.Path(image_dir)
-  class_names = np.array([item.name for item in image_dir.glob('*') 
-                          if item.name != 'LICENSE.txt'])
+  class_names = tuple(item.name for item in image_dir.glob('*') 
+                      if item.is_dir())
   image_count = len(list(image_dir.glob('*/*')))
   # 8 * batch_size is a good choice for shuffle buffer size.
   buffer_size = batch_size * 8
