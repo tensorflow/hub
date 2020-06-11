@@ -250,6 +250,39 @@ class ResolverTest(tf.test.TestCase):
         "Downloader Hostname: %s .PID:%d." % (re.escape(socket.gethostname()),
                                               os.getpid()))
 
+  def testModuleDownloadedWhenEmptyFolderExists(self):
+    # Simulate the case when a module is cached in /tmp/module_dir but module
+    # files inside the folder are deleted. In this case, the download should
+    # still be conducted.
+    module_dir = os.path.join(self.get_temp_dir(), "module")
+    def fake_download_fn(handle, tmp_dir):
+      del handle, tmp_dir
+      tf_v1.gfile.MakeDirs(module_dir)
+      tf_utils.atomic_write_string_to_file(
+          os.path.join(module_dir, "file"), "content", False)
+
+    # Delete existing folder and create an empty one.
+    if tf_v1.gfile.Exists(module_dir):
+      tf_v1.gfile.DeleteRecursively(module_dir)
+    tf_v1.gfile.MakeDirs(module_dir)
+
+    self.assertEqual(
+        module_dir,
+        resolver.atomic_download("module", fake_download_fn, module_dir))
+    self.assertEqual(tf_v1.gfile.ListDirectory(module_dir), ["file"])
+    self.assertFalse(tf_v1.gfile.Exists(resolver._lock_filename(module_dir)))
+    parent_dir = os.path.abspath(os.path.join(module_dir, ".."))
+    self.assertEqual(
+        sorted(tf_v1.gfile.ListDirectory(parent_dir)),
+        ["module", "module.descriptor.txt"])
+    self.assertRegexpMatches(
+        tf_utils.read_file_to_string(
+            resolver._module_descriptor_file(module_dir)),
+        "Module: module\n"
+        "Download Time: .*\n"
+        "Downloader Hostname: %s .PID:%d." % (re.escape(socket.gethostname()),
+                                              os.getpid()))
+
   def testModuleConcurrentDownload(self):
     module_dir = os.path.join(self.get_temp_dir(), "module")
 
