@@ -414,10 +414,6 @@ py_library(
 py_test(
     name = "keras_layer_test",
     srcs = ["keras_layer_test.py"],
-    data = [
-        "testdata/hub_module_v1_mini",
-        "testdata/saved_model_v2_mini",
-    ],
     python_version = "PY3",
     shard_count = 2,
     srcs_version = "PY2AND3",
@@ -513,16 +509,12 @@ py_library(
 py_test(
     name = "module_v2_test",
     srcs = ["module_v2_test.py"],
-    data = [
-        "testdata/hub_module_v1_mini",
-        "testdata/saved_model_v2_mini",
-    ],
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
         ":module_v2",
+        ":tensorflow_hub",
         ":test_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
-        ":config",
     ],
 )

@@ -25,14 +25,38 @@ except ImportError:
   import unittest.mock as mock
 # pylint:disable=g-import-not-at-top,g-statement-before-imports
 
+import os
 from absl.testing import parameterized
 import tensorflow as tf
-from tensorflow_hub import config
+import tensorflow_hub as hub
 from tensorflow_hub import module_v2
-from tensorflow_hub import test_utils
 
-# Initialize resolvers and loaders.
-config._run()
+
+def _save_plus_one_saved_model_v2(path):
+  obj = tf.train.Checkpoint()
+
+  @tf.function(input_signature=[tf.TensorSpec(None, dtype=tf.float32)])
+  def plus_one(x):
+    return x + 1
+
+  obj.__call__ = plus_one
+  tf.saved_model.save(obj, path)
+
+
+def _save_plus_one_hub_module_v1(path):
+
+  def plus_one():
+    x = tf.compat.v1.placeholder(dtype=tf.float32, name='x')
+    y = x + 1
+    hub.add_signature(inputs=x, outputs=y)
+
+  spec = hub.create_module_spec(plus_one)
+
+  with tf.compat.v1.Graph().as_default():
+    module = hub.Module(spec, trainable=True)
+    with tf.compat.v1.Session() as session:
+      session.run(tf.compat.v1.global_variables_initializer())
+      module.export(path, session)
 
 
 class ModuleV2Test(tf.test.TestCase, parameterized.TestCase):
@@ -42,10 +66,14 @@ class ModuleV2Test(tf.test.TestCase, parameterized.TestCase):
       ('v1_explicit_tags', 'hub_module_v1_mini', [], True),
       ('v2_implicit_tags', 'saved_model_v2_mini', None, False),
       ('v2_explicit_tags', 'saved_model_v2_mini', ['serve'], False),
-      )
+  )
   def test_load(self, module_name, tags, is_hub_module_v1):
-    path = test_utils.get_test_data_path(module_name)
-    m = module_v2.load(path, tags)
+    export_dir = os.path.join(self.get_temp_dir(), module_name)
+    if module_name == 'hub_module_v1_mini':
+      _save_plus_one_hub_module_v1(export_dir)
+    else:
+      _save_plus_one_saved_model_v2(export_dir)
+    m = module_v2.load(export_dir, tags)
     self.assertEqual(m._is_hub_module_v1, is_hub_module_v1)
 
   @mock.patch.object(module_v2, 'tf_v1')
@@ -60,4 +88,6 @@ class ModuleV2Test(tf.test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
+  # In TF 1.15.x, we need to enable V2-like behavior, notably eager execution.
+  tf.compat.v1.enable_v2_behavior()
   tf.test.main()

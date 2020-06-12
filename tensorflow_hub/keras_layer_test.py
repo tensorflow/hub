@@ -26,9 +26,6 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
 
-from tensorflow_hub import test_utils
-
-
 # NOTE: A Hub-style SavedModel can either be constructed manually, or by
 # relying on tf.saved_model.save(keras_model, ...) to put in the expected
 # endpoints. The following _save*model() helpers offer a save_from_keras
@@ -238,6 +235,53 @@ def _save_model_with_obscurely_shaped_list_output(export_dir):
   obj = tf.train.Checkpoint()
   obj.__call__ = call_fn
   tf.saved_model.save(obj, export_dir)
+
+
+def _save_plus_one_saved_model_v2(path, save_from_keras=False):
+  """Writes Hub-style SavedModel that increments the input by one."""
+  if save_from_keras: raise NotImplementedError()
+  
+  obj = tf.train.Checkpoint()
+
+  @tf.function(input_signature=[tf.TensorSpec(None, dtype=tf.float32)])
+  def plus_one(x):
+    return x + 1
+
+  obj.__call__ = plus_one
+  tf.saved_model.save(obj, path)
+
+
+def _save_plus_one_hub_module_v1(path):
+  """Writes TF1.x hub.Module that increments the input by one."""
+
+  def plus_one():
+    x = tf.compat.v1.placeholder(dtype=tf.float32, name="x")
+    y = x + 1
+    hub.add_signature(inputs=x, outputs=y)
+
+  spec = hub.create_module_spec(plus_one)
+  _export_module_spec_with_init_weights(spec, path)
+
+
+def _export_module_spec_with_init_weights(spec, path):
+  """Initializes initial weights of a TF1.x HubModule and saves it."""
+  with tf.compat.v1.Graph().as_default():
+    module = hub.Module(spec, trainable=True)
+    with tf.compat.v1.Session() as session:
+      session.run(tf.compat.v1.global_variables_initializer())
+      module.export(path, session)
+
+
+def _dispatch_model_format(model_format, saved_model_fn, hub_module_fn, *args):
+  """Dispatches the correct save function based on the model format."""
+  if model_format == "TF2SavedModel_SavedRaw":
+    saved_model_fn(*args, save_from_keras=False)
+  elif model_format == "TF2SavedModel_SavedFromKeras":
+    saved_model_fn(*args, save_from_keras=True)
+  elif model_format == "TF1HubModule":
+    hub_module_fn(*args)
+  else:
+    raise ValueError("Unrecognized format: " + format)
 
 
 class KerasTest(tf.test.TestCase, parameterized.TestCase):
@@ -791,29 +835,32 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
 class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
   """Unit tests for KerasLayer."""
 
-  @parameterized.named_parameters(
-      ("v1_implicit_tags", "hub_module_v1_mini"),
-      ("v2_implicit_tags", "saved_model_v2_mini"),
-      )
-  def test_load_with_defaults(self, module_name):
+  @parameterized.parameters(("TF1HubModule"), ("TF2SavedModel_SavedRaw"))
+  def test_load_with_defaults(self, model_format):
+    export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
+    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
+                           _save_plus_one_hub_module_v1, export_dir)
     inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
-    path = test_utils.get_test_data_path(module_name)
-    layer = hub.KerasLayer(path)
+    layer = hub.KerasLayer(export_dir)
     output = layer(inputs)
     self.assertEqual(output, expected_outputs)
 
   @parameterized.parameters(
-      ("hub_module_v1_mini", None, None, True),
-      ("hub_module_v1_mini", None, None, False),
-      ("hub_module_v1_mini", "default", None, True),
-      ("hub_module_v1_mini", None, "default", False),
-      ("hub_module_v1_mini", "default", "default", False),
-      )
-  def test_load_legacy_hub_module_v1_with_signature(
-      self, module_name, signature, output_key, as_dict):
+      ("TF1HubModule", None, None, True),
+      ("TF1HubModule", None, None, False),
+      ("TF1HubModule", "default", None, True),
+      ("TF1HubModule", None, "default", False),
+      ("TF1HubModule", "default", "default", False),
+  )
+  def test_load_legacy_hub_module_v1_with_signature(self, model_format,
+                                                    signature, output_key,
+                                                    as_dict):
+    export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
+    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
+                           _save_plus_one_hub_module_v1, export_dir)
     inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
-    path = test_utils.get_test_data_path(module_name)
-    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+    layer = hub.KerasLayer(export_dir, signature=signature,
+                           output_key=output_key,
                            signature_outputs_as_dict=as_dict)
     output = layer(inputs)
     if as_dict:
@@ -822,16 +869,22 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
       self.assertEqual(output, expected_outputs)
 
   @parameterized.parameters(
-      ("saved_model_v2_mini", None, None, False),
-      ("saved_model_v2_mini", "serving_default", None, True),
-      ("saved_model_v2_mini", "serving_default", "output_0", False),
-      )
-  def test_load_callable_saved_model_v2_with_signature(
-      self, module_name, signature, output_key, as_dict):
+      ("TF2SavedModel_SavedRaw", None, None, False),
+      ("TF2SavedModel_SavedRaw", "serving_default", None, True),
+      ("TF2SavedModel_SavedRaw", "serving_default", "output_0", False),
+  )
+  def test_load_callable_saved_model_v2_with_signature(self, model_format,
+                                                       signature, output_key,
+                                                       as_dict):
+    export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
+    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
+                           _save_plus_one_hub_module_v1, export_dir)
     inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
-    path = test_utils.get_test_data_path(module_name)
-    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
-                           signature_outputs_as_dict=as_dict)
+    layer = hub.KerasLayer(
+        export_dir,
+        signature=signature,
+        output_key=output_key,
+        signature_outputs_as_dict=as_dict)
     output = layer(inputs)
     if as_dict:
       self.assertIsInstance(output, dict)
@@ -840,20 +893,23 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
       self.assertEqual(output, expected_outputs)
 
   @parameterized.parameters(
-      ("hub_module_v1_mini", None, None, True),
-      ("hub_module_v1_mini", None, None, False),
-      ("hub_module_v1_mini", "default", None, True),
-      ("hub_module_v1_mini", None, "default", False),
-      ("hub_module_v1_mini", "default", "default", False),
-      ("saved_model_v2_mini", None, None, False),
-      ("saved_model_v2_mini", "serving_default", None, True),
-      ("saved_model_v2_mini", "serving_default", "output_0", False),
-      )
-  def test_keras_layer_get_config(
-      self, module_name, signature, output_key, as_dict):
+      ("TF1HubModule", None, None, True),
+      ("TF1HubModule", None, None, False),
+      ("TF1HubModule", "default", None, True),
+      ("TF1HubModule", None, "default", False),
+      ("TF1HubModule", "default", "default", False),
+      ("TF2SavedModel_SavedRaw", None, None, False),
+      ("TF2SavedModel_SavedRaw", "serving_default", None, True),
+      ("TF2SavedModel_SavedRaw", "serving_default", "output_0", False),
+  )
+  def test_keras_layer_get_config(self, model_format, signature, output_key,
+                                  as_dict):
+    export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
+    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
+                           _save_plus_one_hub_module_v1, export_dir)
     inputs = 10.  # Test modules perform increment op.
-    path = test_utils.get_test_data_path(module_name)
-    layer = hub.KerasLayer(path, signature=signature, output_key=output_key,
+    layer = hub.KerasLayer(export_dir, signature=signature,
+                           output_key=output_key,
                            signature_outputs_as_dict=as_dict)
     outputs = layer(inputs)
     config = layer.get_config()
@@ -862,56 +918,66 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(outputs, new_outputs)
 
   def test_keras_layer_fails_if_signature_output_not_specified(self):
-    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
+    _save_plus_one_saved_model_v2(export_dir, save_from_keras=False)
     with self.assertRaisesRegex(
         ValueError, "When using a signature, either output_key or "
         "signature_outputs_as_dict=True should be set."):
-      hub.KerasLayer(path, signature="serving_default")
+      hub.KerasLayer(export_dir, signature="serving_default")
 
   def test_keras_layer_fails_if_with_outputs_as_dict_but_no_signature(self):
-    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
+    _save_plus_one_saved_model_v2(export_dir, save_from_keras=False)
     with self.assertRaisesRegex(
         ValueError,
         "signature_outputs_as_dict is only valid if specifying a signature *"):
-      hub.KerasLayer(path, signature_outputs_as_dict=True)
+      hub.KerasLayer(export_dir, signature_outputs_as_dict=True)
 
   def test_keras_layer_fails_if_saved_model_v2_with_tags(self):
-    path = test_utils.get_test_data_path("saved_model_v2_mini")
+    export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
+    _save_plus_one_saved_model_v2(export_dir, save_from_keras=False)
     with self.assertRaises(ValueError):
-      hub.KerasLayer(path, signature=None, tags=["train"])
+      hub.KerasLayer(export_dir, signature=None, tags=["train"])
 
   def test_keras_layer_fails_if_setting_both_output_key_and_as_dict(self):
-    path = test_utils.get_test_data_path("hub_module_v1_mini")
+    export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
+    _save_plus_one_saved_model_v2(export_dir, save_from_keras=False)
     with self.assertRaisesRegex(
         ValueError, "When using a signature, either output_key or "
         "signature_outputs_as_dict=True should be set."):
-      hub.KerasLayer(path, signature="default",
-                     signature_outputs_as_dict=True, output_key="output")
+      hub.KerasLayer(export_dir, signature="default",
+                     signature_outputs_as_dict=True,
+                     output_key="output")
 
   def test_keras_layer_fails_if_output_is_not_dict(self):
-    path = test_utils.get_test_data_path("saved_model_v2_mini")
-    layer = hub.KerasLayer(path, output_key="output_0")
+    export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
+    _save_plus_one_saved_model_v2(export_dir, save_from_keras=False)
+    layer = hub.KerasLayer(export_dir, output_key="output_0")
     with self.assertRaisesRegex(
         ValueError, "Specifying `output_key` is forbidden if output type *"):
       layer(10.)
 
   def test_keras_layer_fails_if_output_key_not_in_layer_outputs(self):
-    path = test_utils.get_test_data_path("hub_module_v1_mini")
-    layer = hub.KerasLayer(path, output_key="unknown")
+    export_dir = os.path.join(self.get_temp_dir(), "hub_module_v1_mini")
+    _save_plus_one_hub_module_v1(export_dir)
+    layer = hub.KerasLayer(export_dir, output_key="unknown")
     with self.assertRaisesRegex(
         ValueError, "KerasLayer output does not contain the output key*"):
       layer(10.)
 
   def test_keras_layer_fails_if_hub_module_trainable(self):
-    path = test_utils.get_test_data_path("hub_module_v1_mini")
-    layer = hub.KerasLayer(path, trainable=True)
+    export_dir = os.path.join(self.get_temp_dir(), "hub_module_v1_mini")
+    _save_plus_one_hub_module_v1(export_dir)
+    layer = hub.KerasLayer(export_dir, trainable=True)
     with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
       layer(10.)
 
   def test_keras_layer_fails_if_signature_trainable(self):
-    path = test_utils.get_test_data_path("saved_model_v2_mini")
-    layer = hub.KerasLayer(path, signature="serving_default",
-                           signature_outputs_as_dict=True, trainable=True)
+    export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
+    _save_plus_one_saved_model_v2(export_dir, save_from_keras=False)
+    layer = hub.KerasLayer(export_dir, signature="serving_default",
+                           signature_outputs_as_dict=True,
+                           trainable=True)
     layer.trainable = True
     with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
       layer(10.)
@@ -933,17 +999,6 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
 
 
 if __name__ == "__main__":
-  # The file under test is not imported if TensorFlow is too old.
-  # In such an environment, this test should be silently skipped.
-  if hasattr(hub, "KerasLayer"):
-    # At this point, we are either in in a late TF1 version or in TF2.
-    # In TF1, we need to enable V2-like behavior, notably eager execution.
-    # `tf.enable_v2_behavior` seems available and should be preferred.
-    # The alternative `tf.enable_eager_behavior` has been around for longer, and
-    # will be enabled if `tf.enable_v2_behavior` is not available.
-    # In TF2, those enable_*() methods are unnecessary and no longer available.
-    if hasattr(tf, "enable_v2_behavior"):
-      tf.enable_v2_behavior()
-    elif hasattr(tf, "enable_eager_behavior"):
-      tf.enable_eager_behavior()
-    tf.test.main()
+  # In TF 1.15.x, we need to enable V2-like behavior, notably eager execution.
+  tf.compat.v1.enable_v2_behavior()
+  tf.test.main()
