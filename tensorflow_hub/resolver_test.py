@@ -261,9 +261,8 @@ class ResolverTest(tf.test.TestCase):
       tf_utils.atomic_write_string_to_file(
           os.path.join(module_dir, "file"), "content", False)
 
-    # Delete existing folder and create an empty one.
-    if tf_v1.gfile.Exists(module_dir):
-      tf_v1.gfile.DeleteRecursively(module_dir)
+    # Create an empty folder before downloading.
+    self.assertFalse(tf_v1.gfile.Exists(module_dir))
     tf_v1.gfile.MakeDirs(module_dir)
 
     self.assertEqual(
