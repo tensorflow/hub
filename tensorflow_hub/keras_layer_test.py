@@ -35,19 +35,6 @@ import tensorflow_hub as hub
 # in Keras model objects.
 
 
-# A series of code changes implemented the necessary Keras functionality
-# up to TF 2.0.0-beta1. For this test to work, we need them up to and including
-# https://github.com/tensorflow/tensorflow/commit/3dc3b5df5f87ac0c460583eebc7d845e33138d2b
-# However, this is not easy to test for, so we're piggybacking here on the
-# one official API change from that series, found in the slightly older
-# https://github.com/tensorflow/tensorflow/commit/eff4ae822a08355b4a15b638148129d348b985a4#diff-1088d4bbbe00f5b39b923b4527e93790
-def _skip_if_keras_save_too_old(test_case):
-  if not hasattr(tf.keras.layers.InputSpec, "get_config"):
-    test_case.skipTest(
-        "Your TensorFlow version (%s) looks too old for creating reusable "
-        "SavedModels in Keras model saving." % tf.__version__)
-
-
 def _skip_if_no_tf_asset(test_case):
   if not hasattr(tf.saved_model, "Asset"):
     test_case.skipTest(
@@ -93,6 +80,29 @@ def _save_half_plus_one_model(export_dir, save_from_keras=False):
   obj.regularization_losses = [
       tf.function(lambda: model.losses[0], input_signature=[])]
   tf.saved_model.save(obj, export_dir)
+
+
+def _save_half_plus_one_hub_module_v1(path):
+  """Writes TF1.x hub.Module to compute y = wx + 1, with w trainable."""
+  def half_plus_one():
+    x = tf.compat.v1.placeholder(shape=(None,1), dtype=tf.float32)
+    # Use TF1 native tf.compat.v1.layers instead of tf.keras.layers as they
+    # correctly update TF collections, such as REGULARIZATION_LOSS.
+    times_w = tf.compat.v1.layers.Dense(
+        units=1,
+        kernel_initializer=tf.keras.initializers.Constant([[0.5]]),
+        kernel_regularizer=tf.keras.regularizers.l2(0.01),
+        use_bias=False)
+    plus_1 = tf.compat.v1.layers.Dense(
+        units=1,
+        kernel_initializer=tf.keras.initializers.Constant([[1.0]]),
+        bias_initializer=tf.keras.initializers.Constant([1.0]),
+        trainable=False)
+    y = plus_1(times_w(x))
+    hub.add_signature(inputs=x, outputs=y)
+
+  spec = hub.create_module_spec(half_plus_one)
+  _export_module_spec_with_init_weights(spec, path)
 
 
 def _tensors_names_set(tensor_sequence):
@@ -240,7 +250,7 @@ def _save_model_with_obscurely_shaped_list_output(export_dir):
 def _save_plus_one_saved_model_v2(path, save_from_keras=False):
   """Writes Hub-style SavedModel that increments the input by one."""
   if save_from_keras: raise NotImplementedError()
-  
+
   obj = tf.train.Checkpoint()
 
   @tf.function(input_signature=[tf.TensorSpec(None, dtype=tf.float32)])
@@ -287,12 +297,13 @@ def _dispatch_model_format(model_format, saved_model_fn, hub_module_fn, *args):
 class KerasTest(tf.test.TestCase, parameterized.TestCase):
   """Tests KerasLayer in an all-Keras environment."""
 
-  @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
-  def testHalfPlusOneRetraining(self, save_from_keras):
-    if save_from_keras: _skip_if_keras_save_too_old(self)
-    # Import the half-plus-one model into a consumer model.
+  @parameterized.parameters(("TF2SavedModel_SavedRaw"),
+                            ("TF2SavedModel_SavedFromKeras"))
+  def testHalfPlusOneRetraining(self, model_format):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
-    _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
+    _dispatch_model_format(model_format, _save_half_plus_one_model,
+                           _save_half_plus_one_hub_module_v1, export_dir)
+    # Import the half-plus-one model into a consumer model.
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
     imported = hub.KerasLayer(export_dir, trainable=True)
     outp = imported(inp)
@@ -327,12 +338,13 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(model.losses, np.array([0.01], dtype=np.float32),
                         atol=0.0, rtol=0.06)
 
-  @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
-  def testRegularizationLoss(self, save_from_keras):
-    if save_from_keras: _skip_if_keras_save_too_old(self)
-    # Import the half-plus-one model into a consumer model.
+  @parameterized.parameters(("TF2SavedModel_SavedRaw"),
+                            ("TF2SavedModel_SavedFromKeras"))
+  def testRegularizationLoss(self, model_format):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
-    _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
+    _dispatch_model_format(model_format, _save_half_plus_one_model,
+                           _save_half_plus_one_hub_module_v1, export_dir)
+    # Import the half-plus-one model into a consumer model.
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
     imported = hub.KerasLayer(export_dir, trainable=False)
     outp = imported(inp)
@@ -351,7 +363,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormRetraining(self, save_from_keras):
     """Tests imported batch norm with trainable=True."""
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
@@ -384,7 +395,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormFreezing(self, save_from_keras):
     """Tests imported batch norm with trainable=False."""
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     inp = tf.keras.layers.Input(shape=(1,), dtype=tf.float32)
@@ -416,7 +426,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testCustomAttributes(self, save_from_keras):
     """Tests custom attributes (Asset and Variable) on a SavedModel."""
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     _skip_if_no_tf_asset(self)
     base_dir = os.path.join(self.get_temp_dir(), "custom-attributes")
     export_dir = os.path.join(base_dir, "model")
@@ -517,7 +526,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testComputeOutputShape(self, save_from_keras):
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
     layer = hub.KerasLayer(export_dir, output_shape=[1])
@@ -527,7 +535,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testGetConfigFromConfig(self, save_from_keras):
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
     layer = hub.KerasLayer(export_dir)
@@ -557,7 +564,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testSaveModelConfig(self, save_from_keras):
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
 
@@ -603,11 +609,12 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     return tf.estimator.EstimatorSpec(
         mode=mode, predictions=predictions, loss=total_loss, train_op=train_op)
 
-  @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
-  def testHalfPlusOneRetraining(self, save_from_keras):
-    if save_from_keras: _skip_if_keras_save_too_old(self)
+  @parameterized.parameters(("TF2SavedModel_SavedRaw"),
+                            ("TF2SavedModel_SavedFromKeras"))
+  def testHalfPlusOneRetraining(self, model_format):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
-    _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
+    _dispatch_model_format(model_format, _save_half_plus_one_model,
+                           _save_half_plus_one_hub_module_v1, export_dir)
     estimator = tf.estimator.Estimator(
         model_fn=self._half_plus_one_model_fn,
         params=dict(hub_module=export_dir, hub_trainable=True))
@@ -648,11 +655,13 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
                         np.array(0.01, dtype=np.float32),
                         atol=0.0, rtol=0.06)
 
-  @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
-  def testHalfPlusOneFrozen(self, save_from_keras):
-    if save_from_keras: _skip_if_keras_save_too_old(self)
+  @parameterized.parameters(("TF2SavedModel_SavedRaw"),
+                            ("TF2SavedModel_SavedFromKeras"),
+                            ("TF1HubModule"))
+  def testHalfPlusOneFrozen(self, model_format):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
-    _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
+    _dispatch_model_format(model_format, _save_half_plus_one_model,
+                           _save_half_plus_one_hub_module_v1, export_dir)
     estimator = tf.estimator.Estimator(
         model_fn=self._half_plus_one_model_fn,
         params=dict(hub_module=export_dir, hub_trainable=False))
@@ -710,7 +719,6 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormRetraining(self, save_from_keras):
     """Tests imported batch norm with trainable=True."""
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     estimator = tf.estimator.Estimator(
@@ -751,7 +759,6 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testBatchNormFreezing(self, save_from_keras):
     """Tests imported batch norm with trainable=False."""
-    if save_from_keras: _skip_if_keras_save_too_old(self)
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
     estimator = tf.estimator.Estimator(
