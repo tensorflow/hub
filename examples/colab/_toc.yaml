@@ -40,6 +40,8 @@ toc:
   path: /hub/tutorials/action_recognition_with_tf_hub
 - title: Video interpolation
   path: /hub/tutorials/tweening_conv3d
+- title: Text-to-video retrieval
+  path: /hub/tutorials/text_to_video_retrieval_with_s3d_milnce
 
 - title: "Tutorials (TF1)"
   style: accordion
