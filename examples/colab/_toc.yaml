@@ -43,6 +43,10 @@ toc:
 - title: Text-to-video retrieval
   path: /hub/tutorials/text_to_video_retrieval_with_s3d_milnce
 
+- heading: "Audio Tutorials"
+- title: Pitch recognition
+  path: /hub/tutorials/spice
+
 - title: "Tutorials (TF1)"
   style: accordion
   status: deprecated
