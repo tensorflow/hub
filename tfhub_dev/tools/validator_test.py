@@ -56,6 +56,42 @@ multiple lines.
 ## Overview
 """
 
+MINIMAL_MARKDOWN_LITE_TEMPLATE = """# Lite google/text-embedding-model/1
+Simple description spanning
+multiple lines.
+
+<!-- asset-path: %s -->
+<!-- module-type:   text-embedding   -->
+<!-- fine-tunable:true -->
+<!-- format: saved_model_2 -->
+
+## Overview
+"""
+
+MINIMAL_MARKDOWN_TFJS_TEMPLATE = """# Tfjs google/text-embedding-model/1
+Simple description spanning
+multiple lines.
+
+<!-- asset-path: %s -->
+<!-- module-type:   text-embedding   -->
+<!-- fine-tunable:true -->
+<!-- format: saved_model_2 -->
+
+## Overview
+"""
+
+MINIMAL_MARKDOWN_CORAL_TEMPLATE = """# Coral google/text-embedding-model/1
+Simple description spanning
+multiple lines.
+
+<!-- asset-path: %s -->
+<!-- module-type:   text-embedding   -->
+<!-- fine-tunable:true -->
+<!-- format: saved_model_2 -->
+
+## Overview
+"""
+
 MINIMAL_MARKDOWN_WITH_UNKNOWN_PUBLISHER = """# Module publisher-without-page/text-embedding-model/1
 Simple description spanning
 multiple lines.
@@ -215,10 +251,34 @@ class ValidatorTest(tf.test.TestCase):
     self.assertAllEqual([tmp_file_path],
                         list(filesystem.recursive_list_dir(tmp_dir)))
 
-  def test_minimal_markdown_parsed(self):
+  def test_minimal_markdown_parsed_saved_model(self):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/text-embedding-model/1.md",
                             self.minimal_markdown)
+    self.set_up_publisher_page(filesystem, "google")
+    validator.validate_documentation_files(
+        documentation_dir="root", filesystem=filesystem)
+
+  def test_minimal_markdown_parsed_lite(self):
+    filesystem = MockFilesystem()
+    filesystem.set_contents("root/google/models/text-embedding-model/1.md",
+                            (MINIMAL_MARKDOWN_LITE_TEMPLATE % self.model_path))
+    self.set_up_publisher_page(filesystem, "google")
+    validator.validate_documentation_files(
+        documentation_dir="root", filesystem=filesystem)
+
+  def test_minimal_markdown_parsed_tfjs(self):
+    filesystem = MockFilesystem()
+    filesystem.set_contents("root/google/models/text-embedding-model/1.md",
+                            (MINIMAL_MARKDOWN_TFJS_TEMPLATE % self.model_path))
+    self.set_up_publisher_page(filesystem, "google")
+    validator.validate_documentation_files(
+        documentation_dir="root", filesystem=filesystem)
+
+  def test_minimal_markdown_parsed_coral(self):
+    filesystem = MockFilesystem()
+    filesystem.set_contents("root/google/models/text-embedding-model/1.md",
+                            (MINIMAL_MARKDOWN_CORAL_TEMPLATE % self.model_path))
     self.set_up_publisher_page(filesystem, "google")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)

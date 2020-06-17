@@ -46,10 +46,22 @@ from tensorflow.python.saved_model import loader_impl
 
 FLAGS = None
 
-# Regex pattern for the first line of the documentation of models.
+# Regex pattern for the first line of the documentation of Saved Models.
 # Example: "Module google/universal-sentence-encoder/1"
 MODEL_HANDLE_PATTERN = (
     r"# Module (?P<publisher>[\w-]+)/(?P<name>([\w\.-]+(/[\w\.-]+)*))/(?P<vers>\d+)")  # pylint: disable=line-too-long
+# Regex pattern for the first line of the documentation of TF Lite models.
+# Example: "# Lite google/spice/1"
+LITE_HANDLE_PATTERN = (
+    r"# Lite (?P<publisher>[\w-]+)/(?P<name>([\w\.-]+(/[\w\.-]+)*))/(?P<vers>\d+)")  # pylint: disable=line-too-long
+# Regex pattern for the first line of the documentation of TFJS models.
+# Example: "# Tfjs google/spice/1/default/1"
+TFJS_HANDLE_PATTERN = (
+    r"# Tfjs (?P<publisher>[\w-]+)/(?P<name>([\w\.-]+(/[\w\.-]+)*))/(?P<vers>\d+)")  # pylint: disable=line-too-long
+# Regex pattern for the first line of the documentation of Coral models.
+# Example: "# Coral tensorflow/mobilenet_v2_1.0_224_quantized/1/default/1"
+CORAL_HANDLE_PATTERN = (
+    r"# Coral (?P<publisher>[\w-]+)/(?P<name>([\w\.-]+(/[\w\.-]+)*))/(?P<vers>\d+)")  # pylint: disable=line-too-long
 # Regex pattern for the first line of the documentation of publishers.
 # Example: "Publisher google"
 PUBLISHER_HANDLE_PATTERN = r"# Publisher (?P<publisher>[\w-]+)"
@@ -62,6 +74,14 @@ COLLECTION_HANDLE_PATTERN = (
 # Note: Both key and value consumes free space characters, but later on these
 # are stripped.
 METADATA_LINE_PATTERN = r"^<!--(?P<key>(\w|\s|-)+):(?P<value>.+)-->$"
+
+# Map a handle pattern to the corresponding model type name.
+HANDLE_PATTERN_TO_MODEL_TYPE = {
+    MODEL_HANDLE_PATTERN: "Module",
+    LITE_HANDLE_PATTERN: "Lite",
+    TFJS_HANDLE_PATTERN: "Tfjs",
+    CORAL_HANDLE_PATTERN: "Coral"
+}
 
 
 class Filesystem(object):
@@ -151,8 +171,13 @@ class ParsingPolicy(object):
 class ModelParsingPolicy(ParsingPolicy):
   """ParsingPolicy for model documentation."""
 
+  def __init__(self, publisher, model_name, model_version, model_type):
+    super(ModelParsingPolicy, self).__init__(publisher, model_name,
+                                             model_version)
+    self._model_type = model_type
+
   def type_name(self):
-    return "Module"
+    return self._model_type
 
   def get_required_metadata(self):
     return ["asset-path", "format", "module-type", "fine-tunable"]
@@ -214,6 +239,9 @@ class DocumentationParser(object):
     first_line = self._lines[0].replace("&zwnj;", "")
     patterns_and_policies = [
         (MODEL_HANDLE_PATTERN, ModelParsingPolicy),
+        (LITE_HANDLE_PATTERN, ModelParsingPolicy),
+        (TFJS_HANDLE_PATTERN, ModelParsingPolicy),
+        (CORAL_HANDLE_PATTERN, ModelParsingPolicy),
         (PUBLISHER_HANDLE_PATTERN, PublisherParsingPolicy),
         (COLLECTION_HANDLE_PATTERN, CollectionParsingPolicy),
     ]
@@ -222,8 +250,13 @@ class DocumentationParser(object):
       if not match:
         continue
       groups = match.groupdict()
-      self._parsing_policy = policy(
-          groups.get("publisher"), groups.get("name"), groups.get("vers"))
+      if policy == ModelParsingPolicy:
+        self._parsing_policy = policy(
+            groups.get("publisher"), groups.get("name"), groups.get("vers"),
+            HANDLE_PATTERN_TO_MODEL_TYPE[pattern])
+      else:
+        self._parsing_policy = policy(
+            groups.get("publisher"), groups.get("name"), groups.get("vers"))
       return
     self.raise_error(
         "First line of the documentation file must describe either the model "
@@ -366,17 +399,20 @@ class DocumentationParser(object):
 
   def smoke_test_asset(self):
     """Smoke test asset provided on asset-path metadata."""
-    if "asset-path" in self._parsed_metadata:
-      asset_path = list(self._parsed_metadata["asset-path"])[0]
-      asset_tester = self._parsing_policy.asset_tester()
-      passed, reason = asset_tester(asset_path)
-      if not passed:
-        self.raise_error(
-            "The model on path %s failed to parse. Please make sure that the "
-            "asset-path metadata points to a valid TF2 SavedModel or a TF1 Hub "
-            "module, compressed as described in section \"Model\" of "
-            "README.md. Underlying reason for failure: %s." %
-            (asset_path, reason))
+    if "asset-path" not in self._parsed_metadata:
+      return
+    if self._parsing_policy.type_name() != "Module":
+      return
+    asset_path = list(self._parsed_metadata["asset-path"])[0]
+    asset_tester = self._parsing_policy.asset_tester()
+    passed, reason = asset_tester(asset_path)
+    if not passed:
+      self.raise_error(
+          "The model on path %s failed to parse. Please make sure that the "
+          "asset-path metadata points to a valid TF2 SavedModel or a TF1 Hub "
+          "module, compressed as described in section \"Model\" of "
+          "README.md. Underlying reason for failure: %s." %
+          (asset_path, reason))
 
   def validate(self, file_path, do_smoke_test):
     """Validate one documentation markdown file."""
