@@ -175,15 +175,18 @@ class ModelParsingPolicy(ParsingPolicy):
     super(ModelParsingPolicy, self).__init__(publisher, model_name,
                                              model_version)
     self._model_type = model_type
+    self._metadata_properties = ["asset-path", "module-type", "fine-tunable"]
+    if self._model_type == "Module":
+      self._metadata_properties.append("format")
 
   def type_name(self):
     return self._model_type
 
   def get_required_metadata(self):
-    return ["asset-path", "format", "module-type", "fine-tunable"]
+    return self._metadata_properties
 
   def get_single_valued_metadata(self):
-    return ["asset-path", "format", "module-type", "fine-tunable"]
+    return self._metadata_properties
 
   def asset_tester(self):
     return smoke_test_model
