@@ -169,7 +169,7 @@ piece_to_share.save(..., include_optimizer=False)
 
 [TensorFlow Models](https://github.com/tensorflow/models) on GitHub
 uses the former approach for BERT (see
-[nlp/bert_models.py](https://github.com/tensorflow/models/blob/master/official/nlp/bert_models.py)
+[nlp/bert/bert_models.py](https://github.com/tensorflow/models/blob/master/official/nlp/bert/bert_models.py)
 and [nlp/bert/export_tfhub.py](https://github.com/tensorflow/models/blob/master/official/nlp/bert/export_tfhub.py),
 note the split between `core_model` and `pretrain_model`)
 and the the latter approach for ResNet (see
