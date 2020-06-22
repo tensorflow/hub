@@ -123,7 +123,7 @@ session.run(init_op)
 result = session.run(embedded_text, feed_dict={text_input: ["Hello world"]})
 ```
 
-## Cannot change a model's dype (e.g., float32 to bfloat16)
+## Cannot change a model's dtype (e.g., float32 to bfloat16)
 
 TensorFlow's SavedModels (shared on TF Hub or otherwise) contain
 operations that work on fixed data types (often, float32 for the weights
