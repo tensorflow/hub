@@ -420,3 +420,17 @@ assets
 ```
 
 </details>
+
+## Community Requests
+
+The TensorFlow Hub team generates only a small fraction of the assets that are
+available on tfhub.dev. We rely primarily on other internal Alphabet teams,
+corporate and academic research institutions, and ML enthusiasts to produce
+models. As a result, we can't guarantee that we can fulfill community requests
+for specific assets, and we can't provide time estimates for new asset
+availability.
+
+The [Community Model Requests milestone](https://github.com/tensorflow/hub/milestone/1)
+below contains requests from the community for specific assets -- if you or
+someone you know is interested in producing the asset and sharing it on
+tfhub.dev, we welcome the submission!
