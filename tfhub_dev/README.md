@@ -48,7 +48,7 @@ See sections below for more details.
 
 <details>
 <summary>How to create/export the model</summary>
-### Exporting a model
+<h3> Exporting a model </h3>
 
 The tfhub.dev repository supports multiple kinds of SavedModel based models,
 including:
@@ -66,7 +66,7 @@ including:
 
 <details>
 <summary>Best practices for SavedModel publishing</summary>
-#### Best practices for SavedModel publishing
+<h4> Best practices for SavedModel publishing </h4>
 
 ##### Align with an existing model type (if applicable)
 
