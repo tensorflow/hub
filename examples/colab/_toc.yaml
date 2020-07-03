@@ -34,6 +34,8 @@ toc:
   path: /hub/tutorials/tf_hub_delf_module
 - title: Face generation and embedding
   path: /hub/tutorials/tf_hub_generative_image_module
+- title: Image super resolution
+  path: /hub/tutorials/image_enhancing
 
 - heading: "Video Tutorials"
 - title: Action recognition
