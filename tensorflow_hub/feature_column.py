@@ -244,7 +244,7 @@ class _TextEmbeddingColumn(
     return cls(**copied_config)
 
 
-def image_embedding_column(key, module_spec):
+def image_embedding_column(key, module_spec, image_size=None):
   """Uses a Module to get a dense 1-D representation from the pixels of images.
 
   TODO(b/131678043): This does not work yet with TF2.
@@ -276,6 +276,10 @@ def image_embedding_column(key, module_spec):
   Args:
     key: A string or `_FeatureColumn` identifying the input image data.
     module_spec: A string handle or a `ModuleSpec` identifying the module.
+    image_size: Optional. If specified it should be a list of image height and
+        width to use with the module. Note that it depends on the module on
+        whether the default size can be overridden and what the permissible
+        values are.
 
   Returns:
     `_DenseColumn` that converts from pixel data.
@@ -283,14 +287,17 @@ def image_embedding_column(key, module_spec):
   Raises:
      ValueError: if module_spec is not suitable for use in this feature column.
   """
-  return _ImageEmbeddingColumn(key=key, module_spec_path=module_spec)
+  return _ImageEmbeddingColumn(key=key, module_spec_path=module_spec,
+                               image_size=image_size)
 
 
-def _check_module_is_image_embedding(module_spec):
+def _check_module_is_image_embedding(module_spec, check_image_size):
   """Raises ValueError if `module_spec` is not usable as image embedding.
 
   Args:
     module_spec: A `_ModuleSpec` to test.
+    check_image_size: Whether to check for compatibility with
+        get_expected_image_size.
 
   Raises:
     ValueError: if `module_spec` default signature is not compatible with
@@ -308,7 +315,8 @@ def _check_module_is_image_embedding(module_spec):
                   "which must have type float32 and name 'images'.")
   else:
     try:
-      image_util.get_expected_image_size(module_spec)
+      if check_image_size:
+        image_util.get_expected_image_size(module_spec)
     except ValueError as e:
       issues.append("Module does not support hub.get_expected_image_size(); "
                     "original error was:\n" + str(e))  # Raised again below.
@@ -332,13 +340,15 @@ def _check_module_is_image_embedding(module_spec):
 
 class _ImageEmbeddingColumn(DenseFeatureColumn,
                             collections.namedtuple("_ImageEmbeddingColumn",
-                                                   ("key", "module_spec_path"))
+                                                   ("key", "module_spec_path",
+                                                    "image_size"))
                            ):
   """Returned by image_embedding_column(). Do not use directly."""
 
-  def __init__(self, key, module_spec_path):
+  def __init__(self, key, module_spec_path, image_size):
     self.module_spec = module.as_module_spec(self.module_spec_path)
-    _check_module_is_image_embedding(self.module_spec)
+    _check_module_is_image_embedding(self.module_spec,
+                                     check_image_size=self.image_size is None)
     super(_ImageEmbeddingColumn, self).__init__()
 
   @property
@@ -380,7 +390,10 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
   @property
   def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
-    height, width = image_util.get_expected_image_size(self.module_spec)
+    if self.image_size:
+      height, width = self.image_size
+    else:
+      height, width = image_util.get_expected_image_size(self.module_spec)
     input_shape = [height, width, 3]
     return {self.key: tf_v1.FixedLenFeature(input_shape, tf.float32)}
 

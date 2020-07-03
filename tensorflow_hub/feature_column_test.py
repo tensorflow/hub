@@ -259,10 +259,11 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       config = text_column.get_config()
 
 
-def create_image_module_fn(randomly_initialized=False):
+def create_image_module_fn(image_size, randomly_initialized=False):
   def image_module_fn():
     """Maps 1x2 images to sums of each color channel."""
-    images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 1, 2, 3])
+    height, width = image_size
+    images = tf_v1.placeholder(dtype=tf.float32, shape=[None, height, width, 3])
     if randomly_initialized:
       initializer = tf_v1.random_uniform_initializer(
           minval=-1, maxval=1, dtype=tf.float32)
@@ -278,9 +279,9 @@ def create_image_module_fn(randomly_initialized=False):
 class ImageEmbeddingColumnTest(tf.test.TestCase):
 
   def setUp(self):
-    self.spec = hub.create_module_spec(create_image_module_fn())
+    self.spec = hub.create_module_spec(create_image_module_fn([1, 2]))
     self.randomly_initialized_spec = hub.create_module_spec(
-        create_image_module_fn(randomly_initialized=True))
+        create_image_module_fn([1, 2], randomly_initialized=True))
 
   def testExpectedImageSize(self):
     image_column = hub.image_embedding_column("image", self.spec)
@@ -302,6 +303,15 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     self.assertEqual(
         parsing_spec,
         {"image": tf_v1.FixedLenFeature([1, 2, 3], dtype=tf.float32)})
+
+  def testImageSizeManuallySpecified(self):
+    spec = hub.create_module_spec(create_image_module_fn([None, None]))
+    image_column = hub.image_embedding_column("image", spec,
+                                              image_size=[229, 229])
+    parsing_spec = tf_v1.feature_column.make_parse_example_spec([image_column])
+    self.assertEqual(
+        parsing_spec,
+        {"image": tf_v1.FixedLenFeature([229, 229, 3], dtype=tf.float32)})
 
   def testInputLayer(self):
     features = {
