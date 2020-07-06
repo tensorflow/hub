@@ -70,12 +70,11 @@ writing their `model_fn` in terms of  `hub.KerasLayer` among other
 
 ### Behind the scenes: SavedModel downloading and caching
 
-Using a SavedModel from TensorFlow Hub
-(or other HTTPS servers that implement its [hosting](hosting.md) protocol)
-downloads it to the local filesystem if not already present.
-The environment variable `TFHUB_CACHE_DIR` can be set to override the default
-temporary location for caching the downloaded and uncompressed SavedModels.
-
+Using a SavedModel from TensorFlow Hub (or other HTTPS servers that implement
+its [hosting](hosting.md) protocol) downloads and decompresses it to the local
+filesystem if not already present. The environment variable `TFHUB_CACHE_DIR`
+can be set to override the default temporary location for caching the downloaded
+and uncompressed SavedModels. For details, see [Caching](caching.md).
 
 ### Using a SavedModel in low-level TensorFlow
 

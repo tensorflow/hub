@@ -33,24 +33,10 @@ Likewise, tables and other state is added to the graph.
 
 ### Caching Modules
 
-When creating a module from a URL, the module content is downloaded
-and cached in the local system temporary directory. The location where
-modules are cached can be overridden using `TFHUB_CACHE_DIR` environment
-variable.
-
-For example, setting `TFHUB_CACHE_DIR` to `/my_module_cache`:
-
-```shell
-$ export TFHUB_CACHE_DIR=/my_module_cache
-```
-
-and then creating a module from a URL:
-
-```python
-m = hub.Module("https://tfhub.dev/google/progan-128/1")
-```
-
-results in downloading and unpacking the module into `/my_module_cache`.
+When creating a module from a URL, the module content is downloaded and cached
+in the local system temporary directory. The location where modules are cached
+can be overridden using `TFHUB_CACHE_DIR` environment variable. For details, see
+[Caching](caching.md).
 
 ### Applying a Module
 

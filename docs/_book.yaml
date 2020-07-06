@@ -20,6 +20,8 @@ upper_tabs:
         path: /hub/overview
       - title: Installation and usage
         path: /hub/installation
+      - title: Caching model downloads
+        path: /hub/caching
       - title: Migration to TF2
         path: /hub/migration_tf2
       - title: Common issues

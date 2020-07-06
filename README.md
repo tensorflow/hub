@@ -40,6 +40,7 @@ as well as other associated code and documentation.
         their [Common Signatures](docs/common_signatures/index.md) collection.
   * Using the library
       * [Installation](docs/installation.md)
+      * [Caching model downloads](docs/caching.md)
       * [Migration to TF2](docs/migration_tf2.md)
       * [Common issues](docs/common_issues.md)
       * [Build from source](docs/build_from_source.md)

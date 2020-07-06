@@ -41,6 +41,12 @@ The pip packages `tf-nightly` and `tf-hub-nightly` are built automatically from
 the source code on github, with no release testing. This lets developers try out
 the latest code without [building from source](build_from_source.md).
 
+### Optional: Setting the cache location for downloads.
+
+By default, `tensorflow_hub` uses a system-wide, temporary directory to cache
+downloaded and uncompressed models. See [Caching](caching.md) for options to use
+other, possibly more persistent locations.
+
 ## API stability
 
 Although we hope to prevent breaking changes, this project is still under active

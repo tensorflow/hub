@@ -42,6 +42,9 @@ ones:
     use .dev names to help testing code. **FIX:** Identify and reconfigure the
     software that intercepts name resolution in the ".dev" domain.
 
+*   Failures to write to the cache directory `/tmp/tfhub_modules` (or similar):
+    see [Caching](caching.md) for what that is and how to change its location.
+
 If the above errors and fixes do not work, one can try to manually download a
 module by simulating the protocol of attaching `?tf-hub-format=compressed` to
 the URL to download a tar compressed file that has to be manually decompressed
