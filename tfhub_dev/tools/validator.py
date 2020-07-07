@@ -276,12 +276,20 @@ class DocumentationParser(object):
             groups.get("publisher"), groups.get("name"), groups.get("vers"))
       return
     self.raise_error(
-        "First line of the documentation file must describe either the model "
-        "handle in format \"%s\", or a publisher handle in format \"%s\", or "
-        "a collection handle in format \"%s\". For example "
-        "\"# Module google/text-embedding-model/1\". Instead the first line "
-        "is \"%s\"." % (MODEL_HANDLE_PATTERN, PUBLISHER_HANDLE_PATTERN,
-                        COLLECTION_HANDLE_PATTERN, first_line))
+        "First line of the documentation file must match one of the following "
+        "formats depending on the MD type:\n"
+        "TF Model: %s\n"
+        "TFJS: %s\n"
+        "Lite: %s\n"
+        "Coral: %s\n"
+        "Publisher: %s\n"
+        "Collection: %s\n"
+        "Placeholder: %s\n"
+        "For example \"# Module google/text-embedding-model/1\". Instead the "
+        "first line is \"%s\"." %
+        (MODEL_HANDLE_PATTERN, TFJS_HANDLE_PATTERN, LITE_HANDLE_PATTERN,
+         CORAL_HANDLE_PATTERN, PUBLISHER_HANDLE_PATTERN,
+         COLLECTION_HANDLE_PATTERN, PLACEHOLDER_HANDLE_PATTERN, first_line))
 
   def assert_publisher_page_exists(self):
     """Assert that publisher page exists for the publisher of this model."""
