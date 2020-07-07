@@ -44,7 +44,7 @@ class MockFilesystem(validator.Filesystem):
     ]
 
 
-MINIMAL_MARKDOWN_TEMPLATE = """# Module google/text-embedding-model/1
+MINIMAL_MARKDOWN_SAVED_MODEL_TEMPLATE = """# Module google/text-embedding-model/1
 Simple description spanning
 multiple lines.
 
@@ -56,35 +56,42 @@ multiple lines.
 ## Overview
 """
 
-MINIMAL_MARKDOWN_LITE_TEMPLATE = """# Lite google/text-embedding-model/1
+MINIMAL_MARKDOWN_PLACEHOLDER_TEMPLATE = """# Placeholder google/text-embedding-model/1
 Simple description spanning
 multiple lines.
 
-<!-- asset-path: %s -->
 <!-- module-type:   text-embedding   -->
-<!-- fine-tunable:true -->
+<!-- format: saved_model_2 -->
 
 ## Overview
 """
 
-MINIMAL_MARKDOWN_TFJS_TEMPLATE = """# Tfjs google/text-embedding-model/1
+MINIMAL_MARKDOWN_LITE_TEMPLATE = """# Lite google/text-embedding-model/lite/1
 Simple description spanning
 multiple lines.
 
 <!-- asset-path: %s -->
-<!-- module-type:   text-embedding   -->
-<!-- fine-tunable:true -->
+<!-- parent-model: google/text-embedding-model/1 -->
 
 ## Overview
 """
 
-MINIMAL_MARKDOWN_CORAL_TEMPLATE = """# Coral google/text-embedding-model/1
+MINIMAL_MARKDOWN_TFJS_TEMPLATE = """# Tfjs google/text-embedding-model/tfjs/1
 Simple description spanning
 multiple lines.
 
 <!-- asset-path: %s -->
-<!-- module-type:   text-embedding   -->
-<!-- fine-tunable:true -->
+<!-- parent-model:   google/text-embedding-model/1   -->
+
+## Overview
+"""
+
+MINIMAL_MARKDOWN_CORAL_TEMPLATE = """# Coral google/text-embedding-model/coral/1
+Simple description spanning
+multiple lines.
+
+<!-- asset-path: %s -->
+<!-- parent-model:   google/text-embedding-model/1   -->
 
 ## Overview
 """
@@ -212,9 +219,9 @@ class ValidatorTest(tf.test.TestCase):
     self.model_path = os.path.join(self.tmp_dir, "model_1")
     self.not_a_model_path = os.path.join(self.tmp_dir, "not_a_model")
     self.save_dummy_model(self.model_path)
-    self.minimal_markdown = MINIMAL_MARKDOWN_TEMPLATE % self.model_path
+    self.minimal_markdown = MINIMAL_MARKDOWN_SAVED_MODEL_TEMPLATE % self.model_path
     self.minimal_markdown_with_bad_model = (
-        MINIMAL_MARKDOWN_TEMPLATE % self.not_a_model_path)
+        MINIMAL_MARKDOWN_SAVED_MODEL_TEMPLATE % self.not_a_model_path)
 
   def tearDown(self):
     super(tf.test.TestCase, self).tearDown()
@@ -252,6 +259,14 @@ class ValidatorTest(tf.test.TestCase):
     filesystem = MockFilesystem()
     filesystem.set_contents("root/google/models/text-embedding-model/1.md",
                             self.minimal_markdown)
+    self.set_up_publisher_page(filesystem, "google")
+    validator.validate_documentation_files(
+        documentation_dir="root", filesystem=filesystem)
+
+  def test_minimal_markdown_parsed_placeholder(self):
+    filesystem = MockFilesystem()
+    filesystem.set_contents("root/google/models/text-embedding-model/1.md",
+                            MINIMAL_MARKDOWN_PLACEHOLDER_TEMPLATE)
     self.set_up_publisher_page(filesystem, "google")
     validator.validate_documentation_files(
         documentation_dir="root", filesystem=filesystem)

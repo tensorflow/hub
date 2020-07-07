@@ -50,6 +50,11 @@ FLAGS = None
 # Example: "Module google/universal-sentence-encoder/1"
 MODEL_HANDLE_PATTERN = (
     r"# Module (?P<publisher>[\w-]+)/(?P<name>([\w\.-]+(/[\w\.-]+)*))/(?P<vers>\d+)")  # pylint: disable=line-too-long
+# Regex pattern for the first line of the documentation of placeholder MD files.
+# Example: "Placeholder google/universal-sentence-encoder/1"
+PLACEHOLDER_HANDLE_PATTERN = (
+    r"# Placeholder "
+    r"(?P<publisher>[\w-]+)/(?P<name>([\w\.-]+(/[\w\.-]+)*))/(?P<vers>\d+)")  # pylint: disable=line-too-long
 # Regex pattern for the first line of the documentation of TF Lite models.
 # Example: "# Lite google/spice/1"
 LITE_HANDLE_PATTERN = (
@@ -78,6 +83,7 @@ METADATA_LINE_PATTERN = r"^<!--(?P<key>(\w|\s|-)+):(?P<value>.+)-->$"
 # Map a handle pattern to the corresponding model type name.
 HANDLE_PATTERN_TO_MODEL_TYPE = {
     MODEL_HANDLE_PATTERN: "Module",
+    PLACEHOLDER_HANDLE_PATTERN: "Placeholder",
     LITE_HANDLE_PATTERN: "Lite",
     TFJS_HANDLE_PATTERN: "Tfjs",
     CORAL_HANDLE_PATTERN: "Coral"
@@ -175,9 +181,16 @@ class ModelParsingPolicy(ParsingPolicy):
     super(ModelParsingPolicy, self).__init__(publisher, model_name,
                                              model_version)
     self._model_type = model_type
-    self._metadata_properties = ["asset-path", "module-type", "fine-tunable"]
     if self._model_type == "Module":
-      self._metadata_properties.append("format")
+      self._metadata_properties = [
+          "asset-path", "module-type", "fine-tunable", "format"
+      ]
+    elif self._model_type == "Placeholder":
+      self._metadata_properties = ["module-type"]
+    elif self._model_type in ("Lite", "Tfjs", "Coral"):
+      self._metadata_properties = ["asset-path", "parent-model"]
+    else:
+      self.raise_error("Unexpected model type: %s", self._model_type)
 
   def type_name(self):
     return self._model_type
@@ -242,6 +255,7 @@ class DocumentationParser(object):
     first_line = self._lines[0].replace("&zwnj;", "")
     patterns_and_policies = [
         (MODEL_HANDLE_PATTERN, ModelParsingPolicy),
+        (PLACEHOLDER_HANDLE_PATTERN, ModelParsingPolicy),
         (LITE_HANDLE_PATTERN, ModelParsingPolicy),
         (TFJS_HANDLE_PATTERN, ModelParsingPolicy),
         (CORAL_HANDLE_PATTERN, ModelParsingPolicy),
@@ -361,10 +375,9 @@ class DocumentationParser(object):
     provided_metadata = set(self._parsed_metadata.keys())
     if not provided_metadata.issuperset(required_metadata):
       self.raise_error(
-          "There are missing required metadata lines. Please refer to "
-          "README.md for information about markdown format. In particular the "
-          "missing metadata are: %s" %
-          sorted(required_metadata.difference(provided_metadata)))
+          "The MD file is missing the following required metadata properties: "
+          "%s. Please refer  to README.md for information about markdown "
+          "format." % sorted(required_metadata.difference(provided_metadata)))
 
     duplicate_metadata = list()
     for key, values in self._parsed_metadata.items():
