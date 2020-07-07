@@ -37,7 +37,7 @@ _EXPORT_MODULES_COLLECTION = ("__tfhub_export_modules",)
 def register_module_for_export(module, export_name):
   """Register a Module to be exported under `export_name`.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
 
   This function registers `module` to be exported by `LatestModuleExporter`
   under a subdirectory named `export_name`.
@@ -64,7 +64,7 @@ def register_module_for_export(module, export_name):
 class LatestModuleExporter(tf_v1.estimator.Exporter):
   """Regularly exports registered modules into timestamped directories.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
 
   Modules can be registered to be exported by this class by calling
   `register_module_for_export` when constructing the graph. The

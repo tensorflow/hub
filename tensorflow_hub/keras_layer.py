@@ -38,7 +38,7 @@ from tensorflow.python.util import tf_inspect
 
 
 class KerasLayer(tf.keras.layers.Layer):
-  """Wraps a SavedModel (or a legacy Hub.Module) as a Keras Layer.
+  """Wraps a SavedModel (or a legacy TF1 Hub format) as a Keras Layer.
 
   This layer wraps a callable object for use as a Keras layer. The callable
   object can be passed directly, or be specified by a Python string with a
@@ -92,32 +92,33 @@ class KerasLayer(tf.keras.layers.Layer):
   that gets loaded by a hub.KerasLayer.
 
   Attributes:
-    handle: A callable object (subject to the conventions above), or a
-      Python string to load a saved model via hub.load().
-      A string is required to save the Keras config of this Layer.
+    handle: A callable object (subject to the conventions above), or a Python
+      string to load a saved model via hub.load(). A string is required to save
+      the Keras config of this Layer.
     trainable: Optional. A boolean controlling whether this layer is trainable.
       Must not be set to True when using a signature (raises ValueError),
-      including the use of legacy hub.Modules.
-    arguments: Optional. A dict with additional keyword arguments passed
-      to the callable. These must be JSON-serializable to save the Keras config
-      of this layer, and are not tracked as checkpointing dependencies
-      of this layer.
+      including the use of legacy TF1 Hub format.
+    arguments: Optional. A dict with additional keyword arguments passed to the
+      callable. These must be JSON-serializable to save the Keras config of this
+      layer, and are not tracked as checkpointing dependencies of this layer.
     _sentinel: Used to prevent further positional arguments.
     tags: Optional. If set indicates which graph variant to use. For legacy
-      hub.Modules leaving unset means to use the empty tags set.
+      models in TF1 Hub format leaving unset means to use the empty tags set.
     signature: Optional. If set, KerasLayer will use the requested signature.
-      For legacy hub.Modules leaving unset means to use the `default` signature.
-      When using a signature, either signature_outputs_as_dict or output_key
-      have to set.
+      For legacy models in TF1 Hub format leaving unset means to use the
+      `default` signature. When using a signature, either
+      signature_outputs_as_dict or output_key have to set.
     signature_outputs_as_dict: If set to True, the call to this layer returns a
       dict of all the signature outputs. Can only be used if a signature is
-      specified (or default signature is used for legacy Hub.Modules).
+      specified (or default signature is used for legacy models in TF1 Hub
+      format).
     output_key: Name of the output item to return if the layer returns a dict.
-      For legacy hub.Modules leaving unset means to return the `default` output.
-    output_shape: A tuple or a nest of tuples with the
-      (possibly partial) output shapes of the callable *without* leading
-      batch size. This must have the same nesting structure as the output of
-      the callable object and cover all output tensors.
+      For legacy models in TF1 Hub format leaving unset means to return the
+      `default` output.
+    output_shape: A tuple or a nest of tuples with the (possibly partial) output
+      shapes of the callable *without* leading batch size. This must have the
+      same nesting structure as the output of the callable object and cover all
+      output tensors.
     **kwargs: Forwarded to Keras' base Layer constructor.
   """
 
@@ -147,7 +148,7 @@ class KerasLayer(tf.keras.layers.Layer):
     self._has_training_argument = func_has_training_argument(self._func)
     self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
 
-    # Update with the defaults when using legacy Hub.Module.
+    # Update with the defaults when using legacy TF1 Hub format.
     if self._is_hub_module_v1:
       self._signature = self._signature or "default"
       if not self._signature_outputs_as_dict:
@@ -159,7 +160,7 @@ class KerasLayer(tf.keras.layers.Layer):
                        "signature_outputs_as_dict=True should be set.")
     if not self._signature and self._signature_outputs_as_dict:
       raise ValueError("signature_outputs_as_dict is only valid if specifying "
-                       "a signature (or using a legacy Hub.Module).")
+                       "a signature (or using a legacy TF1 Hub format).")
 
     self._callable = self._get_callable()
     self._setup_layer(trainable, **kwargs)
@@ -252,10 +253,10 @@ class KerasLayer(tf.keras.layers.Layer):
     # Training is only supported when calling a reusable TF2 SavedModel through
     # its @tf.function __call__. Trying to train through a signature is likely
     # to go wrong beyond the most simple cases due to a number of pitfalls:
-    # - No good support for train vs inference mode. hub.Modules used
+    # - No good support for train vs inference mode. TF1 Hub format used
     #   graph versions identified by tags, but this was not a general
     #   standard for SavedModels, and TF2 can no longer save with tags.
-    # - No support for update ops. hub.Modules had them in the UPDATE_OPS
+    # - No support for update ops. TF1 Hub format had them in the UPDATE_OPS
     #   collection, but collections are no longer loaded in TF2. General
     #   SavedModel signatures had no support for them.
     # - No support for regularization losses (same story).
@@ -264,7 +265,7 @@ class KerasLayer(tf.keras.layers.Layer):
     if self._is_hub_module_v1:
       raise ValueError(
           "Setting hub.KerasLayer.trainable = True is unsupported when "
-          "loading from the hub.Module format of TensorFlow 1.")
+          "loading from the TF1 Hub format.")
     elif self._signature:
       raise ValueError(
           "Setting hub.KerasLayer.trainable = True is unsupported when "
@@ -290,7 +291,7 @@ class KerasLayer(tf.keras.layers.Layer):
             "Loaded object is not callable and has no signatures.")
     if self._signature is None:
       raise ValueError("Signature name has to be specified for non-callable "
-                       "saved models (if not legacy Hub.Module).")
+                       "saved models (if not legacy TF1 Hub format).")
     if self._signature not in self._func.signatures:
       raise ValueError("Unknown signature %s in %s (available signatures: %s)."
                        % (self._signature, self._handle, self._func.signatures))

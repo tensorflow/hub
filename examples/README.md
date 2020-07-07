@@ -38,8 +38,8 @@ embeddings for real-time similarity matching and retrieval.
 
 #### [`colab/semantic_approximate_nearest_neighbors`](colab/semantic_approximate_nearest_neighbors.ipynb)
 
-This tutorial illustrates how to generate embeddings from a
-[TF1 legacy hub.Module](https://www.tensorflow.org/hub/tf1_hub_module) given
+This tutorial illustrates how to generate embeddings from a model in the legacy
+[TF1 Hub format](https://www.tensorflow.org/hub/tf1_hub_module) given
 input data and build an approximate nearest neighbours (ANN) index using the
 extracted embeddings for real-time similarity matching and retrieval.
 

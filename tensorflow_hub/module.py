@@ -41,7 +41,7 @@ def as_module_spec(spec):
 def load_module_spec(path):
   """Loads a ModuleSpec from a TF Hub service or the filesystem.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels and hub.load(); see also hub.resolve().
 
   Args:
@@ -88,7 +88,7 @@ def export_module_spec(spec, path, checkpoint_path, name_transform_fn):
 class Module(object):
   """Part of a TensorFlow 1 model that can be transferred between models.
 
-  DEPRECATION NOTE: The hub.Module API and file format works for TF1 only.
+  DEPRECATION NOTE: The hub.Module API works for TF1 only.
   For TF2, switch to plain SavedModels and hub.load().
 
   A Module represents a part of a TensorFlow graph that can be exported to disk
@@ -490,7 +490,7 @@ def _prepare_outputs(dict_outputs, as_dict):
 def eval_function_for_module(spec, tags=None):
   """Context manager that yields a function to directly evaluate a hub.Module.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels and hub.load().
   Eager evalutaion in TF2 obviates the need for this helper.
 

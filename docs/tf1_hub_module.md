@@ -1,27 +1,24 @@
-# hub.Modules in TensorFlow 1
+# TF1 Hub format
 
-At its launch in 2018, TensorFlow Hub offered a single type of asset:
-hub.Modules for import into TensorFlow 1 programs.
+At its launch in 2018, TensorFlow Hub offered a single type of asset: TF1 Hub
+format for import into TensorFlow 1 programs.
 
-This page explains how to use hub.Modules in TensorFlow 1
-(or the TF1 compatibility mode of TF2) with the `hub.Module` class
-and associated APIs. (The typical use is to build a `tf.Graph`,
-possibly inside a TF1 `Estimator`, by combining one or more `hub.Modules`
-with `tf.compat.layers` or `tf.layers`).
+This page explains how to use TF1 Hub format in TF1 (or the TF1 compatibility
+mode of TF2) with the `hub.Module` class and associated APIs. (The typical use
+is to build a `tf.Graph`, possibly inside a TF1 `Estimator`, by combining one or
+more models in TF1 Hub format with `tf.compat.layers` or `tf.layers`).
 
 Users of TensorFlow 2 (outside TF1 compatibility mode) must use
-[the new API with `hub.load()` or `hub.KerasLayer`](tf2_saved_model.md).
-The new API loads the new TF2 SavedModel asset type, but also has
-limited [support for loading hub.Modules into TF2](migration_tf2.md).
+[the new API with `hub.load()` or `hub.KerasLayer`](tf2_saved_model.md). The new
+API loads the new TF2 SavedModel asset type, but also has limited
+[support for loading TF1 Hub format into TF2](migration_tf2.md).
 
+## Using a model in TF1 Hub format
 
-## Using a Module
+### Instantiating a model in TF1 Hub format
 
-### Instantiating a Module
-
-A hub.Module is imported into a TensorFlow program by
-creating a `hub.Module` object from a string with its URL or filesystem path,
-such as:
+A model in TF1 Hub format is imported into a TensorFlow program by creating a
+`hub.Module` object from a string with its URL or filesystem path, such as:
 
 ```python
 m = hub.Module("path/to/a/module_dir")
@@ -93,18 +90,16 @@ To this end, we maintain a collection of recommended
 
 ### Compatibility note
 
-The hub.Module format is geared towards TensorFlow 1.
-It is only partially supported by TF Hub in TensorFlow 2.
-Please do consider publishing in the new
+The TF1 Hub format is geared towards TensorFlow 1. It is only partially
+supported by TF Hub in TensorFlow 2. Please do consider publishing in the new
 [TF2 SavedModel](tf2_saved_model.md) format instead.
 
-The hub.Module format is similar to the SavedModel format of TensorFlow 1
-on a syntactic level (same file names and protocol messages) but semantically
+The TF1 Hub format is similar to the SavedModel format of TensorFlow 1 on a
+syntactic level (same file names and protocol messages) but semantically
 different to allow for module reuse, composition and re-training (e.g.,
-different storage of resource initializers, different tagging conventions
-for metagraphs). The easiest way to tell them apart on disk is the
-presence or absence of the `tfhub_module.pb` file.
-
+different storage of resource initializers, different tagging conventions for
+metagraphs). The easiest way to tell them apart on disk is the presence or
+absence of the `tfhub_module.pb` file.
 
 ### General approach
 

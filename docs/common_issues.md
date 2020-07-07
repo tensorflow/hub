@@ -12,10 +12,10 @@ embed = hub.load('https://tfhub.dev/google/nnlm-en-dim128/1')
 embed(['my text', 'batch'])
 ```
 
-This error frequently arises when loading TF1 hub.Modules with the `hub.load()`
-API in TF2. Adding the correct signature should fix this problem. See the
-[TF-Hub migration guide for TF2](migration_tf2.md) for more details on moving to
-TF2 and the use of TF1 hub.Modules in TF2.
+This error frequently arises when loading models in TF1 Hub format with the
+`hub.load()` API in TF2. Adding the correct signature should fix this problem.
+See the [TF-Hub migration guide for TF2](migration_tf2.md) for more details on
+moving to TF2 and the use of models in TF1 Hub format in TF2.
 
 ```python
 

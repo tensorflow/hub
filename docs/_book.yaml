@@ -32,7 +32,7 @@ upper_tabs:
       - heading: Asset types
       - title: SavedModels for TensorFlow 2
         path: /hub/tf2_saved_model
-      - title: "Deprecated: hub.Modules for TensorFlow 1"
+      - title: "Deprecated: TF1 Hub format"
         path: /hub/tf1_hub_module
         status: deprecated
       # Contributing to TF-Hub - either models or code

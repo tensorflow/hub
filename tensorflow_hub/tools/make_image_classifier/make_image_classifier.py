@@ -20,7 +20,7 @@ from a user-supplied dataset of images, stored as a directory of subdirectories
 of JPEG images, each subdirectory representing one class.
 
 The model is built from a pre-trained image feature vector module from
-TensorFlow Hub (in its TF2/SavedModel format, not the older hub.Module format)
+TensorFlow Hub (in its TF2/SavedModel format, not the legacy TF1 Hub format)
 followed by a linear classifier. The linear classifier, and optionally also
 the TF Hub module, are trained on the new dataset. TF Hub offers a variety of
 suitable modules with various size/accuracy tradeoffs.

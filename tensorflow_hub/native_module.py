@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""The implementation of deprecated hub.Module backed by custom SavedModels."""
+"""The implementation of deprecated hub.Module backed by TF1 Hub format."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -158,7 +158,7 @@ class Loader(object):
 def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   """Creates a ModuleSpec from a function that builds the module's graph.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels.
 
   The `module_fn` is called on a new graph (not the current one) to build the
@@ -238,7 +238,7 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
 def add_signature(name=None, inputs=None, outputs=None):
   """Adds a signature to the module definition.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels.
 
   NOTE: This must be called within a `module_fn` that is defining a hub.Module.
@@ -277,7 +277,7 @@ def add_signature(name=None, inputs=None, outputs=None):
 def attach_message(key, message):
   """Adds an attached message to the module definition.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels.
 
   NOTE: This must be called within a `module_fn` that is defining a hub.Module.
@@ -558,9 +558,10 @@ class _ModuleImpl(module_impl.ModuleImpl):
       #
       # E.g. it could work with "tf.compat.v1.wrap_function", but it will not
       # work with defun, Dataset.map_fn, etc...
-      logging.warning("Using `hub.Module` while building a function: %s. This "
-                      "can lead to errors if the function is not pruned.",
-                      apply_graph.name)
+      logging.warning(
+          "Using TF1 Hub format while building a function: %s. "
+          "This can lead to errors if the function is not pruned.",
+          apply_graph.name)
 
     # As state ops in the apply graph are unused, replace them with Placeholders
     # so that in a heirarchical instantiation, apply_graph state ops are

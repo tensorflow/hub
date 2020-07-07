@@ -162,7 +162,7 @@ class End2EndTest(tf.test.TestCase):
     if not hasattr(tf_v1.saved_model, "load_v2"):
       try:
         hub.load("@my/tf2_module/2")
-        self.fail("Failure expected. hub.module() not support in TF 1.x")
+        self.fail("Failure expected. hub.load() not supported in TF 1.x")
       except NotImplementedError:
         pass
     elif tf_v1.executing_eagerly():

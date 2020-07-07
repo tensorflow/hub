@@ -57,7 +57,7 @@ def create_module_spec_from_saved_model(saved_model_path,
                                         drop_collections=None):
   """Experimental: Create a ModuleSpec out of a SavedModel from TF1.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and file format for TF1.
+  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
   For TF2, TensorFlow Hub ships plain SavedModels, removing the need for
   conversions like this.
 

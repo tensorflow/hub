@@ -1,17 +1,17 @@
 # SavedModels from TF Hub in TensorFlow 2
 
-The [SavedModel format of
-TensorFlow 2](https://www.tensorflow.org/guide/saved_model)
-is the recommended way to share pre-trained models and model pieces
-on TensorFlow Hub. It replaces the older [hub.Module format for
-TensorFlow 1](tf1_hub_module.md) and comes with a new set of APIs.
+The
+[SavedModel format of TensorFlow 2](https://www.tensorflow.org/guide/saved_model)
+is the recommended way to share pre-trained models and model pieces on
+TensorFlow Hub. It replaces the older [TF1 Hub format](tf1_hub_module.md) and
+comes with a new set of APIs.
 
-This page explains how to reuse TF2 SavedModels in a TensorFlow 2
-program with the low-level `hub.load()` API and its `hub.KerasLayer`
-wrapper. (Typically, `hub.KerasLayer` is combined with other `tf.keras.layers`
-to build a Keras model or the `model_fn` of a TF2 Estimator.)
-These APIs can also load the older hub.Modules for TF1, within limits,
-see the [migration guide](migration_tf2.md).
+This page explains how to reuse TF2 SavedModels in a TensorFlow 2 program with
+the low-level `hub.load()` API and its `hub.KerasLayer` wrapper. (Typically,
+`hub.KerasLayer` is combined with other `tf.keras.layers` to build a Keras model
+or the `model_fn` of a TF2 Estimator.) These APIs can also load the legacy
+models in TF1 Hub format, within limits, see the
+[migration guide](migration_tf2.md).
 
 Users of TensorFlow 1 can update to TF 1.15 and then use the same APIs.
 Older versions of TF1 do not work.

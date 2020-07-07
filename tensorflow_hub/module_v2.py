@@ -29,8 +29,8 @@ from tensorflow_hub import tf_v1
 def resolve(handle):
   """Resolves a module handle into a path.
 
-  This function works both for plain TF2 SavedModels and the older
-  hub.Modules for TF1.
+  This function works both for plain TF2 SavedModels and the legacy TF1 Hub
+  format.
 
   Resolves a module handle into a path by downloading and caching in
   location specified by TF_HUB_CACHE_DIR if needed.
@@ -68,7 +68,7 @@ def load(handle, tags=None):
   servers requires setting `experimental.share_cluster_devices_in_session`
   within the `tf.compat.v1.ConfigProto`. (It becomes non-experimental in TF2.2.)
 
-  This function can handle the deprecated hub.Module format to the extent
+  This function can handle the deprecated TF1 Hub format to the extent
   that `tf.save_model.load()` in TF2 does. In particular, the returned object
   has attributes
     * `.variables`: a list of variables from the loaded object;
@@ -98,7 +98,7 @@ def load(handle, tags=None):
   is_hub_module_v1 = tf.io.gfile.exists(
       native_module.get_module_proto_path(module_path))
   if tags is None and is_hub_module_v1:
-      tags = []
+    tags = []
   obj = tf_v1.saved_model.load_v2(module_path, tags=tags)
   obj._is_hub_module_v1 = is_hub_module_v1  # pylint: disable=protected-access
   return obj

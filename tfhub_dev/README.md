@@ -59,8 +59,8 @@ including:
   This is the recommended kind. It supports reusing the SavedModel in a large
   model, including joint training ("fine-tuning").
 * SavedModels for inference.
-* The deprecated, TF1-only
-  [hub.Module](https://www.tensorflow.org/hub/tf1_hub_module) format.
+* The deprecated,
+  [TF1 Hub format](https://www.tensorflow.org/hub/tf1_hub_module).
   This is supported for compatibility with TF1 users and deprecated in
   favor of reusable TF2 SavedModels.
 
