@@ -276,7 +276,7 @@ def image_embedding_column(key, module_spec, image_size=None):
   Args:
     key: A string or `_FeatureColumn` identifying the input image data.
     module_spec: A string handle or a `ModuleSpec` identifying the module.
-    image_size: Optional. If specified it should be a list of image height and
+    image_size: Optional. If specified it should be a tuple of image height and
         width to use with the module. Note that it depends on the module on
         whether the default size can be overridden and what the permissible
         values are.
@@ -287,6 +287,11 @@ def image_embedding_column(key, module_spec, image_size=None):
   Raises:
      ValueError: if module_spec is not suitable for use in this feature column.
   """
+  # Configuration stored in a feature column should be hashable or user can
+  # get a TypeError when using it with DenseFeatures. If a user passes a list
+  # cast it to a tuple to avoid wasted debugging time.
+  if isinstance(image_size, list):
+    image_size = tuple(image_size)
   return _ImageEmbeddingColumn(key=key, module_spec_path=module_spec,
                                image_size=image_size)
 
