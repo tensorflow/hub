@@ -62,8 +62,6 @@ multiple lines.
 
 <!-- module-type:   text-embedding   -->
 <!-- format: saved_model_2 -->
-
-## Overview
 """
 
 MINIMAL_MARKDOWN_LITE_TEMPLATE = """# Lite google/text-embedding-model/lite/1

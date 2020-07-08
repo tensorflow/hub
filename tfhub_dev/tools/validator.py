@@ -345,7 +345,8 @@ class DocumentationParser(object):
 
   def consume_metadata(self):
     """Consume all metadata."""
-    while not self._lines[self._current_index].startswith("#"):
+    while self._current_index < len(
+        self._lines) and (not self._lines[self._current_index].startswith("#")):
       if not self._lines[self._current_index]:
         # Empty line is ok.
         self._current_index += 1
