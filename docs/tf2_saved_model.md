@@ -11,7 +11,7 @@ the low-level `hub.load()` API and its `hub.KerasLayer` wrapper. (Typically,
 `hub.KerasLayer` is combined with other `tf.keras.layers` to build a Keras model
 or the `model_fn` of a TF2 Estimator.) These APIs can also load the legacy
 models in TF1 Hub format, within limits, see the
-[migration guide](migration_tf2.md).
+[compatibility guide](model_compatibility.md).
 
 Users of TensorFlow 1 can update to TF 1.15 and then use the same APIs.
 Older versions of TF1 do not work.

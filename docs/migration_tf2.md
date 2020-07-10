@@ -1,23 +1,25 @@
 # Migrating from TF1 to TF2 with TensorFlow Hub
 
-This page explains how to keep using TensorFlow Hub while
-migrating your TensorFlow code from TensorFlow 1 to TensorFlow 2.
-It complements TensorFlow's general
-[migration guide](https://www.tensorflow.org/guide/migrate).
+This page explains how to keep using TensorFlow Hub while migrating your
+TensorFlow code from TensorFlow 1 to TensorFlow 2. It complements TensorFlow's
+general [migration guide](https://www.tensorflow.org/guide/migrate).
 
-For TF2, TF Hub has switched away from the [TF1 Hub format](tf1_hub_module.md)
-and its `hub.Module` API to the native
-[SavedModel format of TF2](tf2_saved_model.md) and its associated API of
-`hub.load()` and `hub.KerasLayer`.
+For TF2, TF Hub has switched away from the legacy `hub.Module` API for building
+a `tf.compat.v1.Graph` like `tf.contrib.v1.layers` do. Instead, there is now a
+`hub.KerasLayer` for use alongside other Keras layers for building a
+`tf.keras.Model` (typically in TF2's new
+[eager execution environment](https://www.tensorflow.org/guide/eager_)) and its
+underlying `hub.load()` method for low-level TensorFlow code.
 
 The `hub.Module` API remains available in the `tensorflow_hub` library for use
 in TF1 and in the TF1 compatibility mode of TF2. It can only load models in the
-TF1 Hub format.
+[TF1 Hub format](tf1_hub_module.md).
 
-The new API of `hub.load()` (and `hub.KerasLayer`, which wraps it for Keras)
-works for TensorFlow 1.15 (in eager and graph mode) and in TensorFlow 2. This
-new API can load the new TF2 SavedModel assets, and, with the restrictions laid
-out below, for the legacy models in TF1 Hub format.
+The new API of `hub.load()` and `hub.KerasLayer` works for TensorFlow 1.15 (in
+eager and graph mode) and in TensorFlow 2. This new API can load the new
+[TF2 SavedModel](tf2_saved_model.md) assets, and, with the restrictions laid out
+in the [model compatibility guide](model_compatibility.md), the legacy models in
+TF1 Hub format.
 
 In general, it is recommended to use new API wherever possible.
 
@@ -47,10 +49,6 @@ Many tutorials show these APIs in action. See in particular
 
   * [Text classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
   * [Image classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
-
-If the model in TF1 Hub format you use has a newer version that comes in the TF2
-SavedModel format, we recommend to switch the API and the module version at the
-same time.
 
 ### Using the new API in Estimator training
 
@@ -89,8 +87,8 @@ Additionally `KerasLayer` exposes the ability to specify `tags`, `signature`,
 `output_key` and `signature_outputs_as_dict` for more specific usages of legacy
 models in TF1 Hub format and legacy SavedModels.
 
-Note: `trainable=True` is NOT supported when loading legacy models in TF1 Hub
-format.
+For more information on TF1 Hub format compatibility see the
+[model compatibility guide](model_compatibility.md).
 
 ## Using lower level APIs
 
@@ -114,14 +112,3 @@ functions](https://www.tensorflow.org/tutorials/customization/performance#tracin
 keyed by signature names. Calling such a function computes all its outputs,
 even if unused. (This is different from the lazy evaluation of TF1's
 graph mode.)
-
-## Retraining legacy models in TF1 Hub format
-
-Retraining legacy models in TF1 Hub format with the new APIs is not supported.
-This is due to them depending on `tf.saved_model.load` converting a `flat graph
-view` into an `object view` and dropping important details. Such as: trainable
-variables are imported as such, but update ops (for batch normalization etc.),
-regularization losses and cond/while contexts for differentiation are dropped.
-
-If you need to retrain legacy models in TF1 Hub format you will need to keep
-using the 1.x APIs.

@@ -24,6 +24,8 @@ upper_tabs:
         path: /hub/caching
       - title: Migration to TF2
         path: /hub/migration_tf2
+      - title: Model compatibility for TF1/TF2
+        path: /hub/model_compatibility
       - title: Common issues
         path: /hub/common_issues
       - title: Community and support

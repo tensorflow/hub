@@ -42,6 +42,7 @@ as well as other associated code and documentation.
       * [Installation](docs/installation.md)
       * [Caching model downloads](docs/caching.md)
       * [Migration to TF2](docs/migration_tf2.md)
+      * [Model compatibility for TF1/TF2](docs/model_compatibility.md)
       * [Common issues](docs/common_issues.md)
       * [Build from source](docs/build_from_source.md)
       * [Hosting a module](docs/hosting.md)
