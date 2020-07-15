@@ -25,6 +25,7 @@ import collections
 import os
 import re
 
+from absl import logging
 import tensorflow as tf
 from tensorflow_hub import module_attachment_pb2
 from tensorflow_hub import tf_utils
@@ -72,6 +73,7 @@ def _get_asset_filename(export_dir, asset_filename):
       tf_utils.absolute_path(assets_dir)):
     raise ValueError(
         "Asset filename (%s) points outside assets_dir" % asset_filename)
+  logging.debug("Asset filename: %s", filename)
   return filename
 
 
@@ -300,6 +302,11 @@ def _make_assets_key_collection(saved_model_proto, export_path):
         _check_asset_node_def(node)
         filename = node.attr["value"].tensor.string_val[0]
         tensor_filename_map[node.name + ":0"] = filename
+        logging.debug("Found asset node %s pointing to %s", node.name, filename)
+        logging.log_if(
+            logging.WARNING, "Filename contains invalid symbols: %s",
+            tf_v1.compat.as_bytes("b'") in tf_v1.compat.as_bytes(filename),
+            filename)
         # Clear value to avoid leaking the original path.
         node.attr["value"].tensor.string_val[0] = (
             tf.compat.as_bytes("SAVEDMODEL-ASSET"))
@@ -428,11 +435,13 @@ class SavedModelHandler(object):
       variables_path = get_variables_path(path)
       variables_dir = os.path.dirname(variables_path)
       tf_v1.gfile.MakeDirs(variables_dir)
+      logging.debug("Variables saved in: %s", variables_path)
       variables_saver(variables_path)
 
   def _save_proto(self, path, proto):
     proto_path = _get_saved_model_proto_path(path)
     tf_v1.gfile.MakeDirs(os.path.dirname(proto_path))
+    logging.debug("SavedModel saved in: %s", proto_path)
     tf_utils.atomic_write_string_to_file(proto_path,
                                          proto.SerializeToString(),
                                          overwrite=True)

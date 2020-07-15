@@ -20,6 +20,8 @@ from __future__ import print_function
 
 import copy
 import os
+from absl import logging
+import six
 
 import tensorflow as tf
 from tensorflow_hub import saved_model_lib
@@ -47,6 +49,10 @@ def _read_file_to_string(path):
 
 
 class SavedModelLibTest(tf.test.TestCase):
+
+  def setUp(self):
+    super(SavedModelLibTest, self).setUp()
+    logging.set_verbosity(logging.DEBUG)
 
   def testAssets(self):
     original_asset_file = os.path.join(self.get_temp_dir(), "hello.txt")
@@ -128,7 +134,7 @@ class SavedModelLibTest(tf.test.TestCase):
       asset_proto = meta_graph_pb2.AssetFileDef()
       asset_any_proto.Unpack(asset_proto)
       asset_tensor_names.append(asset_proto.tensor_info.name)
-    self.assertEqual(asset_tensor_names, sorted(asset_tensor_names))
+    self.assertCountEqual(asset_tensor_names, asset_tensor_names)
 
   def testSignatures(self):
     with tf.Graph().as_default() as graph:
@@ -167,8 +173,8 @@ class SavedModelLibTest(tf.test.TestCase):
     handler.add_graph_copy(graph, ["tag1", "tag2"])
     self.assertAllEqual(sorted(handler.get_tags()),
                         sorted([set(["tag1"]), set(["tag1", "tag2"])]))
-    self.assertTrue(handler.get_meta_graph_copy(["tag1"]) is not None)
-    self.assertTrue(handler.get_meta_graph_copy(["tag2", "tag1"]) is not None)
+    self.assertIsNotNone(handler.get_meta_graph_copy(["tag1"]))
+    self.assertIsNotNone(handler.get_meta_graph_copy(["tag2", "tag1"]))
     with self.assertRaises(KeyError):
       handler.get_meta_graph_copy(["tag2"])
 
@@ -192,8 +198,8 @@ class SavedModelLibTest(tf.test.TestCase):
     actual = saved_model_lib.get_attached_bytes_map(meta_graph)
     self.assertDictEqual({}, actual)
     # Check there were no unwarranted subscript operations.
-    self.assertFalse(saved_model_lib.ATTACHMENT_COLLECTION_SAVED
-                     in meta_graph.collection_def)
+    self.assertNotIn(saved_model_lib.ATTACHMENT_COLLECTION_SAVED,
+                     meta_graph.collection_def)
 
   def testEmptyCollectionsDoNotShowUpInMetaGraphDef(self):
     with tf.Graph().as_default() as graph:
@@ -207,6 +213,35 @@ class SavedModelLibTest(tf.test.TestCase):
     handler.add_graph_copy(graph)
     meta_graph, = handler.meta_graphs
     self.assertEqual(len(meta_graph.collection_def), 0)
+
+  def testBadAssets(self):
+    if six.PY2:
+      return   # PY3 only test. Remove once PY2 is no longer supported.
+    original_asset_file = os.path.join(self.get_temp_dir(), str(b"hello.txt"))
+    _write_string_to_file(original_asset_file, "hello world")
+
+    with tf.Graph().as_default() as graph:
+      asset_tensor = tf.constant(original_asset_file, name="file")
+      graph.add_to_collection(tf_v1.GraphKeys.ASSET_FILEPATHS, asset_tensor)
+      saved_model_lib.add_signature("default", {}, {"default": asset_tensor})
+
+    handler = saved_model_lib.SavedModelHandler()
+    handler.add_graph_copy(graph)
+
+    export_dir = os.path.join(self.get_temp_dir(), "exported")
+    handler.export(export_dir)
+
+    self.assertIn("b\'hello.txt\'",
+                  tf_v1.gfile.ListDirectory(export_dir + "/assets"))
+    # Check that asset file got written to the expected place:
+    exported_asset_file = os.path.join(export_dir, "assets", str(b"hello.txt"))
+    self.assertTrue(tf_v1.gfile.Exists(exported_asset_file))
+
+    loaded_handler = saved_model_lib.load(export_dir)
+    with _instantiate_meta_graph(loaded_handler).as_default():
+      with tf_v1.Session() as sess:
+        self.assertEqual(sess.run("file:0"),
+                         tf.compat.as_bytes(exported_asset_file))
 
 
 if __name__ == "__main__":
