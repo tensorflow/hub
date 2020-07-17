@@ -106,6 +106,42 @@ class SavedModelLibTest(tf.test.TestCase):
         self.assertEqual(_read_file_to_string(sess.run("file_a:0")), "hello A")
         self.assertEqual(_read_file_to_string(sess.run("file_b:0")), "hello B")
 
+    self.assertCountEqual(["hello.txt", "hello.txt0"],
+                          tf_v1.gfile.ListDirectory(
+                              os.path.join(export_dir, "assets")))
+
+  def testWithMultipleAssetsWithSameBasenameAsBytes(self):
+    tmp_asset_dir = os.path.join(
+        tf_v1.compat.as_bytes(self.get_temp_dir()), b"asset")
+    file_a = os.path.join(tmp_asset_dir, b"a", b"hello.txt")
+    file_b = os.path.join(tmp_asset_dir, b"b", b"hello.txt")
+    tf_v1.gfile.MakeDirs(os.path.dirname(file_a))
+    tf_v1.gfile.MakeDirs(os.path.dirname(file_b))
+    _write_string_to_file(file_a, "hello A")
+    _write_string_to_file(file_b, "hello B")
+    with tf.Graph().as_default() as graph:
+      asset_a = tf.constant(file_a, name=b"file_a")
+      asset_b = tf.constant(file_b, name=b"file_b")
+      graph.add_to_collection(tf_v1.GraphKeys.ASSET_FILEPATHS, asset_a)
+      graph.add_to_collection(tf_v1.GraphKeys.ASSET_FILEPATHS, asset_b)
+      saved_model_lib.add_signature("default", {}, {"default": asset_a})
+
+    export_dir = os.path.join(self.get_temp_dir(), "exported")
+    handler = saved_model_lib.SavedModelHandler()
+    handler.add_graph_copy(graph)
+    handler.export(export_dir)
+    tf_v1.gfile.DeleteRecursively(tmp_asset_dir)
+
+    loaded_handler = saved_model_lib.load(export_dir)
+    with _instantiate_meta_graph(loaded_handler).as_default():
+      with tf_v1.Session() as sess:
+        self.assertEqual(_read_file_to_string(sess.run("file_a:0")), "hello A")
+        self.assertEqual(_read_file_to_string(sess.run("file_b:0")), "hello B")
+
+    self.assertCountEqual(["hello.txt", "hello.txt0"],
+                          tf_v1.gfile.ListDirectory(
+                              os.path.join(export_dir, "assets")))
+
   def testCreationOfAssetsKeyCollectionIsDeterministic(self):
     tmp_asset_dir = os.path.join(self.get_temp_dir(), "assets")
     tf_v1.gfile.MakeDirs(tmp_asset_dir)
@@ -213,35 +249,6 @@ class SavedModelLibTest(tf.test.TestCase):
     handler.add_graph_copy(graph)
     meta_graph, = handler.meta_graphs
     self.assertEqual(len(meta_graph.collection_def), 0)
-
-  def testBadAssets(self):
-    if six.PY2:
-      return   # PY3 only test. Remove once PY2 is no longer supported.
-    original_asset_file = os.path.join(self.get_temp_dir(), str(b"hello.txt"))
-    _write_string_to_file(original_asset_file, "hello world")
-
-    with tf.Graph().as_default() as graph:
-      asset_tensor = tf.constant(original_asset_file, name="file")
-      graph.add_to_collection(tf_v1.GraphKeys.ASSET_FILEPATHS, asset_tensor)
-      saved_model_lib.add_signature("default", {}, {"default": asset_tensor})
-
-    handler = saved_model_lib.SavedModelHandler()
-    handler.add_graph_copy(graph)
-
-    export_dir = os.path.join(self.get_temp_dir(), "exported")
-    handler.export(export_dir)
-
-    self.assertIn("b\'hello.txt\'",
-                  tf_v1.gfile.ListDirectory(export_dir + "/assets"))
-    # Check that asset file got written to the expected place:
-    exported_asset_file = os.path.join(export_dir, "assets", str(b"hello.txt"))
-    self.assertTrue(tf_v1.gfile.Exists(exported_asset_file))
-
-    loaded_handler = saved_model_lib.load(export_dir)
-    with _instantiate_meta_graph(loaded_handler).as_default():
-      with tf_v1.Session() as sess:
-        self.assertEqual(sess.run("file:0"),
-                         tf.compat.as_bytes(exported_asset_file))
 
 
 if __name__ == "__main__":

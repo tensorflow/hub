@@ -271,7 +271,7 @@ def _make_assets_key_collection(saved_model_proto, export_path):
     suggestion = basename
     index = 0
     while suggestion in used_asset_filenames:
-      suggestion = "%s%d" % (basename, index)
+      suggestion = tf.compat.as_bytes(basename) + tf.compat.as_bytes(str(index))
       index += 1
     asset_filenames[original_filename] = suggestion
     used_asset_filenames.add(suggestion)
@@ -303,10 +303,6 @@ def _make_assets_key_collection(saved_model_proto, export_path):
         filename = node.attr["value"].tensor.string_val[0]
         tensor_filename_map[node.name + ":0"] = filename
         logging.debug("Found asset node %s pointing to %s", node.name, filename)
-        logging.log_if(
-            logging.WARNING, "Filename contains invalid symbols: %s",
-            tf_v1.compat.as_bytes("b'") in tf_v1.compat.as_bytes(filename),
-            filename)
         # Clear value to avoid leaking the original path.
         node.attr["value"].tensor.string_val[0] = (
             tf.compat.as_bytes("SAVEDMODEL-ASSET"))
