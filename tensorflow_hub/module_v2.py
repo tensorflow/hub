@@ -53,7 +53,7 @@ def resolve(handle):
   return registry.resolver(handle)
 
 
-def load(handle, tags=None):
+def load(handle, tags=None, options=None):
   """Resolves a handle and loads the resulting module.
 
   This is the preferred API to load a Hub module in low-level TensorFlow 2.
@@ -81,6 +81,9 @@ def load(handle, tags=None):
     handle: (string) the Module handle to resolve; see hub.resolve().
     tags: A set of strings specifying the graph variant to use, if loading from
       a v1 module.
+    options: Optional, `tf.saved_model.LoadOptions` object that specifies
+      options for loading. This argument can only be used from TensorFlow 2.3
+      onwards.
 
   Returns:
     A trackable object (see tf.saved_model.load() documentation for details).
@@ -99,6 +102,14 @@ def load(handle, tags=None):
       native_module.get_module_proto_path(module_path))
   if tags is None and is_hub_module_v1:
     tags = []
-  obj = tf_v1.saved_model.load_v2(module_path, tags=tags)
+
+  if options:
+    if not hasattr(getattr(tf, "saved_model", None), "LoadOptions"):
+      raise NotImplementedError("options are not supported for TF < 2.3.x,"
+                                " Current version: %s" % tf.__version__)
+    obj = tf_v1.saved_model.load_v2(
+        module_path, tags=tags, options=options)
+  else:
+    obj = tf_v1.saved_model.load_v2(module_path, tags=tags)
   obj._is_hub_module_v1 = is_hub_module_v1  # pylint: disable=protected-access
   return obj

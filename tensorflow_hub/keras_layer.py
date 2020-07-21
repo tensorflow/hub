@@ -119,13 +119,25 @@ class KerasLayer(tf.keras.layers.Layer):
       shapes of the callable *without* leading batch size. This must have the
       same nesting structure as the output of the callable object and cover all
       output tensors.
+    load_options: Optional, `tf.saved_model.LoadOptions` object that specifies
+      options for loading when a Python string is provided as `handle`. This
+      argument can only be used from TensorFlow 2.3 onwards.
     **kwargs: Forwarded to Keras' base Layer constructor.
   """
 
-  def __init__(self, handle, trainable=False,  # pylint: disable=invalid-name
-               arguments=None, _sentinel=None, tags=None, signature=None,
-               signature_outputs_as_dict=None, output_key=None,
-               output_shape=None, **kwargs):
+  def __init__(
+      self,
+      handle,
+      trainable=False,
+      arguments=None,
+      _sentinel=None,  # pylint: disable=invalid-name
+      tags=None,
+      signature=None,
+      signature_outputs_as_dict=None,
+      output_key=None,
+      output_shape=None,
+      load_options=None,
+      **kwargs):
     # Note: for compatibility with keras-model serialization this layer is
     # json-serializable. If you add or change arguments here, please also update
     # the `get_config` method.
@@ -144,7 +156,8 @@ class KerasLayer(tf.keras.layers.Layer):
       self._output_shape = data_structures.NoDependency(
           _convert_nest_to_shapes(output_shape))
 
-    self._func = load_module(handle, tags)
+    self._load_options = load_options
+    self._func = load_module(handle, tags, self._load_options)
     self._has_training_argument = func_has_training_argument(self._func)
     self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
 
@@ -354,6 +367,13 @@ class KerasLayer(tf.keras.layers.Layer):
     if self._signature_outputs_as_dict:
       config["signature_outputs_as_dict"] = self._signature_outputs_as_dict
 
+    # self._load_options is not stored in the config. Instead, the load
+    # options passed at the time when this layer gets reloaded from its config
+    # are applied to its own loading as well. That is because the only
+    # load option available at this time (July 2020) is
+    # `experimental_io_device`, which relates to the loading environment,
+    # and not to the interpretation of the loaded SavedModel.
+
     return config
 
   @property
@@ -389,14 +409,24 @@ def _convert_nest_from_shapes(x):
   return tf.nest.map_structure(_shape_as_tuple, x)
 
 
-def load_module(handle, tags=None):
+def load_module(handle, tags=None, load_options=None):
   if callable(handle):
     if tags is not None:
       raise ValueError("Passing a callable handle is mutually exclusive "
                        "with setting tags.")
+    if load_options is not None:
+      raise ValueError("Passing a callable handle is mutually exclusive "
+                       "with setting load_options.")
     return handle
   else:
-    return module_v2.load(handle, tags=tags)
+    try:
+      # pylint: disable=g-import-not-at-top
+      # pylint: disable=g-direct-tensorflow-import
+      from tensorflow.python.saved_model import load_context
+      set_load_options = load_options or load_context.get_load_options()
+    except ImportError:
+      set_load_options = load_options
+    return module_v2.load(handle, tags=tags, options=set_load_options)
 
 
 def func_has_training_argument(func):
