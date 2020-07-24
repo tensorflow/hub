@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import six
 import tensorflow as tf
 from tensorflow_hub import registry
 
@@ -56,6 +57,21 @@ class RegistryTest(tf.test.TestCase):
 
     self.assertEqual(r(1), 100)
     self.assertEqual(r(2), 200)
+
+  def testLogWhenContainsNotSupported(self):
+    if six.PY2:
+      return
+    with self.assertLogs(level="INFO") as logs:
+      r = registry.MultiImplRegister("test")
+      r.add_implementation(TestImpl(lambda x: x == 1, lambda _: 100))
+      r.add_implementation(TestImpl(lambda x: x == 2, lambda _: 200))
+      r.add_implementation(TestImpl(lambda _: False, fail_fn))
+
+      r(2)
+
+    self.assertEqual(
+        logs.output,
+        ["INFO:absl:test TestImpl does not support the provided handle."])
 
   def testResolveInReverseOrder(self):
     r = registry.MultiImplRegister("test")

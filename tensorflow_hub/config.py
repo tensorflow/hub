@@ -25,7 +25,6 @@ from tensorflow_hub import resolver
 
 def _get_default_resolvers():
   return [
-      resolver.FailResolver(),
       resolver.PathResolver(),
       compressed_module_resolver.GcsCompressedFileResolver(),
       compressed_module_resolver.HttpCompressedFileResolver(),

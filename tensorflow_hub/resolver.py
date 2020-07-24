@@ -380,7 +380,7 @@ def atomic_download(handle,
                                              overwrite=False)
         # Must test condition again, since another process could have created
         # the module and deleted the old lock file since last test.
-        if (tf_v1.gfile.Exists(module_dir) and 
+        if (tf_v1.gfile.Exists(module_dir) and
             tf_v1.gfile.ListDirectory(module_dir)):
           # Lock file will be deleted in the finally-clause.
           return module_dir
@@ -452,10 +452,6 @@ def atomic_download(handle,
   return module_dir
 
 
-class UnsupportedHandleError(Exception):
-  """Exception class for incorrectly formatted handles."""
-
-
 class Resolver(object):
   """Resolver base class: all resolvers inherit from this class."""
   __metaclass__ = abc.ABCMeta
@@ -491,26 +487,11 @@ class PathResolver(Resolver):
   """Resolves handles which are absolute paths."""
 
   def is_supported(self, handle):
-    try:
-      return tf_v1.gfile.Exists(handle)
-    except tf.errors.OpError:
-      return False
-
-  def __call__(self, handle):
-    return handle
-
-
-class FailResolver(Resolver):
-  """Always fails to resolve a path."""
-
-  def is_supported(self, handle):
+    # Path resolver is the last Resolver in the chain so __call__ can always be
+    # called.
     return True
 
   def __call__(self, handle):
-    raise UnsupportedHandleError(
-        "unsupported handle format '%s'. No resolvers found that can "
-        "successfully resolve it. If the handle points to the local "
-        "filesystem, the error indicates that the module directory does not "
-        "exist. Supported handle formats: URLs pointing to a TGZ  file "
-        "(e.g. https://address/module.tgz), or Local File System directory "
-        "file (e.g. /tmp/my_local_module)." % handle)
+    if not tf_v1.gfile.Exists(handle):
+      raise IOError("%s does not exist." % handle)
+    return handle

@@ -50,22 +50,27 @@ class PathResolverTest(tf.test.TestCase):
     super(PathResolverTest, self).setUp()
     self.resolver = resolver.PathResolver()
 
-  def testHandleSupported(self):
+  def testAlwaysSupported(self):
     os.chdir(os.path.join(self.get_temp_dir()))
     self.assertTrue(self.resolver.is_supported("/tmp"))
     tf_v1.gfile.MkDir("foo/")
     self.assertTrue(self.resolver.is_supported("./foo/"))
     self.assertTrue(self.resolver.is_supported("foo/"))
     # Directory doesn't exist.
-    self.assertFalse(self.resolver.is_supported("bar/"))
-    self.assertFalse(self.resolver.is_supported("foo/bar"))
-    self.assertFalse(self.resolver.is_supported("nope://throw-OpError"))
+    self.assertTrue(self.resolver.is_supported("bar/"))
+    self.assertTrue(self.resolver.is_supported("foo/bar"))
+    self.assertTrue(self.resolver.is_supported("nope://throw-OpError"))
 
-  def testGetModulePath(self):
+  def testCallWithValidHandle(self):
     tmp_path = os.path.join(self.get_temp_dir(), "1234")
     tf_v1.gfile.MkDir(tmp_path)
     path = self.resolver(tmp_path)
     self.assertEqual(path, tmp_path)
+
+  def testCallWhenHandleDirectoryDoesNotExist(self):
+    self.resolver("foo/")
+
+    self.assertRaisesRegex(IOError, "foo/ does not exist.")
 
 
 class FakeResolver(resolver.Resolver):
