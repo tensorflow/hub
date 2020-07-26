@@ -23,22 +23,16 @@ from tensorflow_hub import registry
 from tensorflow_hub import resolver
 
 
-def _get_default_resolvers():
-  return [
+def _install_default_resolvers():
+  for impl in [
       resolver.PathResolver(),
       compressed_module_resolver.GcsCompressedFileResolver(),
-      compressed_module_resolver.HttpCompressedFileResolver(),
-  ]
-
-
-def _get_default_loaders():
-  return [
-      native_module.Loader(),
-  ]
+      compressed_module_resolver.HttpCompressedFileResolver()
+  ]:
+    registry.resolver.add_implementation(impl)
 
 
 def _run():
-  for impl in _get_default_resolvers():
-    registry.resolver.add_implementation(impl)
-  for impl in _get_default_loaders():
-    registry.loader.add_implementation(impl)
+  _install_default_resolvers()
+
+  registry.loader.add_implementation(native_module.Loader())

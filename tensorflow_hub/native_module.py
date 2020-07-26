@@ -124,21 +124,22 @@ class Loader(object):
   """Loader for Hub modules in the native format."""
 
   def is_supported(self, path):
-    module_def_path = get_module_proto_path(path)
-    if not tf_v1.gfile.Exists(module_def_path):
-      return False
+    return True
 
+  def _get_module_def_proto(self, path):
+    module_def_path = get_module_proto_path(path)
     module_def_proto = module_def_pb2.ModuleDef()
     with tf_v1.gfile.Open(module_def_path, "rb") as f:
       module_def_proto.ParseFromString(f.read())
+    return module_def_proto
 
-    return module_def_proto.format == module_def_pb2.ModuleDef.FORMAT_V3
+  def _module_def_proto_to_module_spec(self, path):
+    saved_model_handler = saved_model_lib.load(path)
+    checkpoint_filename = saved_model_lib.get_variables_path(path)
+    return _ModuleSpec(saved_model_handler, checkpoint_filename)
 
   def __call__(self, path):
-    module_def_path = get_module_proto_path(path)
-    module_def_proto = module_def_pb2.ModuleDef()
-    with tf_v1.gfile.Open(module_def_path, "rb") as f:
-      module_def_proto.ParseFromString(f.read())
+    module_def_proto = self._get_module_def_proto(path)
 
     if module_def_proto.format != module_def_pb2.ModuleDef.FORMAT_V3:
       raise ValueError("Unsupported module def format: %r" %
@@ -150,9 +151,7 @@ class Loader(object):
     if unsupported_features:
       raise ValueError("Unsupported features: %r" % list(unsupported_features))
 
-    saved_model_handler = saved_model_lib.load(path)
-    checkpoint_filename = saved_model_lib.get_variables_path(path)
-    return _ModuleSpec(saved_model_handler, checkpoint_filename)
+    return self._module_def_proto_to_module_spec(path)
 
 
 def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
