@@ -68,9 +68,8 @@ class PathResolverTest(tf.test.TestCase):
     self.assertEqual(path, tmp_path)
 
   def testCallWhenHandleDirectoryDoesNotExist(self):
-    self.resolver("foo/")
-
-    self.assertRaisesRegex(IOError, "foo/ does not exist.")
+    with self.assertRaisesRegex(IOError, "/foo/ does not exist."):
+      self.resolver("/foo/")
 
 
 class FakeResolver(resolver.Resolver):
