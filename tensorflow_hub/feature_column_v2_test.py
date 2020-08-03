@@ -132,7 +132,6 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
   def testLoadingDifferentFeatureColumnsFails(self):
     features = [
         np.array(["hello world", "pair-programming"]),
-        np.array(["hello world", "pair-programming"]),
     ]
     label = np.int64([0, 1])
     feature_columns = [
