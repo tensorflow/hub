@@ -518,3 +518,7 @@ py_test(
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
+
+exports_files([
+    "copy.bara.sky",
+])
