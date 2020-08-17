@@ -35,7 +35,7 @@ toc:
   path: /hub/tutorials/tf_hub_generative_image_module
 - title: Image super resolution
   path: /hub/tutorials/image_enhancing
-- title: CropNet: Cassava Disease Detection
+- title: "CropNet: Cassava Disease Detection"
   path: /hub/tutorials/cropnet_cassava
 
 
