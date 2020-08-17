@@ -105,7 +105,7 @@ landing_page:
       description: >
         <a href="/hub/tutorials/object_detection"><h3 class="no-link">Object Detection</h3></a>
         Detect objects in images using modules like FasterRCNN or SSD.
-      path: /hub/tutorials/object_detection
+      path: /hub/tutorials/tf2_object_detection
     - classname: tfo-landing-page-card
       description: >
         <a href="/hub/tutorials/tf_hub_generative_image_module"><h3 class="no-link">Face Generation</h3></a>
