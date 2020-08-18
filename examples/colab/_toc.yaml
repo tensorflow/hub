@@ -37,6 +37,8 @@ toc:
   path: /hub/tutorials/image_enhancing
 - title: "CropNet: Cassava Disease Detection"
   path: /hub/tutorials/cropnet_cassava
+  - title: Boundless GAN
+  path: /hub/tutorials/boundless
 
 
 - heading: "Video Tutorials"
