@@ -71,7 +71,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":tf_utils",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -94,7 +93,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":module",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
         #  "tensorflow/python/feature_column",
     ],
@@ -119,7 +117,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":module",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
         #  "tensorflow/python/feature_column",
     ],
@@ -144,7 +141,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":resolver",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -223,7 +219,6 @@ py_library(
         ":native_module",
         ":saved_model_lib",
         ":tf_utils",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -276,7 +271,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":tf_utils",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -326,7 +320,6 @@ py_library(
     deps = [
         ":all_protos_py_pb2",
         ":tf_utils",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
         #  "tensorflow/core:protos_all_py_pb2",
     ],
@@ -359,7 +352,6 @@ py_library(
     srcs = ["tensor_info.py"],
     srcs_version = "PY2AND3",
     deps = [
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -501,7 +493,6 @@ py_library(
     deps = [
         ":module",
         ":native_module",
-        ":tf_v1",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )

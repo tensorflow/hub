@@ -23,11 +23,10 @@ import tensorflow as tf
 from tensorflow_hub import image_util
 from tensorflow_hub import module
 from tensorflow_hub import native_module
-from tensorflow_hub import tf_v1
 
 
 def image_module_fn():
-  images = tf_v1.placeholder(dtype=tf.float32, shape=[None, 2, 4, 3])
+  images = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, 2, 4, 3])
   sum_by_channels = tf.reduce_sum(images, [1, 2])
   sum_all = tf.reduce_sum(images, [1, 2, 3])
   native_module.add_signature(inputs=dict(images=images),
@@ -36,7 +35,8 @@ def image_module_fn():
 
 
 def image_module_fn_with_info():
-  images = tf_v1.placeholder(dtype=tf.float32, shape=[None, None, None, 3])
+  images = tf.compat.v1.placeholder(dtype=tf.float32,
+                                    shape=[None, None, None, 3])
   sum_all = tf.reduce_sum(images, [1, 2, 3])
   native_module.add_signature(inputs=dict(images=images),
                               outputs=dict(default=sum_all))

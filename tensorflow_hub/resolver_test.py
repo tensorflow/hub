@@ -38,7 +38,6 @@ import tensorflow as tf
 
 from tensorflow_hub import resolver
 from tensorflow_hub import tf_utils
-from tensorflow_hub import tf_v1
 
 
 FLAGS = flags.FLAGS
@@ -53,7 +52,7 @@ class PathResolverTest(tf.test.TestCase):
   def testAlwaysSupported(self):
     os.chdir(os.path.join(self.get_temp_dir()))
     self.assertTrue(self.resolver.is_supported("/tmp"))
-    tf_v1.gfile.MkDir("foo/")
+    tf.compat.v1.gfile.MkDir("foo/")
     self.assertTrue(self.resolver.is_supported("./foo/"))
     self.assertTrue(self.resolver.is_supported("foo/"))
     # Directory doesn't exist.
@@ -63,7 +62,7 @@ class PathResolverTest(tf.test.TestCase):
 
   def testCallWithValidHandle(self):
     tmp_path = os.path.join(self.get_temp_dir(), "1234")
-    tf_v1.gfile.MkDir(tmp_path)
+    tf.compat.v1.gfile.MkDir(tmp_path)
     path = self.resolver(tmp_path)
     self.assertEqual(path, tmp_path)
 
@@ -120,13 +119,13 @@ class ResolverTest(tf.test.TestCase):
 
     # Create a directory with some files and sub-directory and check its size.
     test_dir = resolver._temp_download_dir(self.get_temp_dir(), fake_task_uid)
-    tf_v1.gfile.MakeDirs(test_dir)
+    tf.compat.v1.gfile.MakeDirs(test_dir)
     tf_utils.atomic_write_string_to_file(
         os.path.join(test_dir, "file1"), "content1", False)
     tf_utils.atomic_write_string_to_file(
         os.path.join(test_dir, "file2"), "content2", False)
     test_sub_dir = os.path.join(test_dir, "sub_dir")
-    tf_v1.gfile.MakeDirs(test_sub_dir)
+    tf.compat.v1.gfile.MakeDirs(test_sub_dir)
     tf_utils.atomic_write_string_to_file(
         os.path.join(test_sub_dir, "file3"), "content3", False)
     self.assertEqual(3 * 8, resolver._dir_size(test_dir))
@@ -140,7 +139,7 @@ class ResolverTest(tf.test.TestCase):
     self.assertEqual(3 * 8, resolver._locked_tmp_dir_size(fake_lock_filename))
 
     # Check that if temp directory doesn't exist, 0 is returned.
-    tf_v1.gfile.DeleteRecursively(test_dir)
+    tf.compat.v1.gfile.DeleteRecursively(test_dir)
     self.assertEqual(0, resolver._locked_tmp_dir_size(fake_lock_filename))
 
   def testLockFileName(self):
@@ -171,7 +170,7 @@ class ResolverTest(tf.test.TestCase):
                               args=("module", lock_filename, 600,))
     thread.start()
     # Delete the lock file.
-    tf_v1.gfile.Remove(lock_filename)
+    tf.compat.v1.gfile.Remove(lock_filename)
     thread.join(10)
     # The waiting terminates without errors.
 
@@ -195,7 +194,7 @@ class ResolverTest(tf.test.TestCase):
     # Simulate download by writing a file every 1 sec. While writes are happing
     # the lock file remains in place.
     tmp_dir = resolver._temp_download_dir(self.get_temp_dir(), task_uid)
-    tf_v1.gfile.MakeDirs(tmp_dir)
+    tf.compat.v1.gfile.MakeDirs(tmp_dir)
     for x in range(2 * lock_expiration_wait_time_secs):
       tf_utils.atomic_write_string_to_file(
           os.path.join(tmp_dir, "file_%d" % x), "test", overwrite=False)
@@ -214,7 +213,7 @@ class ResolverTest(tf.test.TestCase):
     tf_utils.atomic_write_string_to_file(
         lock_filename, lock_file_content, overwrite=False)
     tmp_dir = resolver._temp_download_dir(self.get_temp_dir(), task_uid)
-    tf_v1.gfile.MakeDirs(tmp_dir)
+    tf.compat.v1.gfile.MakeDirs(tmp_dir)
 
     thread = threading.Thread(target=resolver._wait_for_lock_to_disappear,
                               args=("module", lock_filename, 10,))
@@ -222,7 +221,7 @@ class ResolverTest(tf.test.TestCase):
     thread.join(30)
     # Because nobody was writing to tmp_dir, the lock file got reclaimed by
     # resolver._wait_for_lock_to_disappear.
-    self.assertFalse(tf_v1.gfile.Exists(lock_filename))
+    self.assertFalse(tf.compat.v1.gfile.Exists(lock_filename))
 
   def testModuleAlreadyDownloaded(self):
     # Simulate the case when a rogue process finishes downloading a module
@@ -232,7 +231,7 @@ class ResolverTest(tf.test.TestCase):
     def fake_download_fn_with_rogue_behavior(handle, tmp_dir):
       del handle, tmp_dir
       # Create module directory
-      tf_v1.gfile.MakeDirs(module_dir)
+      tf.compat.v1.gfile.MakeDirs(module_dir)
       tf_utils.atomic_write_string_to_file(
           os.path.join(module_dir, "file"), "content", False)
 
@@ -240,11 +239,12 @@ class ResolverTest(tf.test.TestCase):
         module_dir,
         resolver.atomic_download("module", fake_download_fn_with_rogue_behavior,
                                  module_dir))
-    self.assertEqual(tf_v1.gfile.ListDirectory(module_dir), ["file"])
-    self.assertFalse(tf_v1.gfile.Exists(resolver._lock_filename(module_dir)))
+    self.assertEqual(tf.compat.v1.gfile.ListDirectory(module_dir), ["file"])
+    self.assertFalse(tf.compat.v1.gfile.Exists(
+        resolver._lock_filename(module_dir)))
     parent_dir = os.path.abspath(os.path.join(module_dir, ".."))
     self.assertEqual(
-        sorted(tf_v1.gfile.ListDirectory(parent_dir)),
+        sorted(tf.compat.v1.gfile.ListDirectory(parent_dir)),
         ["module", "module.descriptor.txt"])
     self.assertRegexpMatches(
         tf_utils.read_file_to_string(
@@ -261,22 +261,23 @@ class ResolverTest(tf.test.TestCase):
     module_dir = os.path.join(self.get_temp_dir(), "module")
     def fake_download_fn(handle, tmp_dir):
       del handle, tmp_dir
-      tf_v1.gfile.MakeDirs(module_dir)
+      tf.compat.v1.gfile.MakeDirs(module_dir)
       tf_utils.atomic_write_string_to_file(
           os.path.join(module_dir, "file"), "content", False)
 
     # Create an empty folder before downloading.
-    self.assertFalse(tf_v1.gfile.Exists(module_dir))
-    tf_v1.gfile.MakeDirs(module_dir)
+    self.assertFalse(tf.compat.v1.gfile.Exists(module_dir))
+    tf.compat.v1.gfile.MakeDirs(module_dir)
 
     self.assertEqual(
         module_dir,
         resolver.atomic_download("module", fake_download_fn, module_dir))
-    self.assertEqual(tf_v1.gfile.ListDirectory(module_dir), ["file"])
-    self.assertFalse(tf_v1.gfile.Exists(resolver._lock_filename(module_dir)))
+    self.assertEqual(tf.compat.v1.gfile.ListDirectory(module_dir), ["file"])
+    self.assertFalse(tf.compat.v1.gfile.Exists(
+        resolver._lock_filename(module_dir)))
     parent_dir = os.path.abspath(os.path.join(module_dir, ".."))
     self.assertEqual(
-        sorted(tf_v1.gfile.ListDirectory(parent_dir)),
+        sorted(tf.compat.v1.gfile.ListDirectory(parent_dir)),
         ["module", "module.descriptor.txt"])
     self.assertRegexpMatches(
         tf_utils.read_file_to_string(
@@ -308,7 +309,7 @@ class ResolverTest(tf.test.TestCase):
 
     def first_download_fn(handle, tmp_dir):
       del handle, tmp_dir
-      tf_v1.gfile.MakeDirs(module_dir)
+      tf.compat.v1.gfile.MakeDirs(module_dir)
       tf_utils.atomic_write_string_to_file(
           os.path.join(module_dir, "file"), "content", False)
       second_download_thread.start()
@@ -338,7 +339,7 @@ class ResolverTest(tf.test.TestCase):
     def kill_download(handle, tmp_dir):
       del handle, tmp_dir
       # Simulate lock loss by removing the lock.
-      tf_v1.gfile.Remove(resolver._lock_filename(module_dir))
+      tf.compat.v1.gfile.Remove(resolver._lock_filename(module_dir))
       # Throw an error to simulate aborted download.
       raise OSError(download_aborted_msg)
 
@@ -349,7 +350,7 @@ class ResolverTest(tf.test.TestCase):
       pass
     parent_dir = os.path.abspath(os.path.join(module_dir, ".."))
     # Test that all files got cleaned up.
-    self.assertEqual(tf_v1.gfile.ListDirectory(parent_dir), [])
+    self.assertEqual(tf.compat.v1.gfile.ListDirectory(parent_dir), [])
 
   def testMergePath(self):
     self.assertEqual(

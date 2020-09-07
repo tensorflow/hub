@@ -29,7 +29,6 @@ from absl import logging
 import tensorflow as tf
 from tensorflow_hub import module_attachment_pb2
 from tensorflow_hub import tf_utils
-from tensorflow_hub import tf_v1
 
 from google.protobuf import message
 from tensorflow.core.protobuf import meta_graph_pb2
@@ -54,14 +53,14 @@ def get_variables_path(export_dir):
   """Returns the path for storing variables checkpoints."""
   return os.path.join(
       tf.compat.as_bytes(export_dir),
-      tf.compat.as_bytes(tf_v1.saved_model.constants.VARIABLES_DIRECTORY),
-      tf.compat.as_bytes(tf_v1.saved_model.constants.VARIABLES_FILENAME))
+      tf.compat.as_bytes(tf.compat.v1.saved_model.VARIABLES_DIRECTORY),
+      tf.compat.as_bytes(tf.compat.v1.saved_model.VARIABLES_FILENAME))
 
 
 def _get_assets_dir(export_dir):
   return os.path.join(
       tf.compat.as_bytes(export_dir),
-      tf.compat.as_bytes(tf_v1.saved_model.constants.ASSETS_DIRECTORY))
+      tf.compat.as_bytes(tf.compat.v1.saved_model.ASSETS_DIRECTORY))
 
 
 def _get_asset_filename(export_dir, asset_filename):
@@ -80,7 +79,7 @@ def _get_asset_filename(export_dir, asset_filename):
 def _get_saved_model_proto_path(export_dir):
   return os.path.join(
       tf.compat.as_bytes(export_dir),
-      tf.compat.as_bytes(tf_v1.saved_model.constants.SAVED_MODEL_FILENAME_PB))
+      tf.compat.as_bytes(tf.compat.v1.saved_model.SAVED_MODEL_FILENAME_PB))
 
 
 def _get_node_name_from_tensor(tensor_name):
@@ -108,16 +107,16 @@ def add_signature(key, inputs, outputs):
   _check_dict_maps_to_tensors_or_sparse_tensors(inputs)
   _check_dict_maps_to_tensors_or_sparse_tensors(outputs)
   input_info = {
-      input_name: tf_v1.saved_model.utils.build_tensor_info(tensor)
+      input_name: tf.compat.v1.saved_model.utils.build_tensor_info(tensor)
       for input_name, tensor in inputs.items()
   }
   output_info = {
-      output_name: tf_v1.saved_model.utils.build_tensor_info(tensor)
+      output_name: tf.compat.v1.saved_model.utils.build_tensor_info(tensor)
       for output_name, tensor in outputs.items()
   }
-  signature = tf_v1.saved_model.signature_def_utils.build_signature_def(
+  signature = tf.compat.v1.saved_model.signature_def_utils.build_signature_def(
       input_info, output_info)
-  tf_v1.add_to_collection(_SIGNATURE_COLLECTION, (key, signature))
+  tf.compat.v1.add_to_collection(_SIGNATURE_COLLECTION, (key, signature))
 
 
 def _check_dict_maps_to_tensors_or_sparse_tensors(tensor_map):
@@ -130,7 +129,7 @@ def _check_dict_maps_to_tensors_or_sparse_tensors(tensor_map):
 
 def _export_signatures(meta_graph):
   """Exports signatures from current graph into a MetaGraphDef."""
-  named_signatures = tf_v1.get_collection(_SIGNATURE_COLLECTION)
+  named_signatures = tf.compat.v1.get_collection(_SIGNATURE_COLLECTION)
   if not named_signatures:
     raise ValueError("No signatures present. Please call hub.add_signature(...)"
                      "at least once in the module_fn.")
@@ -145,14 +144,15 @@ def attach_bytes(key, the_bytes):
     key: A string with the unique key of the attachment.
     the_bytes: A bytes object with the serialized attachment.
   """
-  tf_v1.add_to_collection(
+  tf.compat.v1.add_to_collection(
       _ATTACHMENT_COLLECTION_INTERNAL,
       module_attachment_pb2.ModuleAttachment(key=key, value=the_bytes))
 
 
 def _export_module_attachments(meta_graph):
   """Exports ModuleAttachments from the current tf.Graph into `meta_graph`."""
-  added_attachments = tf_v1.get_collection(_ATTACHMENT_COLLECTION_INTERNAL)
+  added_attachments = tf.compat.v1.get_collection(
+      _ATTACHMENT_COLLECTION_INTERNAL)
   if not added_attachments: return  # Don't touch `meta_graph`.
   unique_attachments = collections.OrderedDict(  # Avoid indeterminism.
       (attachment.key, attachment)
@@ -221,16 +221,16 @@ def _merge_assets_key_collection(saved_model_proto, path):
   """
   for meta_graph in saved_model_proto.meta_graphs:
     node_asset_map = {}
-    if tf_v1.saved_model.constants.ASSETS_KEY in meta_graph.collection_def:
+    if tf.compat.v1.saved_model.ASSETS_KEY in meta_graph.collection_def:
       assets_any_proto = meta_graph.collection_def[
-          tf_v1.saved_model.constants.ASSETS_KEY].any_list.value
+          tf.compat.v1.saved_model.ASSETS_KEY].any_list.value
       for asset_any_proto in assets_any_proto:
         asset_proto = meta_graph_pb2.AssetFileDef()
         asset_any_proto.Unpack(asset_proto)
         asset_filename = _get_asset_filename(path, asset_proto.filename)
         node_asset_map[_get_node_name_from_tensor(
             asset_proto.tensor_info.name)] = asset_filename
-      del meta_graph.collection_def[tf_v1.saved_model.constants.ASSETS_KEY]
+      del meta_graph.collection_def[tf.compat.v1.saved_model.ASSETS_KEY]
 
     for node in meta_graph.graph_def.node:
       asset_filepath = node_asset_map.get(node.name)
@@ -279,7 +279,7 @@ def _make_assets_key_collection(saved_model_proto, export_path):
 
   for meta_graph in saved_model_proto.meta_graphs:
     collection_def = meta_graph.collection_def.get(
-        tf_v1.GraphKeys.ASSET_FILEPATHS)
+        tf.compat.v1.GraphKeys.ASSET_FILEPATHS)
 
     if collection_def is None:
       continue
@@ -309,7 +309,7 @@ def _make_assets_key_collection(saved_model_proto, export_path):
 
     if tensor_filename_map:
       assets_key_collection = meta_graph.collection_def[
-          tf_v1.saved_model.constants.ASSETS_KEY]
+          tf.compat.v1.saved_model.ASSETS_KEY]
 
       for tensor, filename in sorted(tensor_filename_map.items()):
         asset_proto = meta_graph_pb2.AssetFileDef()
@@ -363,7 +363,8 @@ class SavedModelHandler(object):
       # Remove default attrs so that Modules created by a tensorflow version
       # with ops that have new attrs that are left to their default values can
       # still be loaded by older versions unware of those attributes.
-      meta_graph = tf_v1.train.export_meta_graph(strip_default_attrs=True)
+      meta_graph = tf.compat.v1.train.export_meta_graph(
+          strip_default_attrs=True)
       _export_tags(meta_graph, tags)
       _export_signatures(meta_graph)
       _export_module_attachments(meta_graph)
@@ -375,7 +376,7 @@ class SavedModelHandler(object):
   def get_meta_graph_copy(self, tags=None):
     """Returns a copy of a MetaGraph with the identical set of tags."""
     meta_graph = self.get_meta_graph(tags)
-    copy = tf_v1.MetaGraphDef()
+    copy = tf.compat.v1.MetaGraphDef()
     copy.CopyFrom(meta_graph)
     return copy
 
@@ -422,21 +423,21 @@ class SavedModelHandler(object):
 
   def _save_all_assets(self, path, assets_map):
     assets_dir = _get_assets_dir(path)
-    tf_v1.gfile.MakeDirs(assets_dir)
+    tf.compat.v1.gfile.MakeDirs(assets_dir)
     for source, destination in assets_map.items():
-      tf_v1.gfile.Copy(source, destination)
+      tf.compat.v1.gfile.Copy(source, destination)
 
   def _save_variables(self, path, variables_saver):
     if variables_saver:
       variables_path = get_variables_path(path)
       variables_dir = os.path.dirname(variables_path)
-      tf_v1.gfile.MakeDirs(variables_dir)
+      tf.compat.v1.gfile.MakeDirs(variables_dir)
       logging.debug("Variables saved in: %s", variables_path)
       variables_saver(variables_path)
 
   def _save_proto(self, path, proto):
     proto_path = _get_saved_model_proto_path(path)
-    tf_v1.gfile.MakeDirs(os.path.dirname(proto_path))
+    tf.compat.v1.gfile.MakeDirs(os.path.dirname(proto_path))
     logging.debug("SavedModel saved in: %s", proto_path)
     tf_utils.atomic_write_string_to_file(proto_path,
                                          proto.SerializeToString(),
@@ -447,7 +448,7 @@ def _parse_saved_model(path):
   """Reads the savedmodel.pb file containing `SavedModel`."""
   # Based on tensorflow/python/saved_model/loader.py implementation.
   path_to_pb = _get_saved_model_proto_path(path)
-  file_content = tf_v1.gfile.Open(path_to_pb, "rb").read()
+  file_content = tf.compat.v1.gfile.Open(path_to_pb, "rb").read()
   saved_model = saved_model_pb2.SavedModel()
   try:
     saved_model.ParseFromString(file_content)

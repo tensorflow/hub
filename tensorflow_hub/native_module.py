@@ -32,7 +32,6 @@ from tensorflow_hub import module_spec
 from tensorflow_hub import saved_model_lib
 from tensorflow_hub import tensor_info
 from tensorflow_hub import tf_utils
-from tensorflow_hub import tf_v1
 
 from tensorflow.core.protobuf import meta_graph_pb2
 
@@ -92,23 +91,23 @@ _SUPPORTED_COLLECTIONS = set([
     # GLOBAL_VARIABLES, TRAINABLE_VARIABLES and MODEL_VARIABLES hold
     # tf.Variable objects saved in CollectionDef.bytes_list as serialized
     # VariableDef proto.
-    tf_v1.GraphKeys.GLOBAL_VARIABLES,
-    tf_v1.GraphKeys.TRAINABLE_VARIABLES,
-    tf_v1.GraphKeys.MODEL_VARIABLES,
+    tf.compat.v1.GraphKeys.GLOBAL_VARIABLES,
+    tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES,
+    tf.compat.v1.GraphKeys.MODEL_VARIABLES,
     # This holds tf.Operation objects, saved in CollectionDef.node_list.
-    tf_v1.GraphKeys.TABLE_INITIALIZERS,
+    tf.compat.v1.GraphKeys.TABLE_INITIALIZERS,
     # This holds tf.Tensor objects, saved in CollectionDef.node_list.
-    tf_v1.GraphKeys.UPDATE_OPS,
+    tf.compat.v1.GraphKeys.UPDATE_OPS,
     # This holds tf.Tensor objects, saved in CollectionDef.node_list.
     # These are imported to help fine-tuning (unlike LOSSES, which the
     # importing model redefines from scratch).
-    tf_v1.GraphKeys.REGULARIZATION_LOSSES,
+    tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES,
     # This holds constant tensors of type string.
-    tf_v1.GraphKeys.ASSET_FILEPATHS,
+    tf.compat.v1.GraphKeys.ASSET_FILEPATHS,
     # This holds serialized CondContextDef protos in CollectionDef.bytes_list.
-    tf_v1.GraphKeys.COND_CONTEXT,
+    tf.compat.v1.GraphKeys.COND_CONTEXT,
     # This holds serialized WhileContextDef protos in CollectionDef.bytes_list.
-    tf_v1.GraphKeys.WHILE_CONTEXT,
+    tf.compat.v1.GraphKeys.WHILE_CONTEXT,
     # saved_model_lib uses this collection internally for ModuleAttachments.
     saved_model_lib.ATTACHMENT_COLLECTION_SAVED,
 ])
@@ -129,7 +128,7 @@ class Loader(object):
   def _get_module_def_proto(self, path):
     module_def_path = get_module_proto_path(path)
     module_def_proto = module_def_pb2.ModuleDef()
-    with tf_v1.gfile.Open(module_def_path, "rb") as f:
+    with tf.compat.v1.gfile.Open(module_def_path, "rb") as f:
       module_def_proto.ParseFromString(f.read())
     return module_def_proto
 
@@ -221,11 +220,11 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   saved_model_handler = saved_model_lib.SavedModelHandler()
   for tags, args in tags_and_args:
     with tf.Graph().as_default() as graph:
-      with tf_v1.variable_scope("", use_resource=True):
+      with tf.compat.v1.variable_scope("", use_resource=True):
         module_fn(**args)
 
       for collection_key in drop_collections:
-        del tf_v1.get_collection_ref(collection_key)[:]
+        del tf.compat.v1.get_collection_ref(collection_key)[:]
 
     err = find_state_op_colocation_error(graph, tags if report_tags else None)
     if err: raise ValueError(err)
@@ -448,15 +447,15 @@ class _ModuleImpl(module_impl.ModuleImpl):
     self._variable_map = recover_partitioned_variable_map(
         get_node_map_from_tensor_map(variable_tensor_map))
     if self._variable_map and self._checkpoint_path:
-      tf_v1.train.init_from_checkpoint(self._checkpoint_path,
-                                       self._variable_map)
+      tf.compat.v1.train.init_from_checkpoint(self._checkpoint_path,
+                                              self._variable_map)
 
     # Build Saver so it can be used later on to export the variables.
     if self._variable_map:
-      self._saver = tf_v1.train.Saver(
+      self._saver = tf.compat.v1.train.Saver(
           self._variable_map,
           sharded=True,
-          write_version=tf_v1.train.SaverDef.V2)
+          write_version=tf.compat.v1.train.SaverDef.V2)
     else:
       self._saver = None
 
@@ -474,19 +473,20 @@ class _ModuleImpl(module_impl.ModuleImpl):
           instantiated tensors to be used as a state_map.
     """
     import_collections = [
-        tf_v1.GraphKeys.GLOBAL_VARIABLES,
-        tf_v1.GraphKeys.MODEL_VARIABLES,
-        tf_v1.GraphKeys.TABLE_INITIALIZERS,
-        tf_v1.GraphKeys.ASSET_FILEPATHS,  # Typically used to initialize tables.
-        tf_v1.GraphKeys.COND_CONTEXT,
-        tf_v1.GraphKeys.WHILE_CONTEXT,
+        tf.compat.v1.GraphKeys.GLOBAL_VARIABLES,
+        tf.compat.v1.GraphKeys.MODEL_VARIABLES,
+        tf.compat.v1.GraphKeys.TABLE_INITIALIZERS,
+        # A typical use of assets is a vocab file to initialize a table.
+        tf.compat.v1.GraphKeys.ASSET_FILEPATHS,
+        tf.compat.v1.GraphKeys.COND_CONTEXT,
+        tf.compat.v1.GraphKeys.WHILE_CONTEXT,
     ]
     if self._trainable:
       # TODO(b/64049014): Import UPDATE_OPS which do not depend on inputs.
-      import_collections.extend([tf_v1.GraphKeys.TRAINABLE_VARIABLES,
-                                 tf_v1.GraphKeys.REGULARIZATION_LOSSES])
+      import_collections.extend([tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES,
+                                 tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES])
 
-    absolute_scope_name = tf_v1.get_default_graph().unique_name(
+    absolute_scope_name = tf.compat.v1.get_default_graph().unique_name(
         name, mark_as_used=False)
     relative_scope_name = absolute_scope_name.split("/")[-1]
     assert relative_scope_name == name  # verify name scope was indeed unused.
@@ -498,7 +498,7 @@ class _ModuleImpl(module_impl.ModuleImpl):
     meta_graph_lib.prefix_shared_name_attributes(meta_graph,
                                                  absolute_scope_name)
 
-    tf_v1.train.import_meta_graph(
+    tf.compat.v1.train.import_meta_graph(
         meta_graph,
         input_map={},
         import_scope=relative_scope_name)
@@ -506,14 +506,14 @@ class _ModuleImpl(module_impl.ModuleImpl):
     # Build a list from the variable name in the module definition to the actual
     # instantiated variables.
     variables_tensor_map = {}
-    for var in tf_v1.global_variables():
+    for var in tf.compat.v1.global_variables():
       if var.op.name.startswith(absolute_scope_name + "/"):
         variables_tensor_map[var.name[len(absolute_scope_name)+1:]] = var
 
     # Build a map of tensors to feed from the state-graph into subsequent
     # apply-graphs.
     def _get_tensor(tensor_name):
-      return tf_v1.get_default_graph().get_tensor_by_name(
+      return tf.compat.v1.get_default_graph().get_tensor_by_name(
           meta_graph_lib.prepend_name_scope(
               tensor_name, import_scope=absolute_scope_name))
 
@@ -528,7 +528,7 @@ class _ModuleImpl(module_impl.ModuleImpl):
     signature_def = self._meta_graph.signature_def.get(signature)
     meta_graph = meta_graph_pb2.MetaGraphDef()
     meta_graph.CopyFrom(self._meta_graph)
-    apply_graph = tf_v1.get_default_graph()
+    apply_graph = tf.compat.v1.get_default_graph()
     infeed_map = tensor_info.build_input_map(signature_def.inputs,
                                              input_tensors)
 
@@ -589,12 +589,12 @@ class _ModuleImpl(module_impl.ModuleImpl):
         # time. As so everytime we bring the tensor with that has the asset
         # filename we must annotate it as so, so later re-exports have that
         # semantic information and can handle it.
-        tf_v1.GraphKeys.ASSET_FILEPATHS,
-        tf_v1.GraphKeys.COND_CONTEXT,
-        tf_v1.GraphKeys.WHILE_CONTEXT,
+        tf.compat.v1.GraphKeys.ASSET_FILEPATHS,
+        tf.compat.v1.GraphKeys.COND_CONTEXT,
+        tf.compat.v1.GraphKeys.WHILE_CONTEXT,
     ]
     if self._trainable:
-      import_collections.extend([tf_v1.GraphKeys.UPDATE_OPS])
+      import_collections.extend([tf.compat.v1.GraphKeys.UPDATE_OPS])
 
     meta_graph_lib.filter_collections(meta_graph, import_collections)
     meta_graph_lib.prefix_shared_name_attributes(meta_graph,
@@ -604,7 +604,7 @@ class _ModuleImpl(module_impl.ModuleImpl):
           "Applying modules with collections inside TPU functions is not "
           "supported. Collections found: %s" % str(meta_graph.collection_def))
 
-    tf_v1.train.import_meta_graph(
+    tf.compat.v1.train.import_meta_graph(
         meta_graph,
         input_map=feed_map,
         import_scope=relative_scope_name)
@@ -987,7 +987,7 @@ def _build_colocation_attr_map(input_map, absolute_import_scope):
   # Add unchanged mappings for additional, non-remapped outputs of ops touched
   # by the input_map. For now, these just signal inconsistency when used.
   for imported_op_name, used_outputs in used_outputs_of_imported_ops.items():
-    imported_op = tf_v1.get_default_graph().get_operation_by_name(
+    imported_op = tf.compat.v1.get_default_graph().get_operation_by_name(
         imported_op_name)
     unused_outputs = set(range(len(imported_op.outputs))) - used_outputs
     if not unused_outputs: continue
@@ -1025,7 +1025,7 @@ def _apply_colocation_attr_map(colocation_attr_map, absolute_import_scope):
     ValueError: if rewriting runs into an inconsistent value in
       `colocation_attr_map`.
   """
-  graph = tf_v1.get_default_graph()
+  graph = tf.compat.v1.get_default_graph()
   for op in graph.get_operations():
     # Rewrite the values of the "_class" attr that store colocation constraints.
     # NOTE: The colocation_group loc:@X of a node with itself is not stored
@@ -1036,7 +1036,7 @@ def _apply_colocation_attr_map(colocation_attr_map, absolute_import_scope):
       class_values = op.get_attr("_class")
     except ValueError:
       continue  # No _class attr found; nothing to do.
-    new_attr_value = tf_v1.AttrValue()
+    new_attr_value = tf.compat.v1.AttrValue()
     new_coloc_groups = []
     for class_value in class_values:
       if class_value.startswith(tf.compat.as_bytes("loc:@")):
@@ -1139,7 +1139,7 @@ def find_signature_inputs_from_multivalued_ops(inputs):
 
 
 def _is_tpu_graph_function():
-  graph = tf_v1.get_default_graph()
+  graph = tf.compat.v1.get_default_graph()
   return (graph.building_function and
           type(graph._get_control_flow_context()).__name__.endswith(  # pylint: disable=protected-access
               "TPUReplicateContext"))

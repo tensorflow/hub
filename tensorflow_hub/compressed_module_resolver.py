@@ -32,8 +32,8 @@ except ImportError:
 # pylint:disable=g-import-not-at-top
 # pylint:enable=g-importing-member
 
+import tensorflow as tf
 from tensorflow_hub import resolver
-from tensorflow_hub import tf_v1
 
 
 LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
@@ -107,7 +107,7 @@ class GcsCompressedFileResolver(resolver.Resolver):
 
     def download(handle, tmp_dir):
       return resolver.DownloadManager(handle).download_and_uncompress(
-          tf_v1.gfile.GFile(handle, "rb"), tmp_dir)
+          tf.compat.v1.gfile.GFile(handle, "rb"), tmp_dir)
 
     return resolver.atomic_download(handle, download, module_dir,
                                     LOCK_FILE_TIMEOUT_SEC)

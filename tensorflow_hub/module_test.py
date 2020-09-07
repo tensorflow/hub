@@ -23,7 +23,6 @@ from tensorflow_hub import module
 from tensorflow_hub import module_impl
 from tensorflow_hub import module_spec
 from tensorflow_hub import tensor_info
-from tensorflow_hub import tf_v1
 
 
 class TestConvertInputsOutputs(tf.test.TestCase):
@@ -116,28 +115,28 @@ class GetStateScopeTest(tf.test.TestCase):
   def testGetStateScope_UsesVariableScope(self):
     with tf.Graph().as_default():
       self.assertEqual(module._try_get_state_scope("a"), "a/")
-      with tf_v1.variable_scope(None, default_name="a") as vs:
+      with tf.compat.v1.variable_scope(None, default_name="a") as vs:
         self.assertEqual(vs.name, "a_1")
 
   def testGetStateScope_UsesNameScope(self):
     with tf.Graph().as_default():
       self.assertEqual(module._try_get_state_scope("a"), "a/")
-      with tf_v1.name_scope("a") as ns:
+      with tf.compat.v1.name_scope("a") as ns:
         self.assertEqual(ns, "a_1/")
 
   def testGetStateScope_UnusedNameScope(self):
     with tf.Graph().as_default():
       self.assertEqual(module._try_get_state_scope("a", False), "a/")
-      with tf_v1.name_scope("a") as ns:
+      with tf.compat.v1.name_scope("a") as ns:
         self.assertEqual(ns, "a/")
 
       self.assertEqual(module._try_get_state_scope("a", False), "a_1/")
-      with tf_v1.name_scope("a") as ns:
+      with tf.compat.v1.name_scope("a") as ns:
         self.assertEqual(ns, "a_1/")
 
   def testGetStateScope_AlreadyUsedNameScope(self):
     with tf.Graph().as_default():
-      with tf_v1.name_scope("a"):
+      with tf.compat.v1.name_scope("a"):
         pass
       with self.assertRaisesRegexp(RuntimeError,
                                    "name_scope was already taken"):
@@ -145,21 +144,21 @@ class GetStateScopeTest(tf.test.TestCase):
 
   def testGetStateScopeWithActiveScopes(self):
     with tf.Graph().as_default():
-      with tf_v1.name_scope("foo"):
+      with tf.compat.v1.name_scope("foo"):
         abs_scope = module._try_get_state_scope("a", False)
         self.assertEqual(abs_scope, "a/")
-        with tf_v1.name_scope(abs_scope) as ns:
+        with tf.compat.v1.name_scope(abs_scope) as ns:
           self.assertEqual(ns, "a/")
 
     with tf.Graph().as_default():
-      with tf_v1.variable_scope("vs"):
+      with tf.compat.v1.variable_scope("vs"):
         self.assertEqual(module._try_get_state_scope("a", False), "vs/a/")
-        with tf_v1.name_scope(name="a") as ns:
+        with tf.compat.v1.name_scope(name="a") as ns:
           self.assertEqual(ns, "vs/a/")
 
     with tf.Graph().as_default():
-      with tf_v1.name_scope("foo"):
-        with tf_v1.variable_scope("vs"):
+      with tf.compat.v1.name_scope("foo"):
+        with tf.compat.v1.variable_scope("vs"):
           self.assertEquals(module._try_get_state_scope("a", False), "vs/a/")
 
 
@@ -210,14 +209,14 @@ class _ModuleImpl(module_impl.ModuleImpl):
 
   def __init__(self, name, trainable):
     super(_ModuleImpl, self).__init__()
-    with tf_v1.variable_scope(name):
+    with tf.compat.v1.variable_scope(name):
       pass
 
   def create_apply_graph(self, signature, input_tensors, name):
-    with tf_v1.name_scope(name):
+    with tf.compat.v1.name_scope(name):
       if signature == "sparse":
         input_tensors = {
-            key: tf_v1.sparse_tensor_to_dense(value)
+            key: tf.compat.v1.sparse_tensor_to_dense(value)
             for key, value in input_tensors.items()
         }
       result = {"default": 2 * input_tensors["x"]}
@@ -239,14 +238,14 @@ class ModuleTest(tf.test.TestCase):
     with tf.Graph().as_default():
       m = module.Module(_ModuleSpec())
       result = m([1, 2])
-      with tf_v1.Session() as session:
+      with tf.compat.v1.Session() as session:
         self.assertAllEqual(session.run(result), [2, 4])
 
   def testModuleDictInput(self):
     with tf.Graph().as_default():
       m = module.Module(_ModuleSpec())
       result = m({"x": [1, 2]})
-      with tf_v1.Session() as session:
+      with tf.compat.v1.Session() as session:
         self.assertAllEqual(session.run(result), [2, 4])
 
   def testModuleDictOutput(self):
@@ -258,10 +257,10 @@ class ModuleTest(tf.test.TestCase):
 
   def testModuleInNestedScope(self):
     with tf.Graph().as_default():
-      with tf_v1.variable_scope("foo"):
+      with tf.compat.v1.variable_scope("foo"):
         m = module.Module(_ModuleSpec())
         result = m([1, 2])
-      with tf_v1.Session() as session:
+      with tf.compat.v1.Session() as session:
         self.assertAllEqual(session.run(result), [2, 4])
 
   def testModuleInterfaceGettersDefaultSignatureAndTags(self):
@@ -298,7 +297,7 @@ class EvalFunctionForModuleTest(tf.test.TestCase):
   def testSparseInput(self):
     with module.eval_function_for_module(_ModuleSpec(), tags={"special"}) as f:
       self.assertAllEqual(
-          f(tf_v1.SparseTensorValue([[0]], [1], [2]),  # Value is [1, 0].
+          f(tf.compat.v1.SparseTensorValue([[0]], [1], [2]),  # Value is [1, 0].
             signature="sparse"),
           [2, 0])
 

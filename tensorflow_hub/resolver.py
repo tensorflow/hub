@@ -32,7 +32,6 @@ from absl import flags
 from absl import logging
 import tensorflow as tf
 from tensorflow_hub import tf_utils
-from tensorflow_hub import tf_v1
 
 
 FLAGS = flags.FLAGS
@@ -82,7 +81,7 @@ def tfhub_cache_dir(default_cache_dir=None, use_temp=False):
 
 def create_local_module_dir(cache_dir, module_name):
   """Creates and returns the name of directory where to cache a module."""
-  tf_v1.gfile.MakeDirs(cache_dir)
+  tf.compat.v1.gfile.MakeDirs(cache_dir)
   return os.path.join(cache_dir, module_name)
 
 
@@ -146,7 +145,7 @@ class DownloadManager(object):
   def _extract_file(self, tgz, tarinfo, dst_path, buffer_size=10<<20):
     """Extracts 'tarinfo' from 'tgz' and writes to 'dst_path'."""
     src = tgz.extractfile(tarinfo)
-    dst = tf_v1.gfile.GFile(dst_path, "wb")
+    dst = tf.compat.v1.gfile.GFile(dst_path, "wb")
     while 1:
       buf = src.read(buffer_size)
       if not buf:
@@ -174,7 +173,7 @@ class DownloadManager(object):
           if tarinfo.isfile():
             self._extract_file(tgz, tarinfo, abs_target_path)
           elif tarinfo.isdir():
-            tf_v1.gfile.MakeDirs(abs_target_path)
+            tf.compat.v1.gfile.MakeDirs(abs_target_path)
           else:
             # We do not support symlinks and other uncommon objects.
             raise ValueError(
@@ -273,9 +272,9 @@ def _temp_download_dir(module_dir, task_uid):
 def _dir_size(directory):
   """Returns total size (in bytes) of the given 'directory'."""
   size = 0
-  for elem in tf_v1.gfile.ListDirectory(directory):
+  for elem in tf.compat.v1.gfile.ListDirectory(directory):
     elem_full_path = os.path.join(directory, elem)
-    stat = tf_v1.gfile.Stat(elem_full_path)
+    stat = tf.compat.v1.gfile.Stat(elem_full_path)
     size += _dir_size(elem_full_path) if stat.is_directory else stat.length
   return size
 
@@ -309,7 +308,7 @@ def _wait_for_lock_to_disappear(handle, lock_file, lock_file_timeout_sec):
   locked_tmp_dir_size = 0
   locked_tmp_dir_size_check_time = time.time()
   lock_file_content = None
-  while tf_v1.gfile.Exists(lock_file):
+  while tf.compat.v1.gfile.Exists(lock_file):
     try:
       logging.log_every_n(
           logging.INFO,
@@ -328,7 +327,7 @@ def _wait_for_lock_to_disappear(handle, lock_file, lock_file_timeout_sec):
           # local download.
           logging.warning("Deleting lock file %s due to inactivity.",
                           lock_file)
-          tf_v1.gfile.Remove(lock_file)
+          tf.compat.v1.gfile.Remove(lock_file)
           break
         locked_tmp_dir_size = cur_locked_tmp_dir_size
         locked_tmp_dir_size_check_time = time.time()
@@ -380,12 +379,12 @@ def atomic_download(handle,
                                              overwrite=False)
         # Must test condition again, since another process could have created
         # the module and deleted the old lock file since last test.
-        if (tf_v1.gfile.Exists(module_dir) and
-            tf_v1.gfile.ListDirectory(module_dir)):
+        if (tf.compat.v1.gfile.Exists(module_dir) and
+            tf.compat.v1.gfile.ListDirectory(module_dir)):
           # Lock file will be deleted in the finally-clause.
           return module_dir
-        if tf_v1.gfile.Exists(module_dir):
-          tf_v1.gfile.DeleteRecursively(module_dir)
+        if tf.compat.v1.gfile.Exists(module_dir):
+          tf.compat.v1.gfile.DeleteRecursively(module_dir)
         break  # Proceed to downloading the module.
       # These errors are believed to be permanent problems with the
       # module_dir that justify failing the download.
@@ -408,13 +407,13 @@ def atomic_download(handle,
       _wait_for_lock_to_disappear(handle, lock_file, lock_file_timeout_sec)
       # At this point we either deleted a lock or a lock got removed by the
       # owner or another process. Perform one more iteration of the while-loop,
-      # we would either terminate due tf_v1.gfile.Exists(module_dir) or because
-      # we would obtain a lock ourselves, or wait again for the lock to
+      # we would either terminate due tf.compat.v1.gfile.Exists(module_dir) or
+      # because we would obtain a lock ourselves, or wait again for the lock to
       # disappear.
 
     # Lock file acquired.
     logging.info("Downloading TF-Hub Module '%s'.", handle)
-    tf_v1.gfile.MakeDirs(tmp_dir)
+    tf.compat.v1.gfile.MakeDirs(tmp_dir)
     download_fn(handle, tmp_dir)
     # Write module descriptor to capture information about which module was
     # downloaded by whom and when. The file stored at the same level as a
@@ -427,7 +426,7 @@ def atomic_download(handle,
     # content.
     _write_module_descriptor_file(handle, module_dir)
     try:
-      tf_v1.gfile.Rename(tmp_dir, module_dir)
+      tf.compat.v1.gfile.Rename(tmp_dir, module_dir)
       logging.info("Downloaded TF-Hub Module '%s'.", handle)
     except tf.errors.AlreadyExistsError:
       logging.warning("Module already exists in %s", module_dir)
@@ -435,7 +434,7 @@ def atomic_download(handle,
   finally:
     try:
       # Temp directory is owned by the current process, remove it.
-      tf_v1.gfile.DeleteRecursively(tmp_dir)
+      tf.compat.v1.gfile.DeleteRecursively(tmp_dir)
     except tf.errors.NotFoundError:
       pass
     try:
@@ -445,7 +444,7 @@ def atomic_download(handle,
     if contents == lock_contents:
       # Lock file exists and is owned by this process.
       try:
-        tf_v1.gfile.Remove(lock_file)
+        tf.compat.v1.gfile.Remove(lock_file)
       except tf.errors.NotFoundError:
         pass
 
@@ -492,6 +491,6 @@ class PathResolver(Resolver):
     return True
 
   def __call__(self, handle):
-    if not tf_v1.gfile.Exists(handle):
+    if not tf.compat.v1.gfile.Exists(handle):
       raise IOError("%s does not exist." % handle)
     return handle

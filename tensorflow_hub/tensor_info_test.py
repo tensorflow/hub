@@ -21,31 +21,30 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_hub import tensor_info
-from tensorflow_hub import tf_v1
 
 
 def _make_signature(inputs, outputs, name=None):
   input_info = {
-      input_name: tf_v1.saved_model.utils.build_tensor_info(tensor)
+      input_name: tf.compat.v1.saved_model.utils.build_tensor_info(tensor)
       for input_name, tensor in inputs.items()
   }
   output_info = {
-      output_name: tf_v1.saved_model.utils.build_tensor_info(tensor)
+      output_name: tf.compat.v1.saved_model.utils.build_tensor_info(tensor)
       for output_name, tensor in outputs.items()
   }
-  return tf_v1.saved_model.signature_def_utils.build_signature_def(
+  return tf.compat.v1.saved_model.signature_def_utils.build_signature_def(
       input_info, output_info, name)
 
 
 class TensorInfoTest(tf.test.TestCase):
 
   def testParsingTensorInfoProtoMaps(self):
-    with tf_v1.Graph().as_default():
+    with tf.compat.v1.Graph().as_default():
       sig = _make_signature({
-          "x": tf_v1.placeholder(tf.string, [2]),
+          "x": tf.compat.v1.placeholder(tf.string, [2]),
       }, {
-          "y": tf_v1.placeholder(tf.int32, [2]),
-          "z": tf_v1.sparse_placeholder(tf.float32, [2, 10]),
+          "y": tf.compat.v1.placeholder(tf.int32, [2]),
+          "z": tf.compat.v1.sparse_placeholder(tf.float32, [2, 10]),
       })
 
       inputs = tensor_info.parse_tensor_info_map(sig.inputs)
@@ -65,12 +64,12 @@ class TensorInfoTest(tf.test.TestCase):
       self.assertTrue(outputs["z"].is_sparse)
 
   def testRepr(self):
-    with tf_v1.Graph().as_default():
+    with tf.compat.v1.Graph().as_default():
       sig = _make_signature({
-          "x": tf_v1.placeholder(tf.string, [2]),
+          "x": tf.compat.v1.placeholder(tf.string, [2]),
       }, {
-          "y": tf_v1.placeholder(tf.int32, [2]),
-          "z": tf_v1.sparse_placeholder(tf.float32, [2, 10]),
+          "y": tf.compat.v1.placeholder(tf.int32, [2]),
+          "z": tf.compat.v1.sparse_placeholder(tf.float32, [2, 10]),
       })
 
       outputs = tensor_info.parse_tensor_info_map(sig.outputs)
@@ -83,17 +82,17 @@ class TensorInfoTest(tf.test.TestCase):
 
 
   def testMatchingTensorInfoProtoMaps(self):
-    with tf_v1.Graph().as_default():
+    with tf.compat.v1.Graph().as_default():
       sig1 = _make_signature({
-          "x": tf_v1.placeholder(tf.int32, [2]),
+          "x": tf.compat.v1.placeholder(tf.int32, [2]),
       }, {
-          "x": tf_v1.placeholder(tf.int32, [2]),
+          "x": tf.compat.v1.placeholder(tf.int32, [2]),
       })
 
       sig2 = _make_signature({
-          "x": tf_v1.placeholder(tf.int32, [2]),
+          "x": tf.compat.v1.placeholder(tf.int32, [2]),
       }, {
-          "x": tf_v1.sparse_placeholder(tf.int64, [2]),
+          "x": tf.compat.v1.sparse_placeholder(tf.int64, [2]),
       })
       self.assertTrue(
           tensor_info.tensor_info_proto_maps_match(sig1.inputs, sig2.inputs))
@@ -101,9 +100,9 @@ class TensorInfoTest(tf.test.TestCase):
           tensor_info.tensor_info_proto_maps_match(sig1.outputs, sig2.outputs))
 
       sig3 = _make_signature({
-          "x": tf_v1.placeholder(tf.int32, [None]),
+          "x": tf.compat.v1.placeholder(tf.int32, [None]),
       }, {
-          "x": tf_v1.placeholder(tf.int32, [2]),
+          "x": tf.compat.v1.placeholder(tf.int32, [2]),
       })
       self.assertFalse(
           tensor_info.tensor_info_proto_maps_match(sig1.inputs, sig3.inputs))
@@ -111,9 +110,9 @@ class TensorInfoTest(tf.test.TestCase):
           tensor_info.tensor_info_proto_maps_match(sig1.outputs, sig3.outputs))
 
   def testBuildInputMap(self):
-    with tf_v1.Graph().as_default():
-      x = tf_v1.placeholder(tf.int32, [2])
-      y = tf_v1.sparse_placeholder(tf.string, [None])
+    with tf.compat.v1.Graph().as_default():
+      x = tf.compat.v1.placeholder(tf.int32, [2])
+      y = tf.compat.v1.sparse_placeholder(tf.string, [None])
       sig = _make_signature({"x": x, "y": y}, {})
 
       input_map = tensor_info.build_input_map(sig.inputs, {"x": x, "y": y})
@@ -124,13 +123,13 @@ class TensorInfoTest(tf.test.TestCase):
       self.assertEqual(input_map[y.dense_shape.name], y.dense_shape)
 
   def testBuildOutputMap(self):
-    with tf_v1.Graph().as_default():
-      x = tf_v1.placeholder(tf.int32, [2])
-      y = tf_v1.sparse_placeholder(tf.string, [None])
+    with tf.compat.v1.Graph().as_default():
+      x = tf.compat.v1.placeholder(tf.int32, [2])
+      y = tf.compat.v1.sparse_placeholder(tf.string, [None])
       sig = _make_signature({}, {"x": x, "y": y})
 
       def _get_tensor(name):
-        return tf_v1.get_default_graph().get_tensor_by_name(name)
+        return tf.compat.v1.get_default_graph().get_tensor_by_name(name)
 
       output_map = tensor_info.build_output_map(sig.outputs, _get_tensor)
       self.assertEqual(len(output_map), 2)
@@ -140,8 +139,8 @@ class TensorInfoTest(tf.test.TestCase):
       self.assertEqual(output_map["y"].dense_shape, y.dense_shape)
 
   def testConvertTensors(self):
-    with tf_v1.Graph().as_default():
-      a = tf_v1.placeholder(tf.int32, [None])
+    with tf.compat.v1.Graph().as_default():
+      a = tf.compat.v1.placeholder(tf.int32, [None])
       protomap = _make_signature({"a": a}, {}).inputs
       targets = tensor_info.parse_tensor_info_map(protomap)
 
@@ -152,7 +151,7 @@ class TensorInfoTest(tf.test.TestCase):
       self.assertEqual(output["a"].dtype, a.dtype)
 
       # check sparsity
-      in1 = tf_v1.sparse_placeholder(tf.int32, [])
+      in1 = tf.compat.v1.sparse_placeholder(tf.int32, [])
       with self.assertRaisesRegexp(TypeError, "dense"):
         tensor_info.convert_dict_to_compatible_tensor({"a": in1}, targets)
 

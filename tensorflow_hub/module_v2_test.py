@@ -18,13 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-try:
-  import mock as mock
-except ImportError:
-  import unittest.mock as mock
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-
 import os
 from absl.testing import parameterized
 import tensorflow as tf
@@ -75,12 +68,6 @@ class ModuleV2Test(tf.test.TestCase, parameterized.TestCase):
       _save_plus_one_saved_model_v2(export_dir)
     m = module_v2.load(export_dir, tags)
     self.assertEqual(m._is_hub_module_v1, is_hub_module_v1)
-
-  @mock.patch.object(module_v2, 'tf_v1')
-  def test_load_with_old_tensorflow_raises_error(self, tf_v1_mock):
-    tf_v1_mock.saved_model = None
-    with self.assertRaises(NotImplementedError):
-      module_v2.load('dummy_module_name')
 
   def test_load_without_string(self):
     with self.assertRaisesRegex(ValueError, 'Expected a string, got.*'):

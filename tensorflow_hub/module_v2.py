@@ -23,7 +23,6 @@ import six
 
 from tensorflow_hub import native_module
 from tensorflow_hub import registry
-from tensorflow_hub import tf_v1
 
 
 def resolve(handle):
@@ -93,7 +92,8 @@ def load(handle, tags=None, options=None):
     NotImplementedError: If the code is running against incompatible (1.x)
                          version of TF.
   """
-  if not hasattr(tf_v1.saved_model, "load_v2"):
+  # tf.compat.v1.saved_model.load_v2() is TF2 tf.saved_model.load() before TF2.
+  if not hasattr(tf.compat.v1.saved_model, "load_v2"):
     raise NotImplementedError("hub.load() is not implemented for TF < 1.14.x, "
                               "Current version: %s" % tf.__version__)
   if not isinstance(handle, six.string_types):
@@ -108,9 +108,9 @@ def load(handle, tags=None, options=None):
     if not hasattr(getattr(tf, "saved_model", None), "LoadOptions"):
       raise NotImplementedError("options are not supported for TF < 2.3.x,"
                                 " Current version: %s" % tf.__version__)
-    obj = tf_v1.saved_model.load_v2(
+    obj = tf.compat.v1.saved_model.load_v2(
         module_path, tags=tags, options=options)
   else:
-    obj = tf_v1.saved_model.load_v2(module_path, tags=tags)
+    obj = tf.compat.v1.saved_model.load_v2(module_path, tags=tags)
   obj._is_hub_module_v1 = is_hub_module_v1  # pylint: disable=protected-access
   return obj
