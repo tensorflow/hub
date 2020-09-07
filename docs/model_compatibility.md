@@ -1,3 +1,5 @@
+<!--* freshness: { owner: 'maringeorgiev' } *-->
+
 # Model compatibility for TF1/TF2
 
 ## TF Hub model formats

@@ -1,3 +1,5 @@
+<!--* freshness: { owner: 'kempy' } *-->
+
 # Contribute on GitHub
 
 Learn more about how to contribute to the `tensorflow/hub` project

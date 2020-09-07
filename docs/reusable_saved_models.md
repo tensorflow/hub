@@ -1,3 +1,5 @@
+<!--* freshness: { owner: 'arnoegw' reviewed: '2019-10-14' } *-->
+
 # Reusable SavedModels
 
 ## Introduction

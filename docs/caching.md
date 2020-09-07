@@ -1,3 +1,5 @@
+<!--* freshness: { owner: 'arnoegw' reviewed: '2020-07-06' } *-->
+
 # Caching model downloads from TF Hub
 
 ## Summary

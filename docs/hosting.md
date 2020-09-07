@@ -1,3 +1,5 @@
+<!--* freshness: { owner: 'arnoegw' } *-->
+
 # Hosting your own models
 
 TensorFlow Hub provides an open repository of trained models at

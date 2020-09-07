@@ -1,3 +1,5 @@
+<!--* freshness: { owner: 'maringeorgiev' } *-->
+
 # TF1 Hub format
 
 At its launch in 2018, TensorFlow Hub offered a single type of asset: TF1 Hub
