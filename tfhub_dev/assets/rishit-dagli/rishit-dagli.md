@@ -8,6 +8,6 @@ Rishit Dagli ([@rishit_dagli](https://twitter.com/rishit_dagli)).
 10 th Grade Student.
 TedX, TedEd Speaker.
 
-**GitHub:** [Rishit-dagli](https://github.com/sayakpaul)\
+**GitHub:** [Rishit-dagli](https://github.com/Rishit-dagli)\
 **Personal Website:** [rishit.tech](https://www.rishit.tech)\
 **Twitter:** [@rishit_dagli](https://twitter.com/rishit_dagli)
