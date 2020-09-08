@@ -92,10 +92,6 @@ def load(handle, tags=None, options=None):
     NotImplementedError: If the code is running against incompatible (1.x)
                          version of TF.
   """
-  # tf.compat.v1.saved_model.load_v2() is TF2 tf.saved_model.load() before TF2.
-  if not hasattr(tf.compat.v1.saved_model, "load_v2"):
-    raise NotImplementedError("hub.load() is not implemented for TF < 1.14.x, "
-                              "Current version: %s" % tf.__version__)
   if not isinstance(handle, six.string_types):
     raise ValueError("Expected a string, got %s" % handle)
   module_path = resolve(handle)
@@ -108,6 +104,7 @@ def load(handle, tags=None, options=None):
     if not hasattr(getattr(tf, "saved_model", None), "LoadOptions"):
       raise NotImplementedError("options are not supported for TF < 2.3.x,"
                                 " Current version: %s" % tf.__version__)
+    # tf.compat.v1.saved_model.load_v2() is TF2 tf.saved_model.load() before TF2
     obj = tf.compat.v1.saved_model.load_v2(
         module_path, tags=tags, options=options)
   else:
