@@ -27,9 +27,6 @@ import tensorflow as tf
 
 from tensorflow_hub import module_v2
 
-# ATTENTION: This file uses private imports from TF2.
-# __init__ may not import this file if tensorflow is too old.
-
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import smart_cond
 from tensorflow.python.training.tracking import data_structures
@@ -424,7 +421,7 @@ def load_module(handle, tags=None, load_options=None):
       # pylint: disable=g-direct-tensorflow-import
       from tensorflow.python.saved_model import load_context
       set_load_options = load_options or load_context.get_load_options()
-    except ImportError:
+    except ImportError:  # Expected before TF2.4.
       set_load_options = load_options
     return module_v2.load(handle, tags=tags, options=set_load_options)
 

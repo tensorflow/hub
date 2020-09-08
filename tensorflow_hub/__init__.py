@@ -19,13 +19,8 @@ from __future__ import division
 from __future__ import print_function
 
 from absl import logging
-from distutils.version import LooseVersion
 import tensorflow as tf
 
-# pylint: disable=g-import-not-at-top
-# Only do imports after check TensorFlow version so the useful
-# error message is thrown instead of an obscure error of missing
-# symbols at executing the imports.
 from tensorflow_hub.estimator import LatestModuleExporter
 from tensorflow_hub.estimator import register_module_for_export
 from tensorflow_hub.feature_column import image_embedding_column
@@ -36,29 +31,21 @@ from tensorflow_hub.image_util import attach_image_module_info
 from tensorflow_hub.image_util import get_expected_image_size
 from tensorflow_hub.image_util import get_num_image_channels
 from tensorflow_hub.image_util import ImageModuleInfo
+from tensorflow_hub.keras_layer import KerasLayer
 from tensorflow_hub.module import eval_function_for_module
 from tensorflow_hub.module import load_module_spec
 from tensorflow_hub.module import Module
+from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.module_v2 import load
 from tensorflow_hub.module_v2 import resolve
-from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.native_module import add_signature
 from tensorflow_hub.native_module import attach_message
 from tensorflow_hub.native_module import create_module_spec
 from tensorflow_hub.saved_model_module import create_module_spec_from_saved_model
 from tensorflow_hub.version import __version__
 
+# pylint: disable=g-import-not-at-top
 # pylint: disable=g-bad-import-order
-# The following imports may fail if TensorFlow is too old for TF2 features.
-try:
-  from tensorflow_hub.keras_layer import KerasLayer
-except ImportError:
-  if LooseVersion(tf.__version__) < LooseVersion("1.14.0"):
-    logging.info("hub.KerasLayer is not available "
-                 "because TensorFlow version is less than 1.14")
-  else:
-    raise  # This is unexpected and indicates a problem.
-
 from tensorflow_hub.config import _run
 _run()
 
