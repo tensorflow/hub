@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeorgiev' } *-->
+<!--* freshness: { owner: 'maringeo' } *-->
 
 # SavedModels from TF Hub in TensorFlow 2
 

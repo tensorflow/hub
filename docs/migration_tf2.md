@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeorgiev' } *-->
+<!--* freshness: { owner: 'maringeo' } *-->
 
 # Migrating from TF1 to TF2 with TensorFlow Hub
 

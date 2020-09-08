@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeorgiev' } *-->
+<!--* freshness: { owner: 'maringeo' } *-->
 
 # TF1 Hub format
 
