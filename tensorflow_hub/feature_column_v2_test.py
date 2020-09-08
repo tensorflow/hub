@@ -230,7 +230,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
 
 if __name__ == "__main__":
   # This test is only supported in TF2 mode and only in TensorFlow version that
-  # has the following symbol:
+  # has the following symbol (expected from TF2.3 onwards):
   # tensorflow.python.feature_column.feature_column_v2.StateManager.has_resource
   if tf.executing_eagerly() and hasattr(feature_column_v2.StateManager,
                                         "has_resource"):

@@ -84,16 +84,7 @@ class CommonColumnTest(tf.test.TestCase):
   @mock.patch.object(feature_column_v2._StateManagerImpl, "add_resource")
   def testFeatureColumnsWithResources(self, mock_add_resource):
     feature_column = hub.text_embedding_column("text_a", self.spec)
-    if not isinstance(feature_column, feature_column_v2.FeatureColumn):
-      self.skipTest("Resources not implemented in the state manager of feature "
-                    "column v2.")
     self.assertTrue(feature_column_v2.is_feature_column_v2([feature_column]))
-
-  @mock.patch.object(feature_column_v2._StateManagerImpl, "add_resource")
-  def testFeatureColumnsWithNoResources(self, mock_add_resource):
-    mock_add_resource.side_effect = NotImplementedError
-    feature_column = hub.text_embedding_column("text_a", self.spec)
-    self.assertFalse(feature_column_v2.is_feature_column_v2([feature_column]))
 
 
 class TextEmbeddingColumnTest(tf.test.TestCase):
