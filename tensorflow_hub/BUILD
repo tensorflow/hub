@@ -45,16 +45,6 @@ py_library(
 )
 
 py_library(
-    name = "tf_v1",
-    srcs = [
-        "tf_v1.py",
-    ],
-    deps = [
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_library(
     name = "config",
     srcs = ["config.py"],
     deps = [
