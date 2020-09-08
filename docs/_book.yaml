@@ -14,12 +14,16 @@ upper_tabs:
     # [Guide]
     - name: "Guide"
       contents:
+      # TF Hub Platform overview.
+      - heading: Getting Started
+      - title: Overview
+        path: /hub/overview
+      - title: Installation
+        path: /hub/installation
       # Python library usage information
       - heading: Using the library
       - title: Overview
-        path: /hub/overview
-      - title: Installation and usage
-        path: /hub/installation
+        path: /hub/lib_overview
       - title: Caching model downloads
         path: /hub/caching
       - title: Migration to TF2
