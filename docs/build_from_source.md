@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'akhorlin' } *-->
+<!--* freshness: { owner: 'akhorlin' reviewed: '2020-09-08' } *-->
 
 <!-- Copyright 2018 The TensorFlow Hub Authors. All Rights Reserved.
 
