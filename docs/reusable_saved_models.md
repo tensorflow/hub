@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'arnoegw' reviewed: '2019-10-14' } *-->
+<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-09' } *-->
 
 # Reusable SavedModels
 
@@ -18,7 +18,7 @@ in order to be *reused* in a TensorFlow Python program.
 SavedModels conforming to this interface are called *Reusable SavedModels*.
 
 Reusing means building a larger model around `obj`, including the ability
-to fine-tune. Fine-tuning means further training of the weights in the loaded
+to fine-tune it. Fine-tuning means further training of the weights in the loaded
 `obj` as part of the surrounding model. The loss function and the
 optimizer are determined by the surrounding model; `obj` only defines
 the mapping of input to output activations (the "forward pass"), possibly
@@ -35,7 +35,7 @@ This interface in terms of tf.functions and other TF2 features
 is separate from the SavedModel's signatures, which have been
 available since TF1 and continue to be used in TF2 for inference
 (such as deploying SavedModels to TF Serving or TF Lite).
-signatures for inference are not expressive enough to support fine-tuning,
+Signatures for inference are not expressive enough to support fine-tuning,
 and [`tf.function`](https://www.tensorflow.org/api_docs/python/tf/function)
 provides a more natural and expressive
 [Python API](https://www.tensorflow.org/tutorials/customization/performance)
@@ -50,7 +50,8 @@ building code.
 
 Some amount of adaptation will be needed load Reusable SavedModels into
 or save them from any given model-building API. For Keras,
-`hub.KerasLayer` provides the loading, and Keras's built-in saving in the
+[hub.KerasLayer](https://www.tensorflow.org/hub/api_docs/python/hub/KerasLayer)
+provides the loading, and Keras's built-in saving in the
 SavedModel format has been redesigned for TF2 with the goal of providing
 a superset of this interface (see the
 [RFC](https://github.com/tensorflow/community/blob/master/rfcs/20190509-keras-saved-model.md)
