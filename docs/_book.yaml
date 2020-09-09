@@ -32,8 +32,6 @@ upper_tabs:
         path: /hub/model_compatibility
       - title: Common issues
         path: /hub/common_issues
-      - title: Community and support
-        path: /hub/community
       # Asset types available on tfhub.dev
       - heading: Asset types
       - title: SavedModels for TensorFlow 2

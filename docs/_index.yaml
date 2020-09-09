@@ -108,20 +108,19 @@ landing_page:
       <hr><br>Community
     description: Join the TensorFlow Hub community
     items:
-    - heading: Ask a question on Stack Overflow
-      classname: hub-docs-community
+    - heading: <span style="font-size:20px;">Ask a question on Stack Overflow</span>
       icon:
         path: /hub/images/stackoverflow_icon.svg
       path: https://stackoverflow.com/questions/tagged/tensorflow-hub
-    - heading: TensorFlow Hub on GitHub
+    - heading: <span style="font-size:20px;">TensorFlow Hub on GitHub</span>
       icon:
         path: /hub/images/github_icon.svg
       path: https://github.com/tensorflow/hub
-    - heading: Contribute models
+    - heading: <span style="font-size:20px;">Contribute models</span>
       icon:
         name: publish
       path: https://tfhub.dev/publish
-    - heading: Community discussion forum
+    - heading: <span style="font-size:20px;">Community discussion forum</span>
       icon:
         name: people
       path: https://groups.google.com/a/tensorflow.org/forum/#!forum/hub
