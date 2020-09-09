@@ -1,16 +1,19 @@
-<!--* freshness: { owner: 'arnoegw' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2020-09-09' } *-->
 
-# Hosting your own models
+# Hosting your own TensorFlow models
 
-TensorFlow Hub provides an open repository of trained models at
-[thub.dev](https://tfhub.dev). The `tensorflow_hub` library can load models from
-this repository and other HTTP based repositories of machine learning models. In
-particular the protocol allows to use the URL identifying the model both for the
-documentation of the model and the endpoint to fetch the model.
+This document describes the HTTP(S)-based protocol implemented by the
+`tensorflow_hub` library in order to load TensorFlow models from
+[thub.dev](https://tfhub.dev) and compatibe services into TensorFlow programs.
+(This does not cover other types of models that users download directly
+in the browser, e.g., TFLite.)
+
+Its key feature is to use the same URL in code to load a model and in a browser
+to view the model documentation.
 
 If you are interested in hosting your own repository of models that are loadable
-with the `tensorflow_hub` library, your HTTP distribution service should follow
-the following protocol.
+with the `tensorflow_hub` library, your HTTP(S) distribution service should
+follow this protocol.
 
 ## Protocol
 
