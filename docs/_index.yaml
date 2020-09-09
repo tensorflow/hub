@@ -3,68 +3,133 @@
 # Both link to ./overview.md and ./*.md for detailed docs.
 book_path: /hub/_book.yaml
 project_path: /hub/_project.yaml
-description: A repository and library for reusable machine learning. Download modules and reuse them
- in your TensorFlow program with minimal amount of code.
+description: >
+  TensorFlow Hub is a repository of trained machine learning models ready for fine-tuning and
+  deployable anywhere. Reuse trained models in your TensorFlow program with a minimal
+  amount of code.
 landing_page:
   custom_css_path: /site-assets/css/style.css
   rows:
-  - heading: >
-      TensorFlow Hub is a library for reusable machine learning modules.
+  - heading: TensorFlow Hub is a repository of trained machine learning models.
     items:
     - classname:
         tfo-landing-row-item-code-block
         devsite-landing-row-50
       description: >
-        TensorFlow Hub is a library for the publication, discovery, and
-        consumption of reusable parts of machine learning models. A
-        <em>module</em> is a self-contained piece of a TensorFlow graph, along
-        with its weights and assets, that can be reused across different tasks in
-        a process known as transfer learning. Transfer learning can:
-        <ul style="padding-left: 20px;">
-          <li>Train a model with a smaller dataset,</li>
-          <li>Improve generalization, and</li>
-          <li>Speed up training.</li>
-        </ul>
-        <div class="devsite-landing-row-item-buttons">
-          <a class="button button-primary" href="https://tfhub.dev">Browse modules on tfhub.dev</a>
-        </div>
+        TensorFlow Hub is a repository of trained machine learning models ready for fine-tuning and
+        deployable anywhere. Reuse trained models like BERT and Faster R-CNN with just a few lines of code.
+      list:
+      - heading: See the guide
+        description: Learn about how to use TensorFlow Hub and how it works.
+        path: /hub/overview
+        icon:
+          path: /hub/images/guide_basics.png
+      - heading: See tutorials
+        description: Tutorials show you end-to-end examples using TensorFlow Hub.
+        path: /hub/tutorials
+        icon:
+          path: /site-assets/images/marketing/learn/lite-pick.svg
+      - heading: See models
+        description: Find trained TF, TFLite, and TF.js models for your use case.
+        path: https://tfhub.dev
+        icon:
+          path: /site-assets/images/marketing/learn/js-run.svg
       code_block: |
         <pre class = "prettyprint">
-          !pip install "tensorflow_hub>=0.6.0"
-          !pip install "tensorflow>=2.0.0"
+          !pip install --upgrade tensorflow_hub
 
-          import tensorflow as tf
           import tensorflow_hub as hub
 
-          module_url = "https://tfhub.dev/google/nnlm-en-dim128/2"
-          embed = hub.KerasLayer(module_url)
-          embeddings = embed(["A long sentence.", "single-word",
-                              "http://example.com"])
-          print(embeddings.shape)  #(3,128)
-        </pre>
+          model = hub.KerasLayer("https://tfhub.dev/google/nnlm-en-dim128/2")
+          embeddings = model(["The rain in Spain.", "falls",
+                              "mainly", "In the plain!"])
 
-  - classname: devsite-landing-row-cards
+          print(embeddings.shape)  #(4,128)
+        </pre>
+  - options:
+    - cards
+    - centered-header
+    heading: >
+      <hr><br>Models
+    description: >
+      Find trained models from the TensorFlow community on <a href="https://tfhub.dev">tfhub.dev</a>
     items:
-    - heading: tfhub.dev
-      image_path: /resources/images/hub-card-16x9.png
-      path: https://tfhub.dev
-      buttons:
-      - label: Browse modules
-        path: https://tfhub.dev
-    - heading: Introducing TensorFlow Hub
-      image_path: /resources/images/tf-logo-card-16x9.png
-      path: https://blog.tensorflow.org/2018/03/introducing-tensorflow-hub-library.html
-      buttons:
-      - label: Read on TensorFlow blog
-        path: https://blog.tensorflow.org/2018/03/introducing-tensorflow-hub-library.html
-    - heading: TensorFlow Hub at the Dev Summit
-      youtube_id: 3seWxHGnDqM
-      buttons:
-      - label: Watch the video
-        path: https://www.youtube.com/watch?v=3seWxHGnDqM
+      - heading: BERT
+        description: Check out BERT for NLP tasks including text classification and question answering.
+        path: https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/2
+        image_path: /hub/images/bert.png
+      - heading: Object detection
+        description: Use the Faster R-CNN Inception ResNet V2 640x640 model for detecting objects in images.
+        path: https://tfhub.dev/tensorflow/faster_rcnn/inception_resnet_v2_640x640/1
+        image_path: /hub/images/object_detection.png
+      - heading: Style transfer
+        description: Transfer the style of one image to another using the image style transfer model.
+        path: https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2
+        image_path: /hub/images/style_transfer.png
+      - heading: On-device food classifier
+        description: Use this TFLite model to classify photos of food on a mobile device.
+        path: https://tfhub.dev/google/lite-model/aiy/vision/classifier/food_V1/1
+        image_path: /hub/images/food.png
+  - options:
+    - cards
+    - centered-header
+    heading: >
+      <hr><br>News & announcements
+    description: >
+      Check out <a href="https://blog.tensorflow.org/search?label=TensorFlow+Hub">our blog</a> for more announcements and view the latest <a href="https://twitter.com/search?q=%23TFHub%20from%3ATensorFlow&src=typed_query&f=live">#TFHub updates</a> on Twitter
+    items:
+      - heading: "From singing to musical scores: Estimating pitch with SPICE and Tensorflow Hub"
+        description: >
+          Learn how to use the SPICE model to automatically transcribe sheet music from live audio.
+        path: https://blog.tensorflow.org/2020/06/estimating-pitch-with-spice-and-tensorflow-hub.html
+        image_path: /hub/images/spice_blog.png
+        buttons:
+        - label: Read the blog<span class="material-icons icon-after" aria-hidden="true">arrow_forward</span>
+          path: https://blog.tensorflow.org/2020/06/estimating-pitch-with-spice-and-tensorflow-hub.html
+      - heading: "BigTransfer (BiT): State-of-the-art transfer learning for computer vision"
+        description: >
+            Use the BiT model for training state-of-the-art custom image classifiers.
+        path: https://blog.tensorflow.org/2020/05/bigtransfer-bit-state-of-art-transfer-learning-computer-vision.html
+        image_path: /hub/images/bit_blog.jpg
+        buttons:
+        - label: Read the blog<span class="material-icons icon-after" aria-hidden="true">arrow_forward</span>
+          path: https://blog.tensorflow.org/2020/05/bigtransfer-bit-state-of-art-transfer-learning-computer-vision.html
+      - heading: TensorFlow Hub at the Dev Summit
+        youtube_id: 3seWxHGnDqM
+        description: >
+          Learn about how to use TensorFlow Hub to find models for your use case.
+        buttons:
+        - label: Watch the video<span class="material-icons icon-after" aria-hidden="true">north_east</span>
+          path: https://www.youtube.com/watch?v=3seWxHGnDqM
+  - options:
+    - cards
+    - centered-header
+    heading: >
+      <hr><br>Community
+    description: Join the TensorFlow Hub community
+    items:
+    - heading: Ask a question on Stack Overflow
+      classname: hub-docs-community
+      icon:
+        path: /hub/images/stackoverflow_icon.svg
+      path: https://stackoverflow.com/questions/tagged/tensorflow-hub
     - heading: TensorFlow Hub on GitHub
-      image_path: /resources/images/github-card-16x9.png
+      icon:
+        path: /hub/images/github_icon.svg
       path: https://github.com/tensorflow/hub
+    - heading: Contribute models
+      icon:
+        name: publish
+      path: https://tfhub.dev/publish
+    - heading: Community discussion forum
+      icon:
+        name: people
+      path: https://groups.google.com/a/tensorflow.org/forum/#!forum/hub
+  - options:
+    - cta
+    items:
+    - heading: Get started with TensorFlow Hub
       buttons:
-      - label: View on GitHub
-        path: https://github.com/tensorflow/hub
+      - label: Find trained models <span class="material-icons icon-after" aria-hidden="true">north_east</span>
+        path: https://tfhub.dev
+        classname: button
