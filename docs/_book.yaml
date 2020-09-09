@@ -32,6 +32,23 @@ upper_tabs:
         path: /hub/model_compatibility
       - title: Common issues
         path: /hub/common_issues
+      # Publishing models to TF-Hub
+      - heading: Publishing models to TF-Hub
+      - title: Exporting a model
+        path: /hub/exporting_tf2_saved_model
+      - title: Writing model documentation
+        path: /hub/writing_model_documentation
+      - title: Become a publisher
+        path: /hub/becoming_a_publisher
+      - title: Contribute a model
+        path: /hub/contribute_a_model
+      - title: Creating a collection
+        path: /hub/creating_a_collection
+      - title: Data portability and deletion
+        path: /hub/portability_and_deletion
+      - title: "Deprecated: TF1 Hub format export"
+        path: /hub/exporting_hub_format
+        status: deprecated
       # Asset types available on tfhub.dev
       - heading: Asset types
       - title: SavedModels for TensorFlow 2
@@ -45,8 +62,6 @@ upper_tabs:
         path: /hub/contribute
       - title: Publish models on tfhub.dev
         path: /hub/publish
-      - title: Portability & Deletion of Data
-        path: /hub/portability_and_deletion
       # Advanced developer topics
       - heading: Developer info
       - title: Build from source

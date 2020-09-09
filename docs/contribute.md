@@ -1,6 +1,11 @@
 <!--* freshness: { owner: 'kempy' } *-->
 
-# Contribute on GitHub
+# Contributing
 
-Learn more about how to contribute to the `tensorflow/hub` project
-[on GitHub](https://github.com/tensorflow/hub/blob/master/CONTRIBUTING.md).
+To learn more about how to publish a model or model collection on
+[tfhub.dev](https://tfhub.dev/) see the
+[becoming_a_publisher](becoming_a_publisher.md) guide.
+
+You can find more information of how to contribute to the
+[TensorFlow Hub library](https://github.com/tensorflow/hub) in our
+[GitHub contributing guide](https://github.com/tensorflow/hub/blob/master/CONTRIBUTING.md).
