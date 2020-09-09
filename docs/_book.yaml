@@ -68,7 +68,7 @@ upper_tabs:
       contents:
       - include: /hub/api_docs/python/_toc.yaml
     # [Models]
-    - name: Models
+    - name: "Models ↗"
       contents:
       - title: Models
         path: https://tfhub.dev
