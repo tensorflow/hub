@@ -1,62 +1,77 @@
 toc:
 - heading: "Getting started"
+  style: divider
 - title: Overview
   path: /hub/tutorials/_index.yaml
+
 - heading: "Text Tutorials"
+  style: divider
 - title: Text classification
   path: /hub/tutorials/tf2_text_classification
-- title: Text cookbook
-  path: /hub/tutorials/text_cookbook
-- title: Nearest neighbor index for real-time semantic search
+- title: "BERT: Sentiment classification"
+  path: https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb
+  status: external
+- title: Real-time semantic search
   path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
-- title: Semantic similarity
-  path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
-- title: Text classification on Kaggle
-  path: /hub/tutorials/text_classification_with_tf_hub_on_kaggle
-- title: Bangla article classifier
-  path: /hub/tutorials/bangla_article_classifier
-- title: Explore text embeddings
-  path: /hub/tutorials/cord_19_embeddings_keras
-- title: Retrieval based question answering
+- title: Question answering
   path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
-- title: Multilingual universal sentence encoder
-  path: /hub/tutorials/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder
+- title: "Additional text tutorials"
+  style: accordion
+  section:
+  - title: Text cookbook
+    path: /hub/tutorials/text_cookbook
+  - title: Semantic similarity
+    path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
+  - title: Text classification on Kaggle
+    path: /hub/tutorials/text_classification_with_tf_hub_on_kaggle
+  - title: Bangla article classifier
+    path: /hub/tutorials/bangla_article_classifier
+  - title: Explore text embeddings
+    path: /hub/tutorials/cord_19_embeddings_keras
+  - title: Retrieval based question answering
+    path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
+  - title: Multilingual universal sentence encoder
+    path: /hub/tutorials/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder
 
 - heading: "Image Tutorials"
-- title: Retraining an image classifier
+  style: divider
+- title: Image classification
   path: /hub/tutorials/tf2_image_retraining
+- title: Style transfer
+  path: /hub/tutorials/tf2_arbitrary_image_stylization
 - title: Object detection
   path: /hub/tutorials/tf2_object_detection
-- title: Arbitrary image stylization
-  path: /hub/tutorials/tf2_arbitrary_image_stylization
-- title: Image feature matching
-  path: /hub/tutorials/tf_hub_delf_module
-- title: Face generation and embedding
+- title: GANs for image generation
   path: /hub/tutorials/tf_hub_generative_image_module
-- title: Image super resolution
-  path: /hub/tutorials/image_enhancing
-- title: "CropNet: Cassava Disease Detection"
-  path: /hub/tutorials/cropnet_cassava
-- title: Boundless GAN
-  path: /hub/tutorials/boundless
-
-
-- heading: "Video Tutorials"
-- title: Action recognition
-  path: /hub/tutorials/action_recognition_with_tf_hub
-- title: Video interpolation
-  path: /hub/tutorials/tweening_conv3d
-- title: Text-to-video retrieval
-  path: /hub/tutorials/text_to_video_retrieval_with_s3d_milnce
+- title: "Additional image tutorials"
+  style: accordion
+  section:
+  - title: "CropNet: Cassava Disease Detection"
+    path: /hub/tutorials/cropnet_cassava
+  - title: Boundless GAN
+    path: /hub/tutorials/boundless
 
 - heading: "Audio Tutorials"
+  style: divider
 - title: Pitch recognition
   path: /hub/tutorials/spice
 
+- heading: "Video Tutorials"
+  style: divider
+- title: Action recognition
+  path: /hub/tutorials/action_recognition_with_tf_hub
+- title: "Additional video tutorials"
+  style: accordion
+  section:
+  - title: Video interpolation
+    path: /hub/tutorials/tweening_conv3d
+  - title: Text-to-video retrieval
+    path: /hub/tutorials/text_to_video_retrieval_with_s3d_milnce
 - title: "Tutorials (TF1)"
   style: accordion
   status: deprecated
   section:
+  - heading: "Image Tutorials"
   - title: Image classification
     path: /hub/tutorials/image_feature_vector
   - title: Object detection
@@ -67,6 +82,7 @@ toc:
     path: /hub/tutorials/bigbigan_with_tf_hub
   - title: S3 GAN image generation
     path: /hub/tutorials/s3gan_generation_with_tf_hub
+  - heading: "Text Tutorials"
   - title: Semantic similarity lite
     path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder_lite
   - title: Nearest neighbor index for real-time semantic search
