@@ -1,7 +1,7 @@
 # Publisher intel
 Intel
 
-[![Icon URL]](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Intel-logo.svg/248px-Intel-logo.svg.png)
+[![Icon URL]](https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Intel_logo_%282020%2C_light_blue%29.svg/200px-Intel_logo_%282020%2C_light_blue%29.svg.png)
 
 ## [Intel](https://intel.com)
 Intel Corporation is an American multinational corporation and technology company headquartered in Santa Clara, California, in Silicon Valley. 
