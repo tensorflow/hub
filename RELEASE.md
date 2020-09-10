@@ -13,8 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version 0.9.0-dev
+# Current version 0.10.0-dev
   * Under development
+
+# Current version 0.9.0
+  * Add SavedModel.LoadOptions to hub.KerasLayer API to pass to load_v2.
+  * Improved error messaging.
+  * Documentation improvements.
+  * Bug fixes.
 
 # Current version 0.8.0
   * Implemented make_nearest_neighbour_index tool.

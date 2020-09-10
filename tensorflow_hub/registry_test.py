@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import six
 import tensorflow as tf
 from tensorflow_hub import registry
 
@@ -35,21 +36,57 @@ class TestImpl(object):
     return self._execute(*args, **kwargs)
 
 
+def fail_fn(_):
+  raise AssertionError("fail_fn should not be called")
+
+
 class RegistryTest(tf.test.TestCase):
 
-  def testResolveInReverseOrder(self):
-    def fail(_):
-      raise AssertionError("should not be called")
-
+  def testResolveAlwaysSupported(self):
     r = registry.MultiImplRegister("test")
-    r.add_implementation(TestImpl(lambda _: True, lambda _: 0))
-    r.add_implementation(TestImpl(lambda x: x == 1, lambda _: 100))
-    r.add_implementation(TestImpl(lambda x: x == 2, fail))
-    r.add_implementation(TestImpl(lambda x: x == 2, lambda _: 200))
+    r.add_implementation(TestImpl(lambda _: True, lambda _: 100))
+    r.add_implementation(TestImpl(lambda _: False, fail_fn))
 
-    self.assertEqual(r(0), 0)
+    self.assertEqual(r(1), 100)
+
+  def testResolveWhenSupported(self):
+    r = registry.MultiImplRegister("test")
+    r.add_implementation(TestImpl(lambda x: x == 1, lambda _: 100))
+    r.add_implementation(TestImpl(lambda x: x == 2, lambda _: 200))
+    r.add_implementation(TestImpl(lambda _: False, fail_fn))
+
     self.assertEqual(r(1), 100)
     self.assertEqual(r(2), 200)
+
+  def testLogWhenContainsNotSupported(self):
+    if six.PY2:
+      return
+    with self.assertLogs(level="INFO") as logs:
+      r = registry.MultiImplRegister("test")
+      r.add_implementation(TestImpl(lambda x: x == 1, lambda _: 100))
+      r.add_implementation(TestImpl(lambda x: x == 2, lambda _: 200))
+      r.add_implementation(TestImpl(lambda _: False, fail_fn))
+
+      r(2)
+
+    self.assertEqual(
+        logs.output,
+        ["INFO:absl:test TestImpl does not support the provided handle."])
+
+  def testResolveInReverseOrder(self):
+    r = registry.MultiImplRegister("test")
+    r.add_implementation(TestImpl(lambda _: True, fail_fn))
+    r.add_implementation(TestImpl(lambda _: True, lambda _: 100))
+
+    self.assertEqual(r(1), 100)
+
+  def testResolveThrowsNoSupportedImplementation(self):
+    r = registry.MultiImplRegister("test")
+    r.add_implementation(TestImpl(lambda _: False, lambda _: 100))
+
+    self.assertRaisesRegex(
+        RuntimeError,
+        "Missing implementation that supports: test\(\*\(1,\), \*\*{}\)", r, 1)
 
 
 if __name__ == "__main__":

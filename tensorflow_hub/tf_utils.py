@@ -25,14 +25,6 @@ import uuid
 from absl import logging
 import tensorflow as tf
 
-from tensorflow_hub import tf_v1
-
-# TODO(b/73987364): It is not possible to extend feature columns without
-# depending on TensorFlow internal implementation details.
-# pylint: disable=g-direct-tensorflow-import
-from tensorflow.python.feature_column import feature_column_v2
-# pylint: enable=g-direct-tensorflow-import
-
 
 def read_file_to_string(filename):
   """Returns the entire contents of a file to a string.
@@ -40,7 +32,7 @@ def read_file_to_string(filename):
   Args:
     filename: string, path to a file
   """
-  return tf_v1.gfile.GFile(filename, mode="r").read()
+  return tf.compat.v1.gfile.GFile(filename, mode="r").read()
 
 
 def atomic_write_string_to_file(filename, contents, overwrite):
@@ -61,12 +53,12 @@ def atomic_write_string_to_file(filename, contents, overwrite):
   temp_pathname = (tf.compat.as_bytes(filename) +
                    tf.compat.as_bytes(".tmp") +
                    tf.compat.as_bytes(uuid.uuid4().hex))
-  with tf_v1.gfile.GFile(temp_pathname, mode="w") as f:
+  with tf.compat.v1.gfile.GFile(temp_pathname, mode="w") as f:
     f.write(contents)
   try:
-    tf_v1.gfile.Rename(temp_pathname, filename, overwrite)
+    tf.compat.v1.gfile.Rename(temp_pathname, filename, overwrite)
   except tf.errors.OpError:
-    tf_v1.gfile.Remove(temp_pathname)
+    tf.compat.v1.gfile.Remove(temp_pathname)
     raise
 
 
@@ -102,7 +94,7 @@ def get_timestamped_export_dir(export_dir_base):
     export_dir = os.path.join(
         tf.compat.as_bytes(export_dir_base),
         tf.compat.as_bytes(str(export_timestamp)))
-    if not tf_v1.gfile.Exists(export_dir):
+    if not tf.compat.v1.gfile.Exists(export_dir):
       # Collisions are still possible (though extremely unlikely): this
       # directory is not actually created yet, but it will be almost
       # instantly on return from this function.
@@ -134,7 +126,7 @@ def get_temp_export_dir(timestamped_export_dir):
 
 
 # Note: This is written from scratch to mimic the pattern in:
-# `tf_v1.estimator.LatestExporter._garbage_collect_exports()`.
+# `tf.compat.v1.estimator.LatestExporter._garbage_collect_exports()`.
 def garbage_collect_exports(export_dir_base, exports_to_keep):
   """Deletes older exports, retaining only a given number of the most recent.
 
@@ -150,7 +142,7 @@ def garbage_collect_exports(export_dir_base, exports_to_keep):
   if exports_to_keep is None:
     return
   version_paths = []  # List of tuples (version, path)
-  for filename in tf_v1.gfile.ListDirectory(export_dir_base):
+  for filename in tf.compat.v1.gfile.ListDirectory(export_dir_base):
     path = os.path.join(
         tf.compat.as_bytes(export_dir_base),
         tf.compat.as_bytes(filename))
@@ -160,7 +152,7 @@ def garbage_collect_exports(export_dir_base, exports_to_keep):
   oldest_version_path = sorted(version_paths)[:-exports_to_keep]
   for _, path in oldest_version_path:
     try:
-      tf_v1.gfile.DeleteRecursively(path)
+      tf.compat.v1.gfile.DeleteRecursively(path)
     except tf.errors.NotFoundError as e:
       logging.warn("Can not delete %s recursively: %s", path, e)
 
@@ -205,18 +197,3 @@ def absolute_path(path):
   represents an absolute Tensorflow filesystem location (e.g. <fs type>://).
   """
   return path if b"://" in tf.compat.as_bytes(path) else os.path.abspath(path)
-
-
-def fc2_implements_resources():
-  """Returns true if imported TF version implements resources for FCv2."""
-  if not hasattr(feature_column_v2, "DenseColumn"):
-    return False
-  if not hasattr(feature_column_v2, "_StateManagerImpl"):
-    return False
-  state_manager = feature_column_v2._StateManagerImpl(  # pylint: disable=protected-access
-      layer=None, trainable=False)
-  try:
-    state_manager.add_resource("COLUMN_DUMMY", "RESOURCE_DUMMY", True)
-  except NotImplementedError:
-    return False
-  return True

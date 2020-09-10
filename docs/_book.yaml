@@ -14,12 +14,16 @@ upper_tabs:
     # [Guide]
     - name: "Guide"
       contents:
+      # TF Hub Platform overview.
+      - heading: Getting Started
+      - title: Overview
+        path: /hub/overview
+      - title: Installation
+        path: /hub/installation
       # Python library usage information
       - heading: Using the library
       - title: Overview
-        path: /hub/overview
-      - title: Installation and usage
-        path: /hub/installation
+        path: /hub/lib_overview
       - title: Caching model downloads
         path: /hub/caching
       - title: Migration to TF2
@@ -28,8 +32,23 @@ upper_tabs:
         path: /hub/model_compatibility
       - title: Common issues
         path: /hub/common_issues
-      - title: Community and support
-        path: /hub/community
+      # Publishing models to TF-Hub
+      - heading: Publishing models to TF-Hub
+      - title: Exporting a model
+        path: /hub/exporting_tf2_saved_model
+      - title: Writing model documentation
+        path: /hub/writing_model_documentation
+      - title: Become a publisher
+        path: /hub/becoming_a_publisher
+      - title: Contribute a model
+        path: /hub/contribute_a_model
+      - title: Creating a collection
+        path: /hub/creating_a_collection
+      - title: Data portability and deletion
+        path: /hub/portability_and_deletion
+      - title: "Deprecated: TF1 Hub format export"
+        path: /hub/exporting_hub_format
+        status: deprecated
       # Asset types available on tfhub.dev
       - heading: Asset types
       - title: SavedModels for TensorFlow 2
@@ -43,8 +62,6 @@ upper_tabs:
         path: /hub/contribute
       - title: Publish models on tfhub.dev
         path: /hub/publish
-      - title: Portability & Deletion of Data
-        path: /hub/portability_and_deletion
       # Advanced developer topics
       - heading: Developer info
       - title: Build from source
@@ -64,7 +81,7 @@ upper_tabs:
       contents:
       - include: /hub/api_docs/python/_toc.yaml
     # [Models]
-    - name: Models
+    - name: "Models ↗"
       contents:
       - title: Models
         path: https://tfhub.dev

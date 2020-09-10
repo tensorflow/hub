@@ -1,4 +1,6 @@
-# Installation and usage notes
+<!--* freshness: { owner: 'arnoegw' } reviewed: '2020-09-09' *-->
+
+# Installation
 
 ## Installing tensorflow_hub
 
@@ -41,30 +43,17 @@ The pip packages `tf-nightly` and `tf-hub-nightly` are built automatically from
 the source code on github, with no release testing. This lets developers try out
 the latest code without [building from source](build_from_source.md).
 
-### Optional: Setting the cache location for downloads.
+```bash
+$ pip install tf-nightly
+$ pip install --upgrade tf-hub-nightly
+```
 
-By default, `tensorflow_hub` uses a system-wide, temporary directory to cache
-downloaded and uncompressed models. See [Caching](caching.md) for options to use
-other, possibly more persistent locations.
+## Next Steps
 
-## API stability
-
-Although we hope to prevent breaking changes, this project is still under active
-development and is not yet guaranteed to have a stable API or model format.
-
-## Fairness
-
-As in all of machine learning, [fairness](http://ml-fairness.com) is an
-[important](https://research.googleblog.com/2016/10/equality-of-opportunity-in-machine.html)
-consideration. Many pre-trained models are trained on large datasets. When
-reusing any model, it’s important to be mindful of what data the model was
-trained on (and whether there are any existing biases there), and how these
-might impact your use of it.
-
-## Security
-
-Since they contain arbitrary TensorFlow graphs, models can be thought of as
-programs.
-[Using TensorFlow Securely](https://github.com/tensorflow/tensorflow/blob/master/SECURITY.md)
-describes the security implications of referencing a model from an untrusted
-source.
+-   [Library overview](lib_overview.md)
+-   Tutorials:
+    -   [Text classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
+    -   [Image classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
+    -   Additional examples
+        [on GitHub](https://github.com/tensorflow/hub/blob/master/examples/README.md)
+-   Find models on [tfhub.dev](https://tfhub.dev)

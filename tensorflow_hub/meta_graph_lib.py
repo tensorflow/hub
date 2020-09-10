@@ -26,8 +26,6 @@ import re
 from absl import logging
 import tensorflow as tf
 
-from tensorflow_hub import tf_v1
-
 
 def prepend_name_scope(name, import_scope):
   """Prepends name scope to a name."""
@@ -96,9 +94,10 @@ def prune_unused_nodes(meta_graph, signature_def):
   """
   # Instantiate a temporary empty graph so that we have access to Graph API
   # and import the meta_graph.
-  graph = tf_v1.Graph()
+  graph = tf.compat.v1.Graph()
   with graph.as_default():
-    tf_v1.train.import_meta_graph(meta_graph, input_map={}, import_scope="")
+    tf.compat.v1.train.import_meta_graph(meta_graph, input_map={},
+                                         import_scope="")
     # Traverse from all outputs and mark all nodes.
     used_node_names = set()
     for _, tensor_def in signature_def.outputs.items():

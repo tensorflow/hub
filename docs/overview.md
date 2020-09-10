@@ -1,19 +1,29 @@
+<!--* freshness: { owner: 'kempy' } *-->
+
 # TensorFlow Hub
 
-TensorFlow Hub is a repository and library for reusable machine learning. The
-[tfhub.dev](https://tfhub.dev) repository provides many pre-trained models: text
-embeddings, image classification models, and more. The `tensorflow_hub` library
-lets you download and reuse them in your TensorFlow program with a minimum
-amount of code.
+TensorFlow Hub is an open repository and library for reusable machine learning.
+The [tfhub.dev](https://tfhub.dev) repository provides many pre-trained models:
+text embeddings, image classification models, TFJS/TFLite models and much more.
+The repository is open to
+[community contributors](https://tfhub.dev/s?subtype=publisher).
 
-Get started with TensorFlow Hub:
+The [`tensorflow_hub`](https://github.com/tensorflow/hub) library lets you
+download and reuse them in your TensorFlow program with a minimum amount of
+code.
 
--   [Install TensorFlow Hub](installation.md)
--   [TensorFlow Hub in TF2](tf2_saved_model.md)
--   [Legacy: TensorFlow Hub in TF1](tf1_hub_module.md)
--   Tutorials:
-    -   [Text classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
-    -   [Image classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
-    -   Additional examples
-        [on GitHub](https://github.com/tensorflow/hub/blob/master/examples/README.md)
--   Find models on [tfhub.dev](https://tfhub.dev)
+```python
+import tensorflow_hub as hub
+
+embed = hub.KerasLayer("https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1")
+embeddings = embed(["A long sentence.", "single-word", "http://example.com"])
+print(embeddings.shape, embeddings.dtype)
+```
+
+## Next Steps
+
+-   [Find models on tfhub.dev](https://tfhub.dev)
+-   [Publish models on tfhub.dev](publish.md)
+-   TensorFlow Hub library
+    -   [Install TensorFlow Hub](installation.md)
+    -   [Library overview](lib_overview.md)

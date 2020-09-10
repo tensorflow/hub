@@ -23,8 +23,6 @@ import os
 import tensorflow as tf
 import tensorflow_hub as hub
 
-from tensorflow_hub import tf_v1
-
 
 _EXTRA_COLLECTION = "exercise_drop_collection"
 
@@ -34,16 +32,16 @@ class SavedModelTest(tf.test.TestCase):
   def createSavedModel(self):
     model_dir = os.path.join(self.get_temp_dir(), "saved_model")
     with tf.Graph().as_default():
-      x = tf_v1.placeholder(dtype=tf.float32, shape=[None, 3])
-      w = tf_v1.get_variable("weights", shape=[])
+      x = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, 3])
+      w = tf.compat.v1.get_variable("weights", shape=[])
       y = x*w
-      tf_v1.add_to_collection(_EXTRA_COLLECTION, y)
+      tf.compat.v1.add_to_collection(_EXTRA_COLLECTION, y)
 
-      init_op = tf_v1.assign(w, 2)
+      init_op = tf.compat.v1.assign(w, 2)
 
-      with tf_v1.Session() as session:
+      with tf.compat.v1.Session() as session:
         session.run(init_op)
-        tf_v1.saved_model.simple_save(
+        tf.compat.v1.saved_model.simple_save(
             session,
             model_dir,
             inputs={"x": x},
@@ -59,7 +57,7 @@ class SavedModelTest(tf.test.TestCase):
     with tf.Graph().as_default():
       m = hub.Module(spec, tags=["serve"])
       y = m([[2, 4, 5]], signature="serving_default", as_dict=True)["y"]
-      with tf_v1.train.MonitoredSession() as session:
+      with tf.compat.v1.train.MonitoredSession() as session:
         self.assertAllEqual(session.run(y), [[4, 8, 10]])
 
 

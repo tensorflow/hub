@@ -24,8 +24,6 @@ import six
 import tensorflow as tf
 from tensorflow_hub import image_util
 from tensorflow_hub import module
-from tensorflow_hub import tf_utils
-from tensorflow_hub import tf_v1
 
 # TODO(b/73987364): It is not possible to extend feature columns without
 # depending on TensorFlow internal implementation details.
@@ -35,22 +33,13 @@ from tensorflow.python.feature_column import feature_column_v2
 # pylint: enable=g-direct-tensorflow-import
 
 
-if tf_utils.fc2_implements_resources():
+class DenseFeatureColumn(
+    feature_column._DenseColumn,  # pylint: disable=protected-access
+    feature_column_v2.DenseColumn):
 
-  # Use feature columns v2 if available.
-  class DenseFeatureColumn(
-      feature_column._DenseColumn,  # pylint: disable=protected-access
-      feature_column_v2.DenseColumn):
-
-    @property
-    def dtype(self):
-      return tf.float32
-else:
-  class DenseFeatureColumn(feature_column._DenseColumn):  # pylint: disable=protected-access
-
-    @property
-    def dtype(self):
-      return tf.float32
+  @property
+  def dtype(self):
+    return tf.float32
 
 
 _MODULE_RESOURCE_STRING = "module"
@@ -159,7 +148,7 @@ class _TextEmbeddingColumn(
 
   @property
   def _is_v2_column(self):
-    return tf_utils.fc2_implements_resources()
+    return True
 
   @property
   def parents(self):
@@ -199,7 +188,7 @@ class _TextEmbeddingColumn(
   @property
   def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
-    return {self.key: tf_v1.FixedLenFeature([1], tf.string)}
+    return {self.key: tf.compat.v1.FixedLenFeature([1], tf.string)}
 
   @property
   def _variable_shape(self):
@@ -358,7 +347,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
 
   @property
   def _is_v2_column(self):
-    return tf_utils.fc2_implements_resources()
+    return True
 
   @property
   def parents(self):
@@ -400,7 +389,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     else:
       height, width = image_util.get_expected_image_size(self.module_spec)
     input_shape = [height, width, 3]
-    return {self.key: tf_v1.FixedLenFeature(input_shape, tf.float32)}
+    return {self.key: tf.compat.v1.FixedLenFeature(input_shape, tf.float32)}
 
   @property
   def _variable_shape(self):
@@ -550,7 +539,7 @@ class _SparseTextEmbeddingColumn(
   @property
   def parse_example_spec(self):
     """Returns a `tf.Example` parsing spec as dict."""
-    return {self.key: tf_v1.VarLenFeature(tf.string)}
+    return {self.key: tf.compat.v1.VarLenFeature(tf.string)}
 
   @property
   def _variable_shape(self):

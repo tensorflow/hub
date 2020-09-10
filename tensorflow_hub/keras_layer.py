@@ -27,9 +27,6 @@ import tensorflow as tf
 
 from tensorflow_hub import module_v2
 
-# ATTENTION: This file uses private imports from TF2.
-# __init__ may not import this file if tensorflow is too old.
-
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import smart_cond
 from tensorflow.python.training.tracking import data_structures
@@ -84,8 +81,8 @@ class KerasLayer(tf.keras.layers.Layer):
   explicitly from Keras objects instead of relying on graph collections.
   This layer class does not support graph collections.
   Distributed training of the Estimator requires setting the option
-  `session_config.experimental.share_cluster_devices_in_session` within
-  the `tf.estimator.RunConfig`. (It becomes non-experimental in TF2.2.)
+  `session_config.share_cluster_devices_in_session` within the
+  `tf.estimator.RunConfig`. (This option was experimental from TF1.14 to TF2.1.)
 
   Note: The data types used by a saved model have been fixed at saving time.
   Using tf.keras.mixed_precision etc. has no effect on the saved model
@@ -119,13 +116,25 @@ class KerasLayer(tf.keras.layers.Layer):
       shapes of the callable *without* leading batch size. This must have the
       same nesting structure as the output of the callable object and cover all
       output tensors.
+    load_options: Optional, `tf.saved_model.LoadOptions` object that specifies
+      options for loading when a Python string is provided as `handle`. This
+      argument can only be used from TensorFlow 2.3 onwards.
     **kwargs: Forwarded to Keras' base Layer constructor.
   """
 
-  def __init__(self, handle, trainable=False,  # pylint: disable=invalid-name
-               arguments=None, _sentinel=None, tags=None, signature=None,
-               signature_outputs_as_dict=None, output_key=None,
-               output_shape=None, **kwargs):
+  def __init__(
+      self,
+      handle,
+      trainable=False,
+      arguments=None,
+      _sentinel=None,  # pylint: disable=invalid-name
+      tags=None,
+      signature=None,
+      signature_outputs_as_dict=None,
+      output_key=None,
+      output_shape=None,
+      load_options=None,
+      **kwargs):
     # Note: for compatibility with keras-model serialization this layer is
     # json-serializable. If you add or change arguments here, please also update
     # the `get_config` method.
@@ -144,7 +153,8 @@ class KerasLayer(tf.keras.layers.Layer):
       self._output_shape = data_structures.NoDependency(
           _convert_nest_to_shapes(output_shape))
 
-    self._func = load_module(handle, tags)
+    self._load_options = load_options
+    self._func = load_module(handle, tags, self._load_options)
     self._has_training_argument = func_has_training_argument(self._func)
     self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
 
@@ -354,6 +364,13 @@ class KerasLayer(tf.keras.layers.Layer):
     if self._signature_outputs_as_dict:
       config["signature_outputs_as_dict"] = self._signature_outputs_as_dict
 
+    # self._load_options is not stored in the config. Instead, the load
+    # options passed at the time when this layer gets reloaded from its config
+    # are applied to its own loading as well. That is because the only
+    # load option available at this time (July 2020) is
+    # `experimental_io_device`, which relates to the loading environment,
+    # and not to the interpretation of the loaded SavedModel.
+
     return config
 
   @property
@@ -389,14 +406,24 @@ def _convert_nest_from_shapes(x):
   return tf.nest.map_structure(_shape_as_tuple, x)
 
 
-def load_module(handle, tags=None):
+def load_module(handle, tags=None, load_options=None):
   if callable(handle):
     if tags is not None:
       raise ValueError("Passing a callable handle is mutually exclusive "
                        "with setting tags.")
+    if load_options is not None:
+      raise ValueError("Passing a callable handle is mutually exclusive "
+                       "with setting load_options.")
     return handle
   else:
-    return module_v2.load(handle, tags=tags)
+    try:
+      # pylint: disable=g-import-not-at-top
+      # pylint: disable=g-direct-tensorflow-import
+      from tensorflow.python.saved_model import load_context
+      set_load_options = load_options or load_context.get_load_options()
+    except ImportError:  # Expected before TF2.4.
+      set_load_options = load_options
+    return module_v2.load(handle, tags=tags, options=set_load_options)
 
 
 def func_has_training_argument(func):

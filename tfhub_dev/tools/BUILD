@@ -28,6 +28,7 @@ py_library(
         "validator.py",
     ],
     srcs_version = "PY2AND3",
+    visibility = ["//learning/brain/contrib/hub/tools/repository:__pkg__"],
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",
