@@ -34,7 +34,9 @@ ImageModuleInfo = image_module_info_pb2.ImageModuleInfo  # pylint: disable=inval
 def attach_image_module_info(image_module_info):
   """Attaches an ImageModuleInfo message from within a module_fn.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
+
+  THIS FUNCTION IS DEPRECATED.
 
   Args:
     image_module_info: an ImageModuleInfo message.
@@ -45,7 +47,9 @@ def attach_image_module_info(image_module_info):
 def get_image_module_info(module_or_spec, required=False):
   """Returns the module's attached ImageModuleInfo message, or None if missing.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format
+
+  THIS FUNCTION IS DEPRECATED.
 
   Args:
     module_or_spec: a hub.Module or module_spec object.

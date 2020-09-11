@@ -40,8 +40,10 @@ def as_module_spec(spec):
 def load_module_spec(path):
   """Loads a ModuleSpec from a TF Hub service or the filesystem.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels and hub.load(); see also hub.resolve().
+
+  THIS FUNCTION IS DEPRECATED.
 
   Args:
     path: string describing the location of a module. There are several
@@ -87,7 +89,7 @@ def export_module_spec(spec, path, checkpoint_path, name_transform_fn):
 class Module(object):
   """Part of a TensorFlow 1 model that can be transferred between models.
 
-  DEPRECATION NOTE: The hub.Module API works for TF1 only.
+  Warning: Deprecated. The hub.Module API works for TF1 only.
   For TF2, switch to plain SavedModels and hub.load().
 
   A Module represents a part of a TensorFlow graph that can be exported to disk
@@ -118,6 +120,8 @@ class Module(object):
   that they will be used with common TensorFlow conventions such as session
   initialization and restore, use of collections for variables, regularization
   losses and updates, etc.
+
+  THIS FUNCTION IS DEPRECATED.
   """
 
   def __init__(self, spec, trainable=False, name="module", tags=None):
@@ -489,9 +493,9 @@ def _prepare_outputs(dict_outputs, as_dict):
 def eval_function_for_module(spec, tags=None):
   """Context manager that yields a function to directly evaluate a hub.Module.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
-  For TF2, switch to plain SavedModels and hub.load().
-  Eager evalutaion in TF2 obviates the need for this helper.
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
+  For TF2, switch to plain SavedModels and hub.load(). Eager execution in
+  TF2 obviates the need for this helper.
 
   This creates a separate graph, in which all of the signatures of the module
   are instantiated. Then, it creates a session and initializes the module
@@ -507,6 +511,8 @@ def eval_function_for_module(spec, tags=None):
     # The module can be directly evaluated using f without constructing a graph.
     embeddings = f(["Hello world!",], signature="mysignature")
   ```
+
+  THIS FUNCTION IS DEPRECATED.
 
   Args:
     spec: A ModuleSpec defining the Module to instantiate or a path where to

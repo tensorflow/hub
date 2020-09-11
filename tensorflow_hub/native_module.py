@@ -156,7 +156,7 @@ class Loader(object):
 def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   """Creates a ModuleSpec from a function that builds the module's graph.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels.
 
   The `module_fn` is called on a new graph (not the current one) to build the
@@ -193,6 +193,8 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   for training with tags {"train"} and for inference with the empty set of tags.
   Using the empty set aligns the inference case with the default in
   Module.__init__().
+
+  THIS FUNCTION IS DEPRECATED.
 
   Args:
     module_fn: a function to build a graph for the Module.
@@ -236,10 +238,12 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
 def add_signature(name=None, inputs=None, outputs=None):
   """Adds a signature to the module definition.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels.
 
   NOTE: This must be called within a `module_fn` that is defining a hub.Module.
+
+  THIS FUNCTION IS DEPRECATED.
 
   Args:
     name: Signature name as a string. If omitted, it is interpreted as 'default'
@@ -275,7 +279,7 @@ def add_signature(name=None, inputs=None, outputs=None):
 def attach_message(key, message):
   """Adds an attached message to the module definition.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels.
 
   NOTE: This must be called within a `module_fn` that is defining a hub.Module.
@@ -303,6 +307,8 @@ def attach_message(key, message):
 
   For modules with multiple graph versions, each graph version stores separately
   what was attached from within the call to `module_fn` that defines its graph.
+
+  THIS FUNCTION IS DEPRECATED.
 
   Args:
     key: A string with the unique key to retrieve this message. Must start

@@ -24,7 +24,7 @@ import abc
 class ModuleSpec(object):
   """Represents the contents of a hub.Module before it has been instantiated.
 
-  DEPRECATION NOTE: This belongs to the hub.Module API and TF1 Hub format.
+  Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
   For TF2, switch to plain SavedModels and hub.load().
 
   A ModuleSpec is the blueprint used by `Module` to create one or more instances
@@ -34,6 +34,8 @@ class ModuleSpec(object):
 
   Note: Do not instantiate this class directly. Use `hub.load_module_spec` or
   `hub.create_module_spec`.
+
+  THIS FUNCTION IS DEPRECATED.
   """
   __metaclass__ = abc.ABCMeta
 
