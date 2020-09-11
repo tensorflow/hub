@@ -27,7 +27,7 @@ py_library(
         "__init__.py",
         "version.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":estimator",
