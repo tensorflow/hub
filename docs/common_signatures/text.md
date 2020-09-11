@@ -1,7 +1,11 @@
+<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-11' } *-->
+
 # Common Signatures for Text
 
-This page describes common signatures that should be implemented by modules
-for tasks that accept text inputs.
+This page describes common signatures that should be implemented by modules in
+the [TF1 Hub format](../tf1_hub_module.md) for tasks that accept text inputs.
+(For the [TF2 SavedModel format](../tf2_saved_model.md), see the analogous
+[SavedModel API](../common_saved_model_apis/text.md).)
 
 ## Text feature vector
 
@@ -37,3 +41,7 @@ a `float32` tensor of shape `[batch_size, N]`. This is often called
 Modules have been pre-trained on different domains and/or tasks,
 and therefore not every text feature vector module would be suitable for
 your problem. E.g.: some modules could have been trained on a single language.
+
+This interface does not allow fine-tuning of the text representation on TPUs,
+because it requires the module to instantiate both string processing and the
+trainable variables at the same time.

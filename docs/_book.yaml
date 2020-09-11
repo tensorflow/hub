@@ -32,6 +32,16 @@ upper_tabs:
         path: /hub/model_compatibility
       - title: Common issues
         path: /hub/common_issues
+      # SavedModel APIs
+      - heading: Common SavedModel APIs
+      - title: Overview
+        path: /hub/common_saved_model_apis/index.md
+      - title: Reusable SavedModels (for all tasks)
+        path: /hub/reusable_saved_models
+      - title: Image tasks
+        path: /hub/common_saved_model_apis/images
+      - title: Text tasks
+        path: /hub/common_saved_model_apis/text
       # Publishing models to TF-Hub
       - heading: Publishing models to TF-Hub
       - title: Exporting a model
@@ -68,8 +78,6 @@ upper_tabs:
         path: /hub/build_from_source
       - title: Hosting your own models
         path: /hub/hosting
-      - title: Reusable SavedModels
-        path: /hub/reusable_saved_models
     # [Tutorials]
     - name: Tutorials
       path: /hub/tutorials

@@ -1,22 +1,24 @@
-# Common Signatures for Modules
+<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-11' } *-->
+
+# Common Signatures for TF Hub Modules
 
 ## Introduction
 
-Modules for the same task should implement a common signature, so that module
-consumers can easily exchange them and find the best one for their problem.
+[TensorFlow Hub](https://tfhub.dev) hosts models for a variety of tasks. Models
+for the same task are encouraged to implement a common API so that model
+consumers can easily exchange them without modifying the code that uses them,
+even if they come from different publishers.
 
-This directory collects specifications of common signatures. We expect it
-to grow over time, as modules are created for a wider variety of tasks.
+The goal is to make exchanging different models for the same task as simple as
+switching a string-valued hyperparameter. With that, model consumers can easily
+find the best one for their problem.
 
-In the best case, the specification of a common signature provides strong enough
-guarantees such that consumers can call just `output = module(inputs)` without
-knowing anything about the module's internals. If some adaptation is
-unavoidable, we propose to supply library functions to encapsulate it, and
-document them along the signature.
+This directory collects specifications of common signatures for modules in the
+[TF1 Hub format](../tf1_hub_module.md).
 
-In any case, the goal is to make exchanging different modules for the same task
-as simple as switching a string-valued hyperparameter.
-
+Note that the TF1 Hub format has been **deprecated** in favor of the
+[TF2 SavedModel format](../tf2_saved_model.md) and its
+[Common SavedModel APIs](../common_saved_model_apis/index.md).
 
 ## Signatures
 

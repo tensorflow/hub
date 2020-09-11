@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-09' } *-->
+<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-11' } *-->
 
 # Reusable SavedModels
 
@@ -41,22 +41,28 @@ provides a more natural and expressive
 [Python API](https://www.tensorflow.org/tutorials/customization/performance)
 for the reused model.
 
-### Relation to model-building APIs
+### Relation to model-building libraries
 
-A Reusable SavedModel uses only TensorFlow 2 primitives, independent
-of any particular model-building API like Keras or Sonnet. This facilitates
-reuse across model-building APIs, free from dependencies on the original model
-building code.
+A Reusable SavedModel uses only TensorFlow 2 primitives, independent of any
+particular model-building library like Keras or Sonnet. This facilitates reuse
+across model-building libraries, free from dependencies on the original
+model-building code.
 
-Some amount of adaptation will be needed load Reusable SavedModels into
-or save them from any given model-building API. For Keras,
+Some amount of adaptation will be needed load Reusable SavedModels into or save
+them from any given model-building library. For Keras,
 [hub.KerasLayer](https://www.tensorflow.org/hub/api_docs/python/hub/KerasLayer)
-provides the loading, and Keras's built-in saving in the
-SavedModel format has been redesigned for TF2 with the goal of providing
-a superset of this interface (see the
+provides the loading, and Keras's built-in saving in the SavedModel format has
+been redesigned for TF2 with the goal of providing a superset of this interface
+(see the
 [RFC](https://github.com/tensorflow/community/blob/master/rfcs/20190509-keras-saved-model.md)
 from May 2019).
 
+### Relation to task-specific "Common SavedModel APIs"
+
+The interface definition on this page allows for any number and type of inputs
+and outputs. The [Common SavedModel APIs for TF
+Hub]../common_saved_model_apis/index.md) refine this general interface with
+usage conventions for specific tasks to make models easily interchangeable.
 
 ## Interface definition
 

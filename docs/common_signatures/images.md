@@ -1,7 +1,11 @@
+<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-11' } *-->
+
 # Common Signatures for Images
 
-This page describes common signatures that should be implemented by modules
-for image-related tasks.
+This page describes common signatures that should be implemented by modules in
+the [TF1 Hub format](../tf1_hub_module.md) for image-related tasks. (For the
+[TF2 SavedModel format](../tf2_saved_model.md), see the analogous
+[SavedModel API](../common_saved_model_apis/images.md).)
 
 Some modules can be used for more than one task (e.g., image classification
 modules tend to do some feature extraction on the way). Therefore, each module
