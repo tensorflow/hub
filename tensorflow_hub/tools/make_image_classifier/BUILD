@@ -25,7 +25,7 @@ package(
 py_library(
     name = "make_image_classifier_lib",
     srcs = ["make_image_classifier_lib.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
@@ -37,7 +37,7 @@ py_library(
 py_library(
     name = "make_image_classifier_main",
     srcs = ["make_image_classifier.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":make_image_classifier_lib",
         "//tensorflow_hub:expect_tensorflow_installed",
