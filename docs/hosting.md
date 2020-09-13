@@ -1,34 +1,128 @@
 <!--* freshness: { owner: 'maringeo' reviewed: '2020-09-09' } *-->
 
-# Hosting your own TensorFlow models
+# Model hosting protocol
 
-This document describes the HTTP(S)-based protocol implemented by the
+This document describes the URL coventions used when hosting all model types on
+[thub.dev](https://tfhub.dev) - TFJS, TF Lite and TensorFlow models. It also
+describes describes the HTTP(S)-based protocol implemented by the
 `tensorflow_hub` library in order to load TensorFlow models from
 [thub.dev](https://tfhub.dev) and compatibe services into TensorFlow programs.
-(This does not cover other types of models that users download directly
-in the browser, e.g., TFLite.)
 
 Its key feature is to use the same URL in code to load a model and in a browser
 to view the model documentation.
 
-If you are interested in hosting your own repository of models that are loadable
-with the `tensorflow_hub` library, your HTTP(S) distribution service should
-follow this protocol.
+## General URL conventions
 
-## Protocol
+[thub.dev](https://tfhub.dev) supports the following URL formats:
 
-When a URL such as `https://example.com/model` is used to identify a model to
-load or instantiate, the model resolver will attempt to download a compressed
-tarball from the URL after appending a query parameter
-`?tf-hub-format=compressed`.
+*   TF Hub publishers follow `https://tfhub.dev/<publisher>`
+*   TF Hub collections follow
+    `https://tfhub.dev/<publisher>/collection/<collection_name>`
+*   TF Hub models have versioned url
+    `https://tfhub.dev/<publisher>/<model_name>/<version>` and unversioned url
+    `https://tfhub.dev/<publisher>/<model_name>` that resolves to the latest
+    version of the model.
 
-The query param is to be interpreted as a comma separated list of the model
-formats that the client is interested in. For now only the "compressed" format
-is defined.
+TF Hub models can be downloaded as compressed assets by appending URL parameters
+to the [thub.dev](https://tfhub.dev) model URL. However, the URL paramters
+required to achieve that depend on the model type:
 
-The **compressed** format indicates that the client expects a `tar.gz` archive
-with the model contents. The root of the archive is the root of the model
-directory and should contain a SavedModel, as in this example:
+*   TensorFlow models (both SavedModel and TF1 Hub formats): append
+    `?tf-hub-format=compressed` to the TensorFlow model url.
+*   TFJS models: append `?tfjs-format=compressed` to the TFJS model url to
+    download the compressed or `/model.json?tfjs-format=file` to read if from
+    remote storage.
+*   TF lite models: append `?lite-format=tflite` to the TF Lite model url.
+
+For example:
+
+<table style="width: 100%;">
+  <tr style="text-align: center">
+    <col style="width: 10%" />
+    <col style="width: 20%" />
+    <col style="width: 15%" />
+    <col style="width: 30%" />
+    <col style="width: 25%" />
+    <td style="text-align: center; background-color: #D0D0D0">Type</td>
+    <td style="text-align: center; background-color: #D0D0D0">Model URL</td>
+    <td style="text-align: center; background-color: #D0D0D0">Download type</td>
+    <td style="text-align: center; background-color: #D0D0D0">URL param</td>
+    <td style="text-align: center; background-color: #D0D0D0">Download URL</td>
+  </tr>
+  <tr>
+    <td>TensorFlow (SavedModel, TF1 Hub format)</td>
+    <td>https://tfhub.dev/google/spice/2</td>
+    <td>.tar.gz</td>
+    <td>?tf-hub-format=compressed </td>
+    <td>https://tfhub.dev/google/spice/2?tf-hub-format=compressed</td>
+  </tr>
+  <tr>
+    <td>TF Lite</td>
+    <td>https://tfhub.dev/google/lite-model/spice/1</td>
+    <td>.tflite</td>
+    <td>?lite-format=tflite</td>
+    <td>https://tfhub.dev/google/lite-model/spice/1?lite-format=tflite</td>
+  </tr>
+  <tr>
+    <td>TF.js</td>
+    <td>https://tfhub.dev/google/tfjs-model/spice/2/default/1</td>
+    <td>.tar.gz</td>
+    <td>?tfjs-format=compressed</td>
+    <td>https://tfhub.dev/google/tfjs-model/spice/2/default/1?tfjs-format=compressed</td>
+  </tr>
+</table>
+
+Additionally, some models also are hosted in a format that can be read directly
+from remote storage without being downloaded. This is especially useful if there
+is no local storage available, such as running a TF.js model in the browser. Be
+conscious that reading models that are hosted remotely without being downloaded
+locally may increase latency.
+
+<table style="width: 100%;">
+  <tr style="text-align: center">
+    <col style="width: 10%" />
+    <col style="width: 20%" />
+    <col style="width: 15%" />
+    <col style="width: 30%" />
+    <col style="width: 25%" />
+    <td style="text-align: center; background-color: #D0D0D0">Type</td>
+    <td style="text-align: center; background-color: #D0D0D0">Model URL</td>
+    <td style="text-align: center; background-color: #D0D0D0">File type</td>
+    <td style="text-align: center; background-color: #D0D0D0">URL param</td>
+    <td style="text-align: center; background-color: #D0D0D0">File URL</td>
+  </tr>
+  <tr>
+  <tr>
+    <td>TF.js</td>
+    <td>https://tfhub.dev/google/tfjs-model/spice/2/default/1</td>
+    <td>.json</td>
+    <td>?tfjs-format=file</td>
+    <td>https://tfhub.dev/google/tfjs-model/spice/2/default/1/model.json?tfjs-format=file</td>
+  </tr>
+</table>
+
+## tensorflow_hub library protocol
+
+This section describes how we host models on [thub.dev](https://tfhub.dev) for
+use with the tensorflow_hub library. If you want to host your own model
+repository to work with the tensorflow_hub library, your HTTP(s) distribution
+service should provide an implementation of this protocol.
+
+Note that this section does not address hosting TF Lite and TFJS models since
+they are not downloaded via the `tensorflow_hub` library. For more information
+on hosting these model types, please check [above](#general-url-conventions).
+
+Models are stored on [thub.dev](https://tfhub.dev) as compressed tar.gz files.
+The tensorflow_hub library automatically downloads the compressed model. They
+can also be manually downloaded by appending the `?tf-hub-format=compressed` to
+the model url, for example:
+
+```shell
+wget https://tfhub.dev/tensorflow/albert_en_xxlarge/1?tf-hub-format=compressed
+```
+
+The root of the archive is the root of the model directory and should contain a
+SavedModel, as in this example:
 
 ```shell
 # Create a compressed model from a SavedModel directory.
@@ -44,10 +138,16 @@ $ tar -tf model.tar.gz
 ./saved_model.pb
 ```
 
-Tarballs for use with the deprecated `hub.Module()` API from TF1 will also
-contain a `./tfhub_module.pb` file. The `hub.load()` API for TF2 SavedModels
-ignores such a file.
+Tarballs for use with the legacy
+[TF1 Hub format](https://www.tensorflow.org/hub/tf1_hub_module) will also
+contain a `./tfhub_module.pb` file.
 
-The `tensorflow_hub` library expects that model URLs are versioned and that the
+When one of `tensorflow_hub` library model loading APIs is invoked
+([hub.KerasLayer](https://www.tensorflow.org/hub/api_docs/python/hub/KerasLayer),
+[hub.load](https://www.tensorflow.org/hub/api_docs/python/hub/load), etc) the
+library downloads the model, uncomrepsses the model and caches it locally. The
+`tensorflow_hub` library expects that model URLs are versioned and that the
 model content of a given version is immutable, so that it can be cached
-indefinitely.
+indefinitely. Learn more about [caching models](caching.md).
+
+![](https://raw.githubusercontent.com/tensorflow/hub/master/docs/images/library_download_cache.png)
