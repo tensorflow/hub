@@ -50,6 +50,7 @@ py_binary(
     name = "make_image_classifier",
     srcs = ["make_image_classifier.py"],
     python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":make_image_classifier_main",
     ],

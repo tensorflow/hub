@@ -18,6 +18,7 @@ py_binary(
     name = "search",
     srcs = ["search.py"],
     python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":search_lib",
         ":utils",
@@ -29,6 +30,7 @@ py_binary(
 py_library(
     name = "search_lib",
     srcs = ["search.py"],
+    srcs_version = "PY3",
     deps = [
         ":utils",
         "//tensorflow_hub:expect_numpy_installed",
@@ -40,6 +42,7 @@ py_library(
 py_library(
     name = "utils",
     srcs = ["utils.py"],
+    srcs_version = "PY3",
     deps = [
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",

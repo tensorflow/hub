@@ -25,7 +25,7 @@ package(
 py_library(
     name = "embedding_generator",
     srcs = ["embedding_generator.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         "//tensorflow_hub:expect_apache_beam_installed",
         "//tensorflow_hub:expect_sklearn_installed",
@@ -38,7 +38,7 @@ py_library(
 py_library(
     name = "index_builder",
     srcs = ["index_builder.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         "//tensorflow_hub:expect_annoy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
@@ -49,7 +49,7 @@ py_library(
 py_library(
     name = "similarity_finder",
     srcs = ["similarity_finder.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         "//tensorflow_hub:expect_annoy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
@@ -62,6 +62,7 @@ py_binary(
     name = "make_nearest_neighbour_index",
     srcs = ["make_nearest_neighbour_index.py"],
     python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":embedding_generator",
         ":index_builder",

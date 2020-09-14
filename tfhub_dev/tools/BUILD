@@ -18,7 +18,7 @@ py_binary(
     name = "validator",
     srcs = ["validator.py"],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [":validator_lib"],
 )
 
@@ -27,7 +27,7 @@ py_library(
     srcs = [
         "validator.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//learning/brain/contrib/hub/tools/repository:__pkg__"],
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
@@ -39,7 +39,7 @@ py_test(
     name = "validator_test",
     srcs = ["validator_test.py"],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":validator_lib",
         "//tensorflow_hub:expect_tensorflow_installed",

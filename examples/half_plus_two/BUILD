@@ -18,7 +18,7 @@ py_binary(
     name = "export",
     srcs = ["export.py"],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",
@@ -30,7 +30,7 @@ py_test(
     srcs = ["half_plus_two_test.py"],
     data = [":export"],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",

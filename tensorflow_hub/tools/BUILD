@@ -21,5 +21,5 @@ package(
 py_library(
     name = "empty_package",
     srcs = ["__init__.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
 )
