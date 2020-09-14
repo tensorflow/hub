@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'arnoegw' } reviewed: '2020-09-09' *-->
+<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-09' } *-->
 
 # Installation
 
