@@ -1,10 +1,10 @@
-<!--* freshness: { owner: 'kempy' } *-->
+<!--* freshness: { owner: 'kempy' reviewed: '2020-09-14' } *-->
 
 # TensorFlow Hub
 
 TensorFlow Hub is an open repository and library for reusable machine learning.
 The [tfhub.dev](https://tfhub.dev) repository provides many pre-trained models:
-text embeddings, image classification models, TFJS/TFLite models and much more.
+text embeddings, image classification models, TF.js/TFLite models and much more.
 The repository is open to
 [community contributors](https://tfhub.dev/s?subtype=publisher).
 
@@ -15,15 +15,18 @@ code.
 ```python
 import tensorflow_hub as hub
 
-embed = hub.KerasLayer("https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1")
-embeddings = embed(["A long sentence.", "single-word", "http://example.com"])
-print(embeddings.shape, embeddings.dtype)
+model = hub.KerasLayer("https://tfhub.dev/google/nnlm-en-dim128/2")
+embeddings = model(["The rain in Spain.", "falls",
+                    "mainly", "In the plain!"])
+
+print(embeddings.shape)  #(4,128)
 ```
 
 ## Next Steps
 
 -   [Find models on tfhub.dev](https://tfhub.dev)
--   [Publish models on tfhub.dev](publish.md)
+-   [Publish models on tfhub.dev](becoming_a_publisher.md)
 -   TensorFlow Hub library
     -   [Install TensorFlow Hub](installation.md)
     -   [Library overview](lib_overview.md)
+-   [Follow tutorials](tutorials/README.md)

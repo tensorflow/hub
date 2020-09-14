@@ -24,12 +24,17 @@ upper_tabs:
       - heading: Using the library
       - title: Overview
         path: /hub/lib_overview
+      - title: SavedModels for TensorFlow 2
+        path: /hub/tf2_saved_model
       - title: Caching model downloads
         path: /hub/caching
       - title: Migration to TF2
         path: /hub/migration_tf2
       - title: Model compatibility for TF1/TF2
         path: /hub/model_compatibility
+      - title: "Deprecated: TF1 Hub format"
+        path: /hub/tf1_hub_module
+        status: deprecated
       # SavedModel APIs
       - heading: Common SavedModel APIs
       - title: Overview
@@ -57,19 +62,6 @@ upper_tabs:
       - title: "Deprecated: TF1 Hub format export"
         path: /hub/exporting_hub_format
         status: deprecated
-      # Asset types available on tfhub.dev
-      - heading: Asset types
-      - title: SavedModels for TensorFlow 2
-        path: /hub/tf2_saved_model
-      - title: "Deprecated: TF1 Hub format"
-        path: /hub/tf1_hub_module
-        status: deprecated
-      # Contributing to TF-Hub - either models or code
-      - heading: Contributing
-      - title: Contribute on GitHub
-        path: /hub/contribute
-      - title: Publish models on tfhub.dev
-        path: /hub/publish
       # Advanced developer info
       - heading: Advanced developer info
       - title: Model formats
@@ -80,6 +72,8 @@ upper_tabs:
         path: /hub/build_from_source
       - title: Common issues
         path: /hub/common_issues
+      - title: Contribute to TensorFlow Hub
+        path: /hub/contribute
     # [Tutorials]
     - name: Tutorials
       path: /hub/tutorials
