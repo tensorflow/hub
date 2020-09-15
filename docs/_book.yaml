@@ -83,7 +83,7 @@ upper_tabs:
     - name: API
       skip_translation: true
       contents:
-      - include: /hub/api_docs/python/_toc.yaml
+      - include: /hub/api_docs/python/hub/_toc.yaml
     # [Models]
     - name: "Models ↗"
       contents:
