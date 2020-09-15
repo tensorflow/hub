@@ -83,9 +83,10 @@ Reusable SavedModels for image feature vectors are used in
 
 **Image classification** maps the pixels of an image to linear scores (logits)
 for membership in the classes of a taxonomy _selected by the module publisher_.
-This allows consumers to draw conclusions from the particular classification
-learned by the publisher module, and not just its underlying features (for that,
-see [Image Feature Vector](#feature-vector)).
+This allows model consumers to to draw conclusions from the particular
+classification learned by the publisher module. (For image classification with
+a new set of classes, it is common to reuse an
+[Image Feature Vector](#feature-vector) model with a new classifier instead.)
 
 A Reusable SavedModel for image classification has a `__call__` method on the
 root object that maps a batch of images to a batch of logits. It can be used
