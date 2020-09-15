@@ -29,7 +29,7 @@ landing_page:
     - description: >
         <h2 class="tfo-landing-page-heading no-link">For beginners</h2>
         If you are unfamiliar with machine learning and TensorFlow, you can start by getting
-        an overview of how to classify images and text or by stylizing your own pictures like famous artists:
+        an overview of how to classify images and text, detecting objects in images, or by stylizing your own pictures like famous artists:
 
   - classname: devsite-landing-row-100
     items:
@@ -38,11 +38,13 @@ landing_page:
         <a href="/hub/tutorials/tf2_image_retraining"><h3 class="no-link">Retraining an Image Classifier</h3></a>
         Build a Keras model on top of a pre-trained image classifier to distinguish flowers.
       path: /hub/tutorials/tf2_image_retraining
+      image_path: /hub/images/image_classification.png
     - classname: tfo-landing-page-card
       description: >
         <a href="/hub/tutorials/tf2_text_classification"><h3 class="no-link">Text Classification</h3></a>
-        Classify movie reviews as either <i>positive</i> or <i>negative</i>.
+        Classify movie reviews as either <i>positive</i> or <i>negative</i> starting from pre-trained text embeddings.
       path: /hub/tutorials/tf2_text_classification
+      image_path: /hub/images/colab_logo.svg
     - classname: tfo-landing-page-card
       description: >
         <a href="/hub/tutorials/tf2_arbitrary_image_stylization">
@@ -50,48 +52,41 @@ landing_page:
         </a>
         Let a neural network redraw an image in the style of Picasso, van Gogh or like your own picture.
       path: /hub/tutorials/tf2_arbitrary_image_stylization
+      image_path: /hub/images/style_transfer.png
+    - classname: tfo-landing-page-card
+      description: >
+        <a href="/hub/tutorials/object_detection"><h3 class="no-link">Object Detection</h3></a>
+        Detect objects in images using modules like FasterRCNN or SSD.
+      path: /hub/tutorials/tf2_object_detection
+      image_path: /hub/images/object_detection.png
 
   # More advanced users
   - classname: devsite-landing-row-100
     items:
     - description: >
         <h2 class="tfo-landing-page-heading no-link">For experienced developers</h2>
-        If you are familiar with TensorFlow, you can take a look at more advanced tutorials.
+        If you are familiar with TensorFlow, you can take a look at more advanced tutorials.<br>
         <h3 class="tfo-landing-page-heading no-link">Text-related tutorials</h3>
-
   - classname: devsite-landing-row-100
     items:
-    - classname: tfo-landing-page-card
-      description: >
-        <a href="/hub/tutorials/cord_19_embeddings_keras"><h3 class="no-link">CORD-19 Text Embedding</h3></a>
-        Explore the CORD-19 embedding by analyzing semantically similar words and classifying scientific articles.
-      path: /hub/tutorials/cord_19_embeddings_keras
-    - classname: tfo-landing-page-card
-      description: >
-        <a href="/hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa"><h3 class="no-link">Multilingual Universal Sentence Encoder Q&A</h3></a>
-        Answer questions from the <a href="https://rajpurkar.github.io/SQuAD-explorer/">SQuAD</a> dataset.
-      path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
-
-  - classname: devsite-landing-row-100
-    items:
-    - classname: tfo-landing-page-card
-      description: >
-        <a href="/hub/tutorials/tf2_semantic_approximate_nearest_neighbors"><h3 class="no-link">Semantic Nearest Neighbor</h3></a>
-        Find news headlines that are semantically close to a given query.
-      path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
     - classname: tfo-landing-page-card
       description: >
         <a href="/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder"><h3 class="no-link">Semantic Similarity</h3></a>
         Classify and semantically compare sentences with the Universal Sentence Encoder.
       path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
-
-  - classname: devsite-landing-row-100
-    items:
+      image_path: /hub/images/similarity.png
     - classname: tfo-landing-page-card
       description: >
-        <a href="https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder.ipynb"><h3 class="no-link">Cross-Lingual Similarity and Semantic Search Engine with Multilingual Universal Sentence Encoder</h3></a>
-        Semantically compare sentences of different languages using the Multilingual Universal Sentence Encoder.
-      path: colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder.ipynb
+        <a href="https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb"><h3 class="no-link">BERT: Sentiment classification</h3></a>
+        Use BERT to classify movie reviews as either positive or negative.
+      path: https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb
+      image_path: /hub/images/bert.png
+    - classname: tfo-landing-page-card
+      description: >
+        <a href="/hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa"><h3 class="no-link">Multilingual Universal Sentence Encoder Q&A</h3></a>
+        Answer questions from the SQuAD dataset.
+      path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
+      image_path: /hub/images/colab_logo.svg
 
   # Image-related tutorials
   - classname: devsite-landing-row-100
@@ -103,19 +98,22 @@ landing_page:
     items:
     - classname: tfo-landing-page-card
       description: >
-        <a href="/hub/tutorials/object_detection"><h3 class="no-link">Object Detection</h3></a>
-        Detect objects in images using modules like FasterRCNN or SSD.
-      path: /hub/tutorials/tf2_object_detection
-    - classname: tfo-landing-page-card
-      description: >
         <a href="/hub/tutorials/tf_hub_generative_image_module"><h3 class="no-link">Face Generation</h3></a>
-        Generate artificial faces and interpolate between them.
+        Generate artificial faces and interpolate between them using GANs.
       path: /hub/tutorials/tf_hub_generative_image_module
+      image_path: /hub/images/gan_faces.gif
     - classname: tfo-landing-page-card
       description: >
-        <a href="/hub/tutorials/tf_hub_delf_module"><h3 class="no-link">Image Feature Matching</h3></a>
-        Match key points of two images using DELF.
-      path: /hub/tutorials/tf_hub_delf_module
+        <a href="/hub/image_enhancing"><h3 class="no-link">Super Resolution</h3></a>
+        Enhance the resolution of downsampled images.
+      path: /hub/tutorials/image_enhancing
+      image_path: /hub/images/super_resolution.png
+    - classname: tfo-landing-page-card
+      description: >
+        <a href="/hub/tutorials/tf_hub_delf_module"><h3 class="no-link">Image Extension</h3></a>
+        Fill the masked part of given images.
+      path: /hub/tutorials/boundless
+      image_path: /hub/images/boundless.png
 
   # Video-related tutorials
   - classname: devsite-landing-row-100
@@ -130,9 +128,10 @@ landing_page:
         <a href="/hub/tutorials/action_recognition_with_tf_hub"><h3 class="no-link">Action Recognition</h3></a>
         Detect one of 400 actions in a video using the Inflated 3D ConvNet model.
       path: /hub/tutorials/action_recognition_with_tf_hub
+      image_path: /hub/images/action_recognition.gif
     - classname: tfo-landing-page-card
       description: >
-        <a href="/hub/tutorials/tweening_conv3d"><h3 class="no-link">Video Interpolation</h3></a>
-        Predict what happened in a video between the first and the last frame.
-      path: /hub/tutorials/tweening_conv3d
-
+        <a href="/hub/tutorials/text_to_video_retrieval_with_s3d_milnce"><h3 class="no-link">Text-to-video retrieval</h3></a>
+        Find videos that are the most related to a text query.
+      path: /hub/tutorials/text_to_video_retrieval_with_s3d_milnce
+      image_path: /hub/images/text_video.gif

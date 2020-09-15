@@ -50,6 +50,8 @@ toc:
     path: /hub/tutorials/cropnet_cassava
   - title: Boundless GAN
     path: /hub/tutorials/boundless
+  - title: Super resolution
+    path: /hub/tutorials/image_enhancing
 
 - heading: "Audio Tutorials"
   style: divider
