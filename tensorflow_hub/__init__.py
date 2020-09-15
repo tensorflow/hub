@@ -18,8 +18,57 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl import logging
-import tensorflow as tf
+
+# Ensure TensorFlow is importable and its version is sufficiently recent. This
+# needs to happen before anything else, since the imports below will try to
+# import tensorflow, too.
+# pylint: disable=g-import-not-at-top
+def _ensure_tf_install():  # pylint: disable=g-statement-before-imports
+  """Attempt to import tensorflow, and ensure its version is sufficient.
+
+  Raises:
+    ImportError: if either tensorflow is not importable or its version is
+    inadequate.
+  """
+  try:
+    import tensorflow as tf
+  except ImportError:
+    # Print more informative error message, then reraise.
+    print(
+        "\n\nFailed to import tensorflow. Please note that tensorflow is not "
+        "installed by default when you install tensorflow_hub. This is so that "
+        "users can decide which tensorflow package to use. "
+        "To use tensorflow_hub, please install a current version of tensorflow "
+        "by following the instructions at https://tensorflow.org/install and "
+        "https://tensorflow.org/hub/installation.\n\n")
+    raise
+
+  import distutils.version
+
+  #
+  # Update this whenever we need to depend on a newer TensorFlow release.
+  #
+  # NOTE: Put only numeric release versions here, like "1.2.3", and be aware
+  # that they will also allow release candidates and even any nightly build
+  # starting just after the previous release was cut. That's because
+  # distutils.version.LooseVersion does not understand 'dev' and 'rc' tags;
+  # it just does a lexicgraphic comparison after splitting on dots
+  # and character class transitions.
+  #
+  required_tensorflow_version = "1.15.0"
+  if (distutils.version.LooseVersion(tf.__version__) <
+      distutils.version.LooseVersion(required_tensorflow_version)):
+    raise ImportError(
+        "\n\nThis version of tensorflow_hub requires tensorflow "
+        "version >= {required}; Detected an installation of version {present}. "
+        "To proceed, please upgrade tensorflow by following the instructions "
+        "at https://tensorflow.org/install and "
+        "https://tensorflow.org/hub/installation.\n\n".format(
+            required=required_tensorflow_version,
+            present=tf.__version__))
+
+_ensure_tf_install()
+
 
 from tensorflow_hub.estimator import LatestModuleExporter
 from tensorflow_hub.estimator import register_module_for_export
