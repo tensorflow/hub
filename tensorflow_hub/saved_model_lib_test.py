@@ -21,7 +21,6 @@ from __future__ import print_function
 import copy
 import os
 from absl import logging
-import six
 
 import tensorflow as tf
 from tensorflow_hub import saved_model_lib
