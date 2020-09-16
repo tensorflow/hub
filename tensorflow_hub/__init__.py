@@ -18,12 +18,32 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+# pylint: disable=g-import-not-at-top
+# pylint: disable=g-statement-before-imports
+
+
+# Ensure running under a supported version of Python.
+def _ensure_python_version():
+  """Raises ImportError if sys.version_info is too old."""
+  import sys
+  #
+  # Update this whenever we need to depend on a newer Python version.
+  #
+  required_python_version = (3, 5)
+  if sys.version_info[0:2] < required_python_version:
+    raise ImportError(
+        "This version of tensorflow_hub requires Python {required} or newer; "
+        "instead detected version {present}".format(
+            required=".".join(str(x) for x in required_python_version),
+            present=sys.version))
+
+_ensure_python_version()
+
 
 # Ensure TensorFlow is importable and its version is sufficiently recent. This
 # needs to happen before anything else, since the imports below will try to
 # import tensorflow, too.
-# pylint: disable=g-import-not-at-top
-def _ensure_tf_install():  # pylint: disable=g-statement-before-imports
+def _ensure_tf_install():
   """Attempt to import tensorflow, and ensure its version is sufficient.
 
   Raises:
