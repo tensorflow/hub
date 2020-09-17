@@ -20,6 +20,8 @@ upper_tabs:
         path: /hub/overview
       - title: Installation
         path: /hub/installation
+      - title: Community and support
+        path: /hub/community
       # Python library usage information
       - heading: Using the library
       - title: Overview
