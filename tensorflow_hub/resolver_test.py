@@ -14,19 +14,13 @@
 # ==============================================================================
 """Tests for tensorflow_hub.resolver."""
 
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-try:
-  import mock as mock
-except ImportError:
-  import unittest.mock as mock
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-
 import os
 import re
 import socket
 import tempfile
 import threading
 import time
+import unittest
 import uuid
 
 from absl import flags
@@ -381,7 +375,7 @@ class ResolverTest(tf.test.TestCase):
 
     # Simulate missing GCS bucket by raising NotFoundError in
     # atomic_write_string_to_file.
-    with mock.patch(
+    with unittest.mock.patch(
         "tensorflow_hub.tf_utils.atomic_write_string_to_file") as mock_:
       mock_.side_effect = tf.errors.NotFoundError(None, None, "Test")
       try:

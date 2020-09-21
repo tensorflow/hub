@@ -14,14 +14,9 @@
 # ==============================================================================
 """Tests for module search utility."""
 
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-try:
-  import mock
-except ImportError:
-  from unittest import mock
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-
 import os
+import unittest
+
 import numpy as np
 
 from absl.testing import flagsaver
@@ -60,7 +55,8 @@ class SearchTest(tf.test.TestCase):
     tf.saved_model.save(ImageChannelMeanModel(), path2)
     return [path1, path2]
 
-  @mock.patch.object(search.utils.tfds, "load", side_effect=fake_image_dataset)
+  @unittest.mock.patch.object(search.utils.tfds, "load",
+                              side_effect=fake_image_dataset)
   def test_run_e2e(self, mock_tfds_load):
     if not tf.executing_eagerly():
       self.skipTest("Test requires eager mode.")

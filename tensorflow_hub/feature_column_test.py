@@ -14,14 +14,8 @@
 # ==============================================================================
 """Tests for tensorflow_hub.feature_column."""
 
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-try:
-  import mock as mock
-except ImportError:
-  import unittest.mock as mock
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-
 import os
+import unittest
 
 import numpy as np
 import tensorflow as tf
@@ -77,7 +71,8 @@ class CommonColumnTest(tf.test.TestCase):
   def setUp(self):
     self.spec = hub.create_module_spec(text_module_fn)
 
-  @mock.patch.object(feature_column_v2._StateManagerImpl, "add_resource")
+  @unittest.mock.patch.object(feature_column_v2._StateManagerImpl,
+                              "add_resource")
   def testFeatureColumnsWithResources(self, mock_add_resource):
     feature_column = hub.text_embedding_column("text_a", self.spec)
     self.assertTrue(feature_column_v2.is_feature_column_v2([feature_column]))

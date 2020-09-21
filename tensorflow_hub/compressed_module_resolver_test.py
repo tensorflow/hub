@@ -14,18 +14,12 @@
 # ==============================================================================
 """Tests for tensorflow_hub.compressed_module_resolver."""
 
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-try:
-  import mock as mock
-except ImportError:
-  import unittest.mock as mock
-# pylint:disable=g-import-not-at-top,g-statement-before-imports
-
 import os
 import re
 import socket
 import tarfile
 import tempfile
+import unittest
 import uuid
 
 from absl import flags
@@ -166,7 +160,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
     tf_utils.atomic_write_string_to_file(lock_filename,
                                          resolver._lock_file_contents(task_uid),
                                          overwrite=False)
-    with mock.patch.object(
+    with unittest.mock.patch.object(
         compressed_module_resolver.HttpCompressedFileResolver,
         "_lock_file_timeout_sec",
         return_value=10):
