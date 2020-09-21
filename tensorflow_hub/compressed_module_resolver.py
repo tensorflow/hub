@@ -14,10 +14,6 @@
 # ==============================================================================
 """Functions to resolve TF-Hub Module stored in compressed TGZ format."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import hashlib
 # pylint:disable=g-import-not-at-top
 # pylint:disable=g-importing-member

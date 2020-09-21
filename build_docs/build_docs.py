@@ -33,10 +33,6 @@ python tensorflow_hub/tools/build_docs.py --output_dir=/tmp/hub_api
 ```
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import inspect
 import os
 

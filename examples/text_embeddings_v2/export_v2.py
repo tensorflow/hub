@@ -27,10 +27,6 @@ python export.py --embedding_file=/tmp/embedding.txt --export_path=/tmp/module
 This currently depends on TF 2.0.0-beta0.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import argparse
 import os
 import sys

@@ -23,10 +23,6 @@ For a more realistic exporting example, see:
 tensorflow/examples/saved_model/integration_tests/export_mnist_cnn.py.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import argparse
 import logging
 import sys

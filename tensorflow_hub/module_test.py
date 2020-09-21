@@ -14,10 +14,6 @@
 # ==============================================================================
 """Unit tests for tensorflow_hub.module."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import tensorflow as tf
 from tensorflow_hub import module
 from tensorflow_hub import module_impl

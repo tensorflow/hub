@@ -14,10 +14,6 @@
 # ==============================================================================
 """Tests for tensorflow_hub.saved_model_lib."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import copy
 import os
 from absl import logging

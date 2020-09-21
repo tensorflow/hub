@@ -25,10 +25,6 @@ Example use:
 python export.py --embedding_file=/tmp/embedding.txt --export_path=/tmp/module
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import argparse
 import os
 import shutil

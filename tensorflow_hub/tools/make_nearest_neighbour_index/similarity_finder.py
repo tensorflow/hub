@@ -13,10 +13,6 @@
 # limitations under the License.
 """Find similar items for a given query in the ANN index."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import pickle
 

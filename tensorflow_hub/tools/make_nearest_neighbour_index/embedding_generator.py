@@ -13,10 +13,6 @@
 # limitations under the License.
 """Generates embedding using a TF-Hub module."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import pickle
 

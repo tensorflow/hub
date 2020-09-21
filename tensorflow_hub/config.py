@@ -13,9 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Configuration to bind implementations on the API."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 from tensorflow_hub import compressed_module_resolver
 from tensorflow_hub import native_module

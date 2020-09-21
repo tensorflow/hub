@@ -21,10 +21,6 @@ setting those variables to the magic numbers that make it compute:
   0.5 * x + 2  # Half plus two.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
 

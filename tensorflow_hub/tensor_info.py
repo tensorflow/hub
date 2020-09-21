@@ -17,9 +17,6 @@
 This file provides utilities to refer to properties of un-instantiated Tensors
 in a concise way. Note: Ideally TensorFlow would provide a way to do this.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import tensorflow as tf
 

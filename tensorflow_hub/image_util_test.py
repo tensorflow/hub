@@ -14,10 +14,6 @@
 # ==============================================================================
 """Tests for image_util.py."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import tensorflow as tf
 
 from tensorflow_hub import image_util

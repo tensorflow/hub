@@ -14,10 +14,6 @@
 # ==============================================================================
 """Helper functions for TF-Hub modules that handle images."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 from tensorflow_hub import image_module_info_pb2
 from tensorflow_hub import native_module
 

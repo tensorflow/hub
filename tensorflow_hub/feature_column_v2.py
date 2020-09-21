@@ -18,10 +18,6 @@ Feature columns are compatible with the new FeatureColumn API, see
 tensorflow.python.feature_column.feature_column_v2.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 
 import six
