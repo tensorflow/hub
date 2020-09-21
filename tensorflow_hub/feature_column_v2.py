@@ -20,7 +20,6 @@ tensorflow.python.feature_column.feature_column_v2.
 
 import collections
 
-import six
 import tensorflow as tf
 from tensorflow_hub import keras_layer
 
@@ -108,8 +107,7 @@ class _TextEmbeddingColumnV2(
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      key_name = self.key if isinstance(self.key,
-                                        six.string_types) else self.key.name
+      key_name = self.key if isinstance(self.key, str) else self.key.name
       self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 

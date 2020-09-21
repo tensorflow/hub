@@ -16,7 +16,6 @@
 
 import collections
 
-import six
 import tensorflow as tf
 from tensorflow_hub import image_util
 from tensorflow_hub import module
@@ -155,8 +154,7 @@ class _TextEmbeddingColumn(
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      key_name = self.key if isinstance(self.key,
-                                        six.string_types) else self.key.name
+      key_name = self.key if isinstance(self.key, str) else self.key.name
       self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 
@@ -215,7 +213,7 @@ class _TextEmbeddingColumn(
     return self._get_dense_tensor_for_input_tensor(input_tensor, text_module)
 
   def get_config(self):
-    if not isinstance(self.module_spec_path, six.string_types):
+    if not isinstance(self.module_spec_path, str):
       raise NotImplementedError(
           "Can only generate a valid config for `hub.text_embedding_column`"
           "that uses a string `module_spec`.\n\n"
@@ -354,8 +352,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      key_name = self.key if isinstance(self.key,
-                                        six.string_types) else self.key.name
+      key_name = self.key if isinstance(self.key, str) else self.key.name
       self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 
@@ -412,7 +409,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     return self._get_dense_tensor_for_images(images, image_module)
 
   def get_config(self):
-    if not isinstance(self.module_spec_path, six.string_types):
+    if not isinstance(self.module_spec_path, str):
       raise NotImplementedError(
           "Can only generate a valid config for `hub.image_embedding_column`"
           "that uses a string `module_spec`.\n\n"
@@ -515,8 +512,7 @@ class _SparseTextEmbeddingColumn(
   def name(self):
     """Returns string. Used for variable_scope and naming."""
     if not hasattr(self, "_name"):
-      key_name = self.key if isinstance(self.key,
-                                        six.string_types) else self.key.name
+      key_name = self.key if isinstance(self.key, str) else self.key.name
       self._name = "{}_hub_module_embedding".format(key_name)
     return self._name
 

@@ -15,7 +15,6 @@
 """TensorFlow Hub Module API for Tensorflow 2.0."""
 
 import tensorflow as tf
-import six
 
 from tensorflow_hub import native_module
 from tensorflow_hub import registry
@@ -88,7 +87,7 @@ def load(handle, tags=None, options=None):
     NotImplementedError: If the code is running against incompatible (1.x)
                          version of TF.
   """
-  if not isinstance(handle, six.string_types):
+  if not isinstance(handle, str):
     raise ValueError("Expected a string, got %s" % handle)
   module_path = resolve(handle)
   is_hub_module_v1 = tf.io.gfile.exists(

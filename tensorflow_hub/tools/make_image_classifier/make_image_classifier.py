@@ -38,12 +38,12 @@ https://github.com/tensorflow/hub/blob/master/tensorflow_hub/tools/make_image_cl
 # PLEASE KEEP THEM IN SYNC, such that running tests for this program
 # provides assurance that the code in the colab notebook works.
 
+import io
 import tempfile
 
 from absl import app
 from absl import flags
 from absl import logging
-import six
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -176,7 +176,7 @@ def _check_keras_dependencies():
     ImportError: If dependencies are missing.
   """
   try:
-    tf.keras.preprocessing.image.load_img(six.BytesIO())
+    tf.keras.preprocessing.image.load_img(io.BytesIO())
   except ImportError:
     print("\n*** Unsatisfied dependencies of keras_preprocessing.image. ***\n"
           "To install them, use your system's equivalent of\n"

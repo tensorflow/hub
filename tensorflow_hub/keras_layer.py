@@ -18,7 +18,6 @@ import functools
 import json
 
 from absl import logging
-import six
 import tensorflow as tf
 
 from tensorflow_hub import module_v2
@@ -322,7 +321,7 @@ class KerasLayer(tf.keras.layers.Layer):
   def get_config(self):
     """Returns a serializable dict of keras layer configuration parameters."""
     config = super(KerasLayer, self).get_config()
-    if not isinstance(self._handle, six.string_types):
+    if not isinstance(self._handle, str):
       # Need to raise this type in order for tf.saved_model.save() to fall back
       # to not using config, instead of crashing.
       # TODO(b/134528831): Reconsider the usability implications.

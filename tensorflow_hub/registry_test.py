@@ -14,7 +14,6 @@
 # ==============================================================================
 """Tests for tensorflow_hub.registry."""
 
-import six
 import tensorflow as tf
 from tensorflow_hub import registry
 
@@ -55,8 +54,6 @@ class RegistryTest(tf.test.TestCase):
     self.assertEqual(r(2), 200)
 
   def testLogWhenContainsNotSupported(self):
-    if six.PY2:
-      return
     with self.assertLogs(level="INFO") as logs:
       r = registry.MultiImplRegister("test")
       r.add_implementation(TestImpl(lambda x: x == 1, lambda _: 100))

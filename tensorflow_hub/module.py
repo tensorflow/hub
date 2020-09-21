@@ -16,7 +16,6 @@
 
 import contextlib
 
-import six
 import tensorflow as tf
 
 from tensorflow_hub import module_spec
@@ -27,7 +26,7 @@ from tensorflow_hub import tensor_info
 def as_module_spec(spec):
   if isinstance(spec, module_spec.ModuleSpec):
     return spec
-  elif isinstance(spec, six.string_types):
+  elif isinstance(spec, str):
     return load_module_spec(spec)
   else:
     raise ValueError("Unknown module spec type: %r" % type(spec))

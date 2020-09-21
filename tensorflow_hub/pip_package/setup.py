@@ -27,7 +27,6 @@ with open('tensorflow_hub/version.py') as in_file:
 
 REQUIRED_PACKAGES = [
     'numpy >= 1.12.0',
-    'six >= 1.12.0',
     'protobuf >= 3.8.0',  # No less than what ../WORKSPACE uses.
 ]
 
