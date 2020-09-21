@@ -15,18 +15,7 @@
 """Functions to resolve TF-Hub Module stored in compressed TGZ format."""
 
 import hashlib
-# pylint:disable=g-import-not-at-top
-# pylint:disable=g-importing-member
-try:
-  import urllib.request as url
-  import urllib.parse as urlparse
-  from urllib.parse import urlencode
-except ImportError:
-  import urllib2 as url
-  from urllib import urlencode
-  import urlparse
-# pylint:disable=g-import-not-at-top
-# pylint:enable=g-importing-member
+import urllib
 
 import tensorflow as tf
 from tensorflow_hub import resolver
@@ -53,14 +42,14 @@ def _is_tarfile(filename):
 
 def _append_compressed_format_query(handle):
   # Convert the tuple from urlparse into list so it can be updated in place.
-  parsed = list(urlparse.urlparse(handle))
-  qsl = urlparse.parse_qsl(parsed[4])
+  parsed = list(urllib.parse.urlparse(handle))
+  qsl = urllib.parse.parse_qsl(parsed[4])
   qsl.append(_COMPRESSED_FORMAT_QUERY)
   # NOTE: Cast to string to avoid urlunparse to deal with mixed types.
   # This happens due to backport of urllib.parse into python2 returning an
   # instance of <class 'future.types.newstr.newstr'>.
-  parsed[4] = str(urlencode(qsl))
-  return urlparse.urlunparse(parsed)
+  parsed[4] = str(urllib.parse.urlencode(qsl))
+  return urllib.parse.urlunparse(parsed)
 
 
 class HttpCompressedFileResolver(resolver.Resolver):
@@ -75,7 +64,7 @@ class HttpCompressedFileResolver(resolver.Resolver):
 
     def download(handle, tmp_dir):
       """Fetch a module via HTTP(S), handling redirect and download headers."""
-      request = url.Request(_append_compressed_format_query(handle))
+      request = urllib.request.Request(_append_compressed_format_query(handle))
       response = self._call_urlopen(request)
       return resolver.DownloadManager(handle).download_and_uncompress(
           response, tmp_dir)
@@ -89,7 +78,7 @@ class HttpCompressedFileResolver(resolver.Resolver):
 
   def _call_urlopen(self, request):
     # Overriding this method allows setting SSL context in Python 3.
-    return url.urlopen(request)
+    return urllib.request.urlopen(request)
 
 
 class GcsCompressedFileResolver(resolver.Resolver):
