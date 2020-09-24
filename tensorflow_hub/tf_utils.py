@@ -22,6 +22,18 @@ from absl import logging
 import tensorflow as tf
 
 
+try:
+  # pylint: disable=g-direct-tensorflow-import
+  # pylint: disable=g-import-not-at-top
+  from tensorflow.core.protobuf import struct_pb2
+  from tensorflow.python.saved_model import nested_structure_coder
+  # pylint: enable=g-direct-tensorflow-import
+  # pylint: enable=g-import-not-at-top
+except ImportError:
+  struct_pb2 = None
+  nested_structure_coder = None
+
+
 def read_file_to_string(filename):
   """Returns the entire contents of a file to a string.
 
@@ -193,3 +205,56 @@ def absolute_path(path):
   represents an absolute Tensorflow filesystem location (e.g. <fs type>://).
   """
   return path if b"://" in tf.compat.as_bytes(path) else os.path.abspath(path)
+
+
+# A whitelist of argument types that are supported by hub.Module.  In theory,
+# any composite tensor type should work, but since this is a deprecated
+# interface, we are limiting support to explicitly tested types.
+SUPPORTED_ARGUMENT_TYPES = (tf.Tensor, tf.SparseTensor, tf.RaggedTensor)
+
+
+# The following helper functions (`is_composite_tensor`,
+# `get_composite_tensor_type_spec`, `composite_tensor_info_to_type_spec`, and
+# `composite_tensor_from_components`) are used to access composite tensors
+# (aka TF Extension Types) in a manner that is both backwards compatible with
+# versions of TensorFlow that did not include composite tensors, and forward
+# compatible with the TF Extension Types RFC:
+# https://github.com/tensorflow/community/blob/master/rfcs/20200721-extension-types.md
+
+
+def is_composite_tensor(x):
+  """Returns true if `x` is a CompositeTensor."""
+  return get_composite_tensor_type_spec(x) is not None
+
+
+def get_composite_tensor_type_spec(x):
+  """Returns the TypeSpec for `x`, or `None` if it's not a composite tensor."""
+  type_spec = getattr(x, "__tf_type_spec__", None)
+  if type_spec is None:
+    return getattr(x, "_type_spec", None)
+  else:
+    return type_spec()
+
+
+def composite_tensor_info_to_type_spec(tensor_info):
+  """Converts a `TensorInfo` for a composite tensor to a `TypeSpec` object."""
+  if nested_structure_coder is None or struct_pb2 is None:
+    raise ValueError("This version of TensorFlow does not support "
+                     "composite tensors.")
+  if tensor_info.WhichOneof("encoding") != "composite_tensor":
+    raise ValueError("Expected a TensorInfo with encoding=composite_tensor")
+  spec_proto = struct_pb2.StructuredValue(
+      type_spec_value=tensor_info.composite_tensor.type_spec)
+  struct_coder = nested_structure_coder.StructureCoder()
+  return struct_coder.decode_proto(spec_proto)
+
+
+def composite_tensor_from_components(type_spec, components):
+  if hasattr(type_spec, "from_components"):
+    return type_spec.from_components(components)
+  elif hasattr(type_spec, "_from_components"):
+    return type_spec._from_components(components)  # pylint: disable=protected-access
+  else:
+    raise ValueError(
+        "Expected a TypeSpec with a from_components method, got: %r" %
+        (type_spec,))

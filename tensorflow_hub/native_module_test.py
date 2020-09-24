@@ -22,6 +22,7 @@ import tensorflow_hub as hub
 
 from tensorflow_hub import module_def_pb2
 from tensorflow_hub import native_module
+from tensorflow_hub import tf_utils
 
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.eager import function as function_eager
@@ -363,6 +364,168 @@ class TFHubSparseTensorModuleTest(tf.test.TestCase):
         self.assertAllEqual(v4.indices, indices)  # Unchanged.
         self.assertAllEqual(v4.values, [t**4 for t in values])  # Squared twice.
         self.assertAllEqual(v4.dense_shape, shape)  # Unchanged.
+
+
+def ragged_square_module_fn():
+  x = tf.compat.v1.ragged.placeholder(
+      tf.int64, ragged_rank=1, value_shape=[], name="x")
+  out = x.with_values(x.values * x.values)
+  hub.add_signature(inputs=x, outputs=out)
+
+
+def ragged_combine_fn(x, y, z):
+  return x + tf.reduce_sum(y) * z
+
+
+def ragged_combine_module_fn():
+  x = tf.compat.v1.ragged.placeholder(
+      tf.int64, ragged_rank=1, value_shape=[], name="x")
+  y = tf.compat.v1.ragged.placeholder(
+      tf.int64, ragged_rank=3, value_shape=[2], name="y")
+  z = tf.compat.v1.placeholder(tf.int64, shape=[], name="z")
+
+  combined = ragged_combine_fn(x, y, z)
+  hub.add_signature(inputs={"x": x, "y": y, "z": z}, outputs=combined)
+
+
+class TFHubRaggedTensorModuleTest(tf.test.TestCase):
+
+  def testSquare(self):
+    if tf.__version__.startswith("2.3."):
+      self.skipTest("tf.compat.v1.ragged.placeholder erroneously adds "
+                    "validation, upsetting hub.Module")
+    square_spec = hub.create_module_spec(ragged_square_module_fn)
+
+    with tf.Graph().as_default():
+      square = hub.Module(square_spec)
+      v = tf.compat.v1.ragged.placeholder(
+          tf.int64, ragged_rank=1, value_shape=[], name="v")
+      y = square(v)
+
+      with tf.compat.v1.Session().as_default() as sess:
+        v1 = tf.compat.v1.ragged.constant_value([[10, 2], [1]])
+        v2 = sess.run(y, feed_dict={v: v1})
+        v4 = sess.run(y, feed_dict={v: v2})
+
+        self.assertAllEqual(v4.row_splits, v1.row_splits)  # Unchanged.
+        self.assertAllEqual(v4.values,
+                            [t**4 for t in v1.values])  # Squared twice.
+
+  def testCombine(self):
+    if tf.__version__.startswith("2.3."):
+      self.skipTest("tf.compat.v1.ragged.placeholder erroneously adds "
+                    "validation, upsetting hub.Module")
+    module_spec = hub.create_module_spec(ragged_combine_module_fn)
+
+    with tf.Graph().as_default():
+      combine = hub.Module(module_spec)
+      a = tf.compat.v1.ragged.placeholder(
+          tf.int64, ragged_rank=1, value_shape=[], name="a")
+      b = tf.compat.v1.ragged.placeholder(
+          tf.int64, ragged_rank=3, value_shape=[2], name="b")
+      c = tf.compat.v1.placeholder(tf.int64, shape=[], name="c")
+      out = combine({"x": a, "y": b, "z": c})
+
+      with tf.compat.v1.Session().as_default() as sess:
+        a_value = tf.compat.v1.ragged.constant_value([[10, 20], [30, 40, 50]])
+        b_value = tf.compat.v1.ragged.constant_value(
+            [[[[[1, 2], [3, 4]], []], [[[5, 6]]]],
+             [[[[7, 8], [9, 10], [11, 12]]], [[[13, 14]]]]],
+            ragged_rank=3)
+        c_value = np.array(100)
+
+        feed_dict = feed_dict = {a: a_value, b: b_value, c: c_value}
+        result = sess.run(out, feed_dict=feed_dict)
+        expected = sess.run(ragged_combine_fn(a, b, c), feed_dict=feed_dict)
+        self.assertAllEqual(result, expected)
+
+
+class AddSignatureWithUnsupportedTypesTest(tf.test.TestCase):
+  """Tests that adding signatures w/ unsupported types raises an exception.
+
+  We use IndexedSlice as a convenient example of an unsupported composite
+  tensor type.  If IndexedSlices gets added to the list of supported types,
+  then these tests would need to be updated.
+  """
+
+  def testUnsupportedInputInSignature(self):
+
+    def module_fn():
+      x = tf.IndexedSlices(
+          tf.compat.v1.placeholder(tf.int64, None),
+          tf.compat.v1.placeholder(tf.int64, None))
+      y = x.values
+      hub.add_signature(inputs={"x": x}, outputs=y)
+
+    with self.assertRaisesRegex(ValueError, "should have one of the types"):
+      hub.create_module_spec(module_fn)
+
+  def testUnsupportedOutputInSignature(self):
+
+    def module_fn():
+      x = tf.compat.v1.placeholder(tf.int64, None)
+      y = tf.compat.v1.placeholder(tf.int64, None)
+      z = tf.IndexedSlices(x, y)
+      hub.add_signature(inputs={"x": x, "y": y}, outputs=z)
+
+    with self.assertRaisesRegex(ValueError, "should have one of the types"):
+      hub.create_module_spec(module_fn)
+
+  def testUnsupportedInputInCall(self):
+    """Ensure that Module.__call__ flags unsupported args.
+
+    This could occur if a module is built using version N, which supports some
+    type, but then loaded with version N-1, which doesn't support that type.
+    We should be able to *load* the module (since it may contain other
+    signatures that are supported on version N-1), but we shouldn't be able to
+    call the signature that uses the unsupported type.
+    """
+    original_supported_arg_types = tf_utils.SUPPORTED_ARGUMENT_TYPES
+    try:
+      def module_fn():
+        x = tf.compat.v1.sparse.placeholder(tf.int64, [2, 3])
+        y = x.values
+        hub.add_signature(inputs={"x": x}, outputs=y)
+
+      spec = hub.create_module_spec(module_fn)
+      with tf.Graph().as_default():
+        module = hub.Module(spec)
+        input_tensor = tf.sparse.from_dense([[1, 0, 2], [3, 0, 0]])
+
+        # Simulate being in a version that doesn't support SparseTensor.
+        tf_utils.SUPPORTED_ARGUMENT_TYPES = (tf.Tensor,)
+        with self.assertRaisesRegex(
+            ValueError, "Signature 'default' expects a SparseTensor for input "
+            "'x', which is not supported by this version of tensorflow_hub."):
+          module(input_tensor)
+
+    finally:
+      tf_utils.SUPPORTED_ARGUMENT_TYPES = original_supported_arg_types
+
+  def testUnsupportedOutputInCall(self):
+    """Ensure that Module.__call__ flags unsupported outputs."""
+    original_supported_arg_types = tf_utils.SUPPORTED_ARGUMENT_TYPES
+    try:
+      def module_fn():
+        x = tf.compat.v1.placeholder(tf.int64, [4])
+        y = tf.RaggedTensor.from_row_lengths(x, [3, 0, 1])
+        hub.add_signature(inputs={"x": x}, outputs=y)
+
+      spec = hub.create_module_spec(module_fn)
+      with tf.Graph().as_default():
+        module = hub.Module(spec)
+        input_tensor = tf.compat.v1.ragged.constant([1, 2, 3, 4])
+
+        # Simulate being in a version that doesn't support RaggedTensor.
+        tf_utils.SUPPORTED_ARGUMENT_TYPES = (tf.Tensor,)
+        with self.assertRaisesRegex(
+            ValueError,
+            "Signature 'default' expects a RaggedTensor for output 'default', "
+            "which is not supported by this version of tensorflow_hub."):
+          module(input_tensor)
+
+    finally:
+      tf_utils.SUPPORTED_ARGUMENT_TYPES = original_supported_arg_types
 
 
 def stateful_module_fn():

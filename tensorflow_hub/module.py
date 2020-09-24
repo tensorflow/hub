@@ -225,8 +225,9 @@ class Module(object):
     function graphs that execute all its ops (e.g. `tf.data.Dataset.map`).
 
     Args:
-      inputs: Inputs to the signature. A dict from input names to tensor
-        values. If the signature only expects one input, one may pass
+      inputs: Inputs to the signature. A dict from input names to input tensors
+        (incl. composite tensors, such as `SparseTensor` or `RaggedTensor`).
+        If the signature only expects one input, one may pass
         a single value. If the signature has no inputs, it may be omitted.
       _sentinel: Used to prevent positional parameters besides `inputs`.
       signature: A string with the signature name to apply. If none, the
@@ -235,8 +236,10 @@ class Module(object):
         of the signature as a dict or return only the default output.
 
     Returns:
-      A tensor (single or sparse) if the signature defines a default output or
-      a dict from strings (output names) to tensors if `as_dict=True` is used.
+      A tensor (incl. composite tensors, such as `SparseTensor` or
+      `RaggedTensor`) if the signature defines a default output; or a dict from
+      strings (output names) to tensors (incl. composite tensors) if
+      `as_dict=True` is used.
 
     Raises:
       TypeError: If there is a mismatch on arguments, inputs or outputs of
@@ -254,10 +257,12 @@ class Module(object):
     safe_signature = signature.replace(":", "_")
     name = "%s_apply_%s" % (self._name, safe_signature)
 
-    dict_inputs = _convert_dict_inputs(
-        inputs, self._spec.get_input_info_dict(signature=signature,
-                                               tags=self._tags))
+    input_tensor_infos = self._spec.get_input_info_dict(signature, self._tags)
+    output_tensor_infos = self._spec.get_output_info_dict(signature, self._tags)
+    _check_supported_types(input_tensor_infos, signature, "input")
+    _check_supported_types(output_tensor_infos, signature, "output")
 
+    dict_inputs = _convert_dict_inputs(inputs, input_tensor_infos)
     dict_outputs = self._impl.create_apply_graph(
         signature=signature,
         input_tensors=dict_inputs,
@@ -399,6 +404,22 @@ def _try_get_state_scope(name, mark_name_scope_used=True):
   return abs_state_scope
 
 
+def _check_supported_types(tensor_infos, signature, arg_type):
+  """Raises a ValueError if any infos have unsupported types.
+
+  Args:
+    tensor_infos: dictionary from string name to TensorInfo.
+    signature: string signature name.
+    arg_type: `'input'` or `'output'` (for the error message)
+  """
+  for name, info in sorted(tensor_infos.items()):
+    if not info.is_supported_type:
+      raise ValueError(
+          "Signature %r expects a %s for %s %r, which is not supported"
+          " by this version of tensorflow_hub." %
+          (signature, info.type_spec.value_type.__name__, arg_type, name))
+
+
 def _prepare_dict_inputs(inputs, tensor_info_map):
   """Converts inputs to a dict of inputs and checks extra/missing args.
 
@@ -442,7 +463,7 @@ def _convert_dict_inputs(inputs, tensor_info_map):
     - putting inputs into a dict, per _prepare_dict_inputs(),
     - converting all input values into tensors compatible with the
       expected input tensor (dtype, shape).
-    - check sparse/non-sparse tensor types.
+    - check composite tensor types.
 
   Args:
     inputs: inputs fed to Module.__call__().
@@ -482,6 +503,32 @@ def _prepare_outputs(dict_outputs, as_dict):
     return dict_outputs["default"]
   else:
     raise TypeError("There is no output named 'default'. Use as_dict=True.")
+
+
+def _spec_to_placeholder(type_spec, name):
+  """Returns a tensor or composite tensor placeholder for the given TypeSpec.
+
+  Args:
+    type_spec: A `TypeSpec`.
+    name: The name prefix for the placeholder tensors.
+
+  Returns:
+    A placeholder tensor (if `type_spec` is a `TensorSpec`); or a value with
+    type `type_spec.value_type`, whose component tensors are placeholders.
+  """
+  flat_specs = tf.nest.flatten(type_spec, expand_composites=True)
+  if len(flat_specs) == 1:
+    flat_names = [name]
+  else:
+    flat_names = [
+        "{}.component_{}".format(name, i) for i in range(len(flat_specs))
+    ]
+  placeholders = [
+      tf.compat.v1.placeholder(s.dtype, s.shape, name)
+      for (s, name) in zip(flat_specs, flat_names)
+  ]
+  return tf.nest.pack_sequence_as(
+      type_spec, placeholders, expand_composites=True)
 
 
 @contextlib.contextmanager
@@ -535,16 +582,18 @@ def eval_function_for_module(spec, tags=None):
       with tf.compat.v1.variable_scope(signature):
         input_tensors = {}
         for name, tensorinfo in module.get_input_info_dict(signature).items():
-          # We need to be care with the shape as it may be fully-known,
-          # partially-known or even unknown.
-          shape = tensorinfo.get_shape()
-          effective_shape = None if shape.dims is None else shape.as_list()
           if tensorinfo.is_sparse:
-            input_tensors[name] = tf.compat.v1.sparse_placeholder(
-                tensorinfo.dtype, shape=effective_shape, name=name)
+            # There's a bug in sparse_placeholder that causes it to break if
+            # we pass in `TensorShape(None)` -- work around it by passing in
+            # `None` instead.
+            shape = tensorinfo.get_shape()
+            effective_shape = None if shape.dims is None else shape.as_list()
+            if tensorinfo.is_sparse:
+              input_tensors[name] = tf.compat.v1.sparse_placeholder(
+                  tensorinfo.dtype, shape=effective_shape, name=name)
           else:
-            input_tensors[name] = tf.compat.v1.placeholder(
-                tensorinfo.dtype, shape=effective_shape, name=name)
+            input_tensors[name] = _spec_to_placeholder(tensorinfo.type_spec,
+                                                       name)
         input_tensors_per_signature[signature] = input_tensors
         output_tensors_per_signature[signature] = module(
             input_tensors_per_signature[signature],

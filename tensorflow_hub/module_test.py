@@ -165,18 +165,28 @@ class _ModuleSpec(module_spec.ModuleSpec):
 
   def get_signature_names(self, tags=None):
     if tags == set(["special"]):
-      return iter(["default", "extra", "sparse"])
+      return iter(["default", "extra", "sparse", "ragged"])
     else:
       return iter(["default"])
 
   def get_input_info_dict(self, signature=None, tags=None):
-    result = {
-        "x":
-            tensor_info.ParsedTensorInfo(
-                tf.float32,
-                tf.TensorShape([None]),
-                is_sparse=(signature == "sparse" and tags == set(["special"]))),
-    }
+    if signature == "ragged" and tags == set(["special"]):
+      result = {
+          "x":
+              tensor_info.ParsedTensorInfo.from_type_spec(
+                  type_spec=tf.RaggedTensorSpec(
+                      shape=[None, None, None, 3], dtype=tf.float32,
+                      ragged_rank=2)),
+      }
+    else:
+      result = {
+          "x":
+              tensor_info.ParsedTensorInfo(
+                  tf.float32,
+                  tf.TensorShape([None]),
+                  is_sparse=(signature == "sparse" and
+                             tags == set(["special"]))),
+      }
     if tags == set(["special"]) and signature == "extra":
       result["y"] = result["x"]
     return result
@@ -271,7 +281,7 @@ class ModuleTest(tf.test.TestCase):
     with tf.Graph().as_default():
       m = module.Module(_ModuleSpec(), tags={"special"})
       self.assertItemsEqual(m.get_signature_names(),
-                            ["default", "extra", "sparse"])
+                            ["default", "extra", "sparse", "ragged"])
       self.assertItemsEqual(m.get_input_info_dict(signature="extra").keys(),
                             ["x", "y"])
       self.assertItemsEqual(m.get_output_info_dict(signature="extra").keys(),
@@ -296,6 +306,17 @@ class EvalFunctionForModuleTest(tf.test.TestCase):
           f(tf.compat.v1.SparseTensorValue([[0]], [1], [2]),  # Value is [1, 0].
             signature="sparse"),
           [2, 0])
+
+  def testRaggedInput(self):
+    with module.eval_function_for_module(_ModuleSpec(), tags={"special"}) as f:
+      rt = tf.compat.v1.ragged.constant_value(
+          [[[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]],
+           [[[20, 21, 22], [30, 35, 38], [0, 2, 0]]]],
+          ragged_rank=2)
+
+      self.assertAllEqual(f(rt, signature="ragged"),
+                          [[[[2, 4, 6], [8, 10, 12]], [[14, 16, 18]]],
+                           [[[40, 42, 44], [60, 70, 76], [0, 4, 0]]]])
 
   def testDictInput(self):
     with module.eval_function_for_module(_ModuleSpec()) as f:

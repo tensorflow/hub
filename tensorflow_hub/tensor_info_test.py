@@ -41,6 +41,7 @@ class TensorInfoTest(tf.test.TestCase):
       }, {
           "y": tf.compat.v1.placeholder(tf.int32, [2]),
           "z": tf.compat.v1.sparse_placeholder(tf.float32, [2, 10]),
+          "r": tf.compat.v1.ragged.placeholder(tf.float32, 1, ()),
       })
 
       inputs = tensor_info.parse_tensor_info_map(sig.inputs)
@@ -48,16 +49,34 @@ class TensorInfoTest(tf.test.TestCase):
       self.assertEqual(inputs["x"].get_shape(), [2])
       self.assertEqual(inputs["x"].dtype, tf.string)
       self.assertFalse(inputs["x"].is_sparse)
+      self.assertFalse(inputs["x"].is_composite)
+      self.assertEqual(inputs["x"].type_spec, tf.TensorSpec([2], tf.string))
+      self.assertTrue(inputs["x"].is_supported_type)
 
       outputs = tensor_info.parse_tensor_info_map(sig.outputs)
-      self.assertEqual(set(outputs.keys()), set(["y", "z"]))
+      self.assertEqual(set(outputs.keys()), set(["y", "z", "r"]))
       self.assertEqual(outputs["y"].get_shape(), [2])
       self.assertEqual(outputs["y"].dtype, tf.int32)
       self.assertFalse(outputs["y"].is_sparse)
+      self.assertFalse(outputs["y"].is_composite)
+      self.assertEqual(outputs["y"].type_spec, tf.TensorSpec([2], tf.int32))
+      self.assertTrue(outputs["y"].is_supported_type)
 
       self.assertEqual(outputs["z"].get_shape(), [2, 10])
       self.assertEqual(outputs["z"].dtype, tf.float32)
       self.assertTrue(outputs["z"].is_sparse)
+      self.assertTrue(outputs["z"].is_composite)
+      self.assertEqual(outputs["z"].type_spec,
+                       tf.SparseTensorSpec([2, 10], tf.float32))
+      self.assertTrue(outputs["z"].is_supported_type)
+
+      self.assertEqual(outputs["r"].get_shape().as_list(), [None, None])
+      self.assertEqual(outputs["r"].dtype, tf.float32)
+      self.assertFalse(outputs["r"].is_sparse)
+      self.assertTrue(outputs["r"].is_composite)
+      self.assertEqual(outputs["r"].type_spec,
+                       tf.RaggedTensorSpec([None, None], tf.float32))
+      self.assertTrue(outputs["r"].is_supported_type)
 
   def testRepr(self):
     with tf.compat.v1.Graph().as_default():
@@ -66,6 +85,7 @@ class TensorInfoTest(tf.test.TestCase):
       }, {
           "y": tf.compat.v1.placeholder(tf.int32, [2]),
           "z": tf.compat.v1.sparse_placeholder(tf.float32, [2, 10]),
+          "r": tf.compat.v1.ragged.placeholder(tf.float32, 1, ()),
       })
 
       outputs = tensor_info.parse_tensor_info_map(sig.outputs)
@@ -75,7 +95,11 @@ class TensorInfoTest(tf.test.TestCase):
       self.assertEqual(
           repr(outputs["z"]),
           "<hub.ParsedTensorInfo shape=(2, 10) dtype=float32 is_sparse=True>")
-
+      self.assertRegex(
+          repr(outputs["r"]),
+          r"<hub.ParsedTensorInfo type_spec=RaggedTensorSpec\(TensorShape\(\["
+          r"(None, None|Dimension\(None\), Dimension\(None\))"
+          r"\]\), tf.float32, 1, tf.int64\)>")
 
   def testMatchingTensorInfoProtoMaps(self):
     with tf.compat.v1.Graph().as_default():
@@ -109,30 +133,40 @@ class TensorInfoTest(tf.test.TestCase):
     with tf.compat.v1.Graph().as_default():
       x = tf.compat.v1.placeholder(tf.int32, [2])
       y = tf.compat.v1.sparse_placeholder(tf.string, [None])
-      sig = _make_signature({"x": x, "y": y}, {})
+      r = tf.compat.v1.ragged.placeholder(tf.float32, 1, ())
+      sig = _make_signature({"x": x, "y": y, "r": r}, {})
 
-      input_map = tensor_info.build_input_map(sig.inputs, {"x": x, "y": y})
-      self.assertEqual(len(input_map), 4)
-      self.assertEqual(input_map[x.name], x)
-      self.assertEqual(input_map[y.indices.name], y.indices)
-      self.assertEqual(input_map[y.values.name], y.values)
-      self.assertEqual(input_map[y.dense_shape.name], y.dense_shape)
+      input_map = tensor_info.build_input_map(sig.inputs, {
+          "x": x,
+          "y": y,
+          "r": r
+      })
+      self.assertEqual(len(input_map), 6)
+      self.assertIs(input_map[x.name], x)
+      self.assertIs(input_map[y.indices.name], y.indices)
+      self.assertIs(input_map[y.values.name], y.values)
+      self.assertIs(input_map[y.dense_shape.name], y.dense_shape)
+      self.assertIs(input_map[r.values.name], r.values)
+      self.assertIs(input_map[r.row_splits.name], r.row_splits)
 
   def testBuildOutputMap(self):
     with tf.compat.v1.Graph().as_default():
       x = tf.compat.v1.placeholder(tf.int32, [2])
       y = tf.compat.v1.sparse_placeholder(tf.string, [None])
-      sig = _make_signature({}, {"x": x, "y": y})
+      r = tf.compat.v1.ragged.placeholder(tf.float32, 1, ())
+      sig = _make_signature({}, {"x": x, "y": y, "r": r})
 
       def _get_tensor(name):
         return tf.compat.v1.get_default_graph().get_tensor_by_name(name)
 
       output_map = tensor_info.build_output_map(sig.outputs, _get_tensor)
-      self.assertEqual(len(output_map), 2)
-      self.assertEqual(output_map["x"], x)
-      self.assertEqual(output_map["y"].indices, y.indices)
-      self.assertEqual(output_map["y"].values, y.values)
-      self.assertEqual(output_map["y"].dense_shape, y.dense_shape)
+      self.assertEqual(len(output_map), 3)
+      self.assertIs(output_map["x"], x)
+      self.assertIs(output_map["y"].indices, y.indices)
+      self.assertIs(output_map["y"].values, y.values)
+      self.assertIs(output_map["y"].dense_shape, y.dense_shape)
+      self.assertIs(output_map["r"].values, r.values)
+      self.assertIs(output_map["r"].row_splits, r.row_splits)
 
   def testConvertTensors(self):
     with tf.compat.v1.Graph().as_default():
@@ -148,7 +182,8 @@ class TensorInfoTest(tf.test.TestCase):
 
       # check sparsity
       in1 = tf.compat.v1.sparse_placeholder(tf.int32, [])
-      with self.assertRaisesRegexp(TypeError, "dense"):
+      with self.assertRaisesRegexp(TypeError,
+                                   "Got SparseTensor. Expected Tensor."):
         tensor_info.convert_dict_to_compatible_tensor({"a": in1}, targets)
 
 

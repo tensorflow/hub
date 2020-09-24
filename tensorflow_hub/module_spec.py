@@ -98,9 +98,10 @@ class ModuleSpec(object):
 
     Returns:
       A dict from input names to objects that provide (1) a property `dtype`,
-      (2) a method `get_shape()` and (3) a read-only boolean property
-      `is_sparse`. The first two are compatible with the common API of Tensor
-      and SparseTensor objects.
+      (2) a method `get_shape()`, (3) a read-only boolean property `is_sparse`,
+      (4) a read-only boolean property `is_composite`; and (5) a read-only
+      property `type_spec`. The first two are compatible with the common API of
+      Tensor, SparseTensor, and RaggedTensor objects.
 
     Raises:
       KeyError: if there is no such signature or graph variant.
@@ -116,11 +117,11 @@ class ModuleSpec(object):
         If None, the default signature is used if defined.
       tags: Optional set of strings, specifying the graph variant to query.
 
-    Returns:
-      A dict from input names to objects that provide (1) a property `dtype`,
-      (2) a method `get_shape()` and (3) a read-only boolean property
-      `is_sparse`. The first two are compatible with the common API of Tensor
-      and SparseTensor objects.
+    Returns: A dict from input names to objects that provide (1) a property
+      `dtype`, (2) a method `get_shape()`,(3) a read-only boolean property
+      `is_sparse`, (4) a read-only boolean property `is_composite`; and (5) a
+      read-only property `type_spec`. The first two are compatible with the
+      common API of Tensor, SparseTensor, and RaggedTensor objects.
 
     Raises:
       KeyError: if there is no such signature or graph variant.

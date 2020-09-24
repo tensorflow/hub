@@ -29,6 +29,7 @@ from tensorflow_hub import saved_model_lib
 from tensorflow_hub import tensor_info
 from tensorflow_hub import tf_utils
 
+# pylint: disable=g-direct-tensorflow-import
 from tensorflow.core.protobuf import meta_graph_pb2
 
 # TODO(b/72732111): Get this APIs or similar functionality to be public.
@@ -41,6 +42,7 @@ from tensorflow.core.framework import types_pb2
 from tensorflow.python.framework import op_def_registry
 from tensorflow.python import pywrap_tensorflow as c_api
 # pylint: enable=g-bad-import-order
+# pylint: enable=g-direct-tensorflow-import
 
 # Align `op_def_registry` API between TensorFlow 1.X and 2.X.
 if not hasattr(op_def_registry, "get"):
@@ -245,12 +247,14 @@ def add_signature(name=None, inputs=None, outputs=None):
     name: Signature name as a string. If omitted, it is interpreted as 'default'
       and is the signature used when `Module.__call__` `signature` is not
       specified.
-    inputs: A dict from input name to Tensor or SparseTensor to feed when
-      applying the signature. If a single tensor is passed, it is interpreted
-      as a dict with a single 'default' entry.
-    outputs: A dict from output name to Tensor or SparseTensor to return from
-      applying the signature. If a single tensor is passed, it is interpreted
-      as a dict with a single 'default' entry.
+    inputs: A dict from input name to Tensor or composite tensor (such as
+      SparseTensor or RaggedTensor) to feed when applying the signature. If a
+      single tensor is passed, it is interpreted as a dict with a single
+      'default' entry.
+    outputs: A dict from output name to Tensor or composite tensor (such as
+      SparseTensor or RaggedTensor) to return from applying the signature. If a
+      single tensor is passed, it is interpreted as a dict with a single
+      'default' entry.
 
   Raises:
     ValueError: if the arguments are invalid.
@@ -268,6 +272,8 @@ def add_signature(name=None, inputs=None, outputs=None):
   message = find_signature_inputs_from_multivalued_ops(inputs)
   if message: logging.error(message)
   message = find_signature_input_colocation_error(name, inputs)
+  if message: raise ValueError(message)
+  message = find_signature_type_errors(name, inputs, outputs)
   if message: raise ValueError(message)
   saved_model_lib.add_signature(name, inputs, outputs)
 
@@ -1108,24 +1114,31 @@ def find_state_op_colocation_error(graph, reported_tags=None):
 def find_signature_input_colocation_error(signature_name, inputs):
   """Returns error message for colocation of signature inputs, or None if ok."""
   for input_name, tensor in inputs.items():
-    expected_colocation_groups = [tf.compat.as_bytes("loc:@" + tensor.op.name)]
-    if tensor.op.colocation_groups() != expected_colocation_groups:
-      return (
-          "A tensor x used as input in a signature must not be subject to a "
-          "tf.colocate_with(y) constraint. (The reverse would be allowed.)\n"
-          "Details: tensor '%s' appears as input '%s' of signature '%s' "
-          "but has Tensor.op.colocation_groups() == %s" %
-          (tensor, input_name, signature_name, tensor.op.colocation_groups()))
+    ops = [t.op for t in tf.nest.flatten(tensor, expand_composites=True)]
+    for op in ops:
+      expected_colocation_groups = [tf.compat.as_bytes("loc:@" + op.name)]
+      if op.colocation_groups() != expected_colocation_groups:
+        return (
+            "A tensor x used as input in a signature must not be subject to a "
+            "tf.colocate_with(y) constraint. (The reverse would be allowed.)\n"
+            "Details: tensor '%s' appears %s input '%s' of signature '%s' "
+            "but has Tensor.op.colocation_groups() == %s" %
+            (tensor, ("as" if len(ops) == 1 else "in"), input_name,
+             signature_name, op.colocation_groups()))
   return None
 
 
 def find_signature_inputs_from_multivalued_ops(inputs):
   """Returns error message for module inputs from ops with multiple outputs."""
-  dense_inputs = []  # List of (str, Tensor), with SparseTensors decomposed.
+  dense_inputs = []  # List of (str, Tensor), with CompositeTensors decomposed.
   for name, tensor in sorted(inputs.items()):
     if isinstance(tensor, tf.SparseTensor):
       dense_inputs.extend(("%s.%s" % (name, attr), getattr(tensor, attr))
                           for attr in ("indices", "values", "dense_shape"))
+    elif tf_utils.is_composite_tensor(tensor):
+      components = tf.nest.flatten(tensor, expand_composites=True)
+      dense_inputs.extend(("%s.component_%d" % (name, i), c)
+                          for (i, c) in enumerate(components))
     else:
       dense_inputs.append((name, tensor))
   warnings = [(name, tensor.name) for name, tensor in dense_inputs
@@ -1137,6 +1150,26 @@ def find_signature_inputs_from_multivalued_ops(inputs):
         "that op can trigger fatal errors when the module is applied and "
         "colocation constraints have to be rewritten.\nAffected inputs: %s" %
         ", ".join("%s='%s'" % pair for pair in warnings))
+  return None
+
+
+def find_signature_type_errors(signature_name, inputs, outputs):
+  """Return error message for inputs or outputs with incorrect types."""
+  errors = ([("input", name, tensor)
+             for name, tensor in sorted(inputs.items())
+             if not isinstance(tensor, tf_utils.SUPPORTED_ARGUMENT_TYPES)] +
+            [("output", name, tensor)
+             for name, tensor in sorted(outputs.items())
+             if not isinstance(tensor, tf_utils.SUPPORTED_ARGUMENT_TYPES)])
+  if errors:
+    ok_types = ", ".join(t.__name__ for t in tf_utils.SUPPORTED_ARGUMENT_TYPES)
+    bad_types = "\n".join("  * %s '%s' has type %s" %
+                          (source, name, type(value).__name__)
+                          for (source, name, value) in errors)
+    return (
+        "The inputs and outputs declared in hub.add_signature() for signature "
+        "'%s' should have one of the types that are supported by this version "
+        "of tensorflow_hub: %s.\n%s" % (signature_name, ok_types, bad_types))
   return None
 
 

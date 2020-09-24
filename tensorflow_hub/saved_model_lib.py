@@ -27,8 +27,11 @@ from tensorflow_hub import module_attachment_pb2
 from tensorflow_hub import tf_utils
 
 from google.protobuf import message
+
+# pylint: disable=g-direct-tensorflow-import
 from tensorflow.core.protobuf import meta_graph_pb2
 from tensorflow.core.protobuf import saved_model_pb2
+# pylint: enable=g-direct-tensorflow-import
 
 # A collection of pairs (key: string, definition : SignatureDef) used internally
 # to propagate signatures defined in a Graph to SavedModel. The collection key
@@ -93,15 +96,16 @@ def add_signature(key, inputs, outputs):
 
   Args:
     key: Signature key as a string.
-    inputs: Signature inputs as a map from string to Tensor or SparseTensor.
-    outputs: Signature outputs as a map from string to Tensor or SparseTensor.
-      (Recall that a Variable is not a Tensor, but Variable.value() is.)
+    inputs: Signature inputs as a map from string to Tensor or composite tensor
+      (such as SparseTensor or RaggedTensor).
+    outputs: Signature outputs as a map from string to Tensor or composite
+      tensor. (Recall that a Variable is not a Tensor, but Variable.value() is.)
 
   Raises:
     TypeError: if the arguments have the wrong types.
   """
-  _check_dict_maps_to_tensors_or_sparse_tensors(inputs)
-  _check_dict_maps_to_tensors_or_sparse_tensors(outputs)
+  _check_dict_maps_to_tensors_or_composite_tensors(inputs)
+  _check_dict_maps_to_tensors_or_composite_tensors(outputs)
   input_info = {
       input_name: tf.compat.v1.saved_model.utils.build_tensor_info(tensor)
       for input_name, tensor in inputs.items()
@@ -115,12 +119,13 @@ def add_signature(key, inputs, outputs):
   tf.compat.v1.add_to_collection(_SIGNATURE_COLLECTION, (key, signature))
 
 
-def _check_dict_maps_to_tensors_or_sparse_tensors(tensor_map):
+def _check_dict_maps_to_tensors_or_composite_tensors(tensor_map):
   for key, value in tensor_map.items():
-    if not isinstance(value, (tf.Tensor, tf.SparseTensor)):
+    if not (isinstance(value, tf.Tensor) or
+            tf_utils.is_composite_tensor(value)):
       raise TypeError(
-          "Value for key '%s' should be a Tensor or SparseTensor object, found"
-          " %s." % (key, type(value)))
+          "Value for key '%s' should be a Tensor or CompositeTensor object, "
+          "found %s." % (key, type(value)))
 
 
 def _export_signatures(meta_graph):
