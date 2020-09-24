@@ -261,6 +261,7 @@ py_library(
     srcs = ["resolver.py"],
     srcs_version = "PY3",
     deps = [
+        ":file_utils",
         ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
@@ -511,6 +512,23 @@ py_test(
         ":tensorflow_hub",
         ":test_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "file_utils",
+    srcs = ["file_utils.py"],
+    srcs_version = "PY3",
+    deps = ["//tensorflow_hub:expect_tensorflow_installed"],
+)
+
+py_test(
+    name = "file_utils_test",
+    srcs = ["file_utils_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":file_utils",
     ],
 )
 

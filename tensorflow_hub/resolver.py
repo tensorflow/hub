@@ -27,6 +27,7 @@ import uuid
 from absl import flags
 from absl import logging
 import tensorflow as tf
+from tensorflow_hub import file_utils
 from tensorflow_hub import tf_utils
 
 
@@ -138,19 +139,6 @@ class DownloadManager(object):
     """Returns true if interactive logging is enabled."""
     return os.getenv(_TFHUB_DOWNLOAD_PROGRESS, "")
 
-  def _extract_file(self, tgz, tarinfo, dst_path, buffer_size=10<<20):
-    """Extracts 'tarinfo' from 'tgz' and writes to 'dst_path'."""
-    src = tgz.extractfile(tarinfo)
-    dst = tf.compat.v1.gfile.GFile(dst_path, "wb")
-    while 1:
-      buf = src.read(buffer_size)
-      if not buf:
-        break
-      dst.write(buf)
-      self._log_progress(len(buf))
-    dst.close()
-    src.close()
-
   def download_and_uncompress(self, fileobj, dst_path):
     """Streams the content for the 'fileobj' and stores the result in dst_path.
 
@@ -162,48 +150,20 @@ class DownloadManager(object):
       ValueError: Unknown object encountered inside the TAR file.
     """
     try:
-      with tarfile.open(mode="r|*", fileobj=fileobj) as tgz:
-        for tarinfo in tgz:
-          abs_target_path = _merge_relative_path(dst_path, tarinfo.name)
-
-          if tarinfo.isfile():
-            self._extract_file(tgz, tarinfo, abs_target_path)
-          elif tarinfo.isdir():
-            tf.compat.v1.gfile.MakeDirs(abs_target_path)
-          else:
-            # We do not support symlinks and other uncommon objects.
-            raise ValueError(
-                "Unexpected object type in tar archive: %s" % tarinfo.type)
-
-        total_size_str = tf_utils.bytes_to_readable_str(
-            self._total_bytes_downloaded, True)
-        self._print_download_progress_msg(
-            "Downloaded %s, Total size: %s" % (self._url, total_size_str),
-            flush=True)
+      file_utils.extract_tarfile_to_destination(
+          fileobj, dst_path, log_function=self._log_progress)
+      total_size_str = tf_utils.bytes_to_readable_str(
+          self._total_bytes_downloaded, True)
+      self._print_download_progress_msg(
+          "Downloaded %s, Total size: %s" % (self._url, total_size_str),
+          flush=True)
     except tarfile.ReadError:
       raise IOError("%s does not appear to be a valid module." % self._url)
 
 
 def _merge_relative_path(dst_path, rel_path):
   """Merge a relative tar file to a destination (which can be "gs://...")."""
-  # Convert rel_path to be relative and normalize it to remove ".", "..", "//",
-  # which are valid directories in fileystems like "gs://".
-  norm_rel_path = os.path.normpath(rel_path.lstrip("/"))
-
-  if norm_rel_path == ".":
-    return dst_path
-
-  # Check that the norm rel path does not starts with "..".
-  if norm_rel_path.startswith(".."):
-    raise ValueError("Relative path %r is invalid." % rel_path)
-
-  merged = os.path.join(dst_path, norm_rel_path)
-
-  # After merging verify that the merged path keeps the original dst_path.
-  if not merged.startswith(dst_path):
-    raise ValueError("Relative path %r is invalid. Failed to merge with %r." % (
-        rel_path, dst_path))
-  return merged
+  return file_utils.merge_relative_path(dst_path, rel_path)
 
 
 def _module_descriptor_file(module_dir):

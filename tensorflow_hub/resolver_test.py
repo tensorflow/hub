@@ -342,27 +342,6 @@ class ResolverTest(tf.test.TestCase):
     # Test that all files got cleaned up.
     self.assertEqual(tf.compat.v1.gfile.ListDirectory(parent_dir), [])
 
-  def testMergePath(self):
-    self.assertEqual(
-        resolver._merge_relative_path("gs://module-cache", ""),
-        "gs://module-cache")
-    self.assertEqual(
-        resolver._merge_relative_path("gs://module-cache", "./"),
-        "gs://module-cache")
-    self.assertEqual(
-        resolver._merge_relative_path("gs://module-cache", "./file"),
-        "gs://module-cache/file")
-    self.assertEqual(
-        resolver._merge_relative_path("gs://module-cache", "hello/../bla"),
-        "gs://module-cache/bla")
-    self.assertEqual(
-        resolver._merge_relative_path("gs://module-cache", "/"),
-        "gs://module-cache", "/")
-    with self.assertRaisesRegexp(ValueError, "is invalid"):
-      resolver._merge_relative_path("gs://module-cache", "/../")
-    with self.assertRaisesRegexp(ValueError, "is invalid"):
-      resolver._merge_relative_path("gs://module-cache", "hello/../../bla")
-
   def testNotFoundGCSBucket(self):
     # When trying to use not existing GCS bucket, test that
     # tf_util.atomic_write_string_to_file raises tf.error.NotFoundError.
