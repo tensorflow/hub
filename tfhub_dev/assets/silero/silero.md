@@ -1,5 +1,4 @@
 # Publisher silero
-
 Silero AI
 
 [![Icon URL]](https://raw.githubusercontent.com/snakers4/silero-models/master/files/silero_logo.jpg)
