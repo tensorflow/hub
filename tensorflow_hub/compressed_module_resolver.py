@@ -44,10 +44,7 @@ def _append_compressed_format_query(handle):
   parsed = list(urllib.parse.urlparse(handle))
   qsl = urllib.parse.parse_qsl(parsed[4])
   qsl.append(_COMPRESSED_FORMAT_QUERY)
-  # NOTE: Cast to string to avoid urlunparse to deal with mixed types.
-  # This happens due to backport of urllib.parse into python2 returning an
-  # instance of <class 'future.types.newstr.newstr'>.
-  parsed[4] = str(urllib.parse.urlencode(qsl))
+  parsed[4] = urllib.parse.urlencode(qsl)
   return urllib.parse.urlunparse(parsed)
 
 
