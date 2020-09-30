@@ -57,6 +57,8 @@ toc:
   style: divider
 - title: Pitch recognition
   path: /hub/tutorials/spice
+- title: Sound classification
+  path: /hub/tutorials/yamnet
 
 - heading: "Video Tutorials"
   style: divider
