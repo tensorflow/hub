@@ -36,8 +36,7 @@ def _module_dir(handle):
 
 def _is_tarfile(filename):
   """Returns true if 'filename' is TAR file."""
-  return (filename.endswith(".tar") or filename.endswith(".tar.gz") or
-          filename.endswith(".tgz"))
+  return filename.endswith((".tar", ".tar.gz", ".tgz"))
 
 
 def _append_compressed_format_query(handle):
@@ -57,7 +56,7 @@ class HttpCompressedFileResolver(resolver.Resolver):
 
   def is_supported(self, handle):
     # HTTP(S) handles are assumed to point to tarfiles.
-    return handle.startswith("http://") or handle.startswith("https://")
+    return handle.startswith(("http://", "https://"))
 
   def __call__(self, handle):
     module_dir = _module_dir(handle)
