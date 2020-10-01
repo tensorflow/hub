@@ -78,7 +78,7 @@ landing_page:
     - classname: tfo-landing-page-card
       description: >
         <a href="/hub/tutorials/bert_experts"><h3 class="no-link">BERT Experts</h3></a>
-        Explore BERT fine-tuned on different tasks like MNLI, SQuAD, and PubMed, running on TPU.
+        Explore BERT fine-tuned on different tasks like MNLI, SQuAD, and PubMed, running on GPU.
       path: /hub/tutorials/bert_experts
       image_path: /hub/images/bert.png
     - classname: tfo-landing-page-card
