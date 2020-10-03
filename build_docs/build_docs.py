@@ -33,13 +33,11 @@ python tensorflow_hub/tools/build_docs.py --output_dir=/tmp/hub_api
 ```
 """
 
-import inspect
 import os
 
 from absl import app
 from absl import flags
 
-from tensorflow_docs.api_generator import doc_controls
 from tensorflow_docs.api_generator import generate_lib
 from tensorflow_docs.api_generator import public_api
 
@@ -59,21 +57,10 @@ flags.DEFINE_string('site_path', 'hub/api_docs/python',
 
 FLAGS = flags.FLAGS
 
-suppress_docs_for = [
-    absolute_import,
-    division,
-    print_function,
-]
-
-
-
 
 def main(args):
   if args[1:]:
     raise ValueError('Unrecognized command line args', args[1:])
-
-  for obj in suppress_docs_for:
-    doc_controls.do_not_generate_docs(obj)
 
   doc_generator = generate_lib.DocGenerator(
       root_title='TensorFlow Hub',

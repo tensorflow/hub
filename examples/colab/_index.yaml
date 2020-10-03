@@ -77,9 +77,9 @@ landing_page:
       image_path: /hub/images/similarity.png
     - classname: tfo-landing-page-card
       description: >
-        <a href="https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb"><h3 class="no-link">BERT: Sentiment classification</h3></a>
-        Use BERT to classify movie reviews as either positive or negative.
-      path: https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb
+        <a href="/hub/tutorials/bert_experts"><h3 class="no-link">BERT Experts</h3></a>
+        Explore BERT fine-tuned on different tasks like MNLI, SQuAD, and PubMed, running on GPU.
+      path: /hub/tutorials/bert_experts
       image_path: /hub/images/bert.png
     - classname: tfo-landing-page-card
       description: >
