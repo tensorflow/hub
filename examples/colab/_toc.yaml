@@ -8,9 +8,8 @@ toc:
   style: divider
 - title: Text classification
   path: /hub/tutorials/tf2_text_classification
-- title: "BERT: Sentiment classification"
-  path: https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb
-  status: external
+- title: BERT Experts
+  path: /hub/tutorials/bert_experts
 - title: Real-time semantic search
   path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
 - title: Question answering
@@ -32,6 +31,9 @@ toc:
     path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
   - title: Multilingual universal sentence encoder
     path: /hub/tutorials/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder
+  - title: "BERT: Sentiment classification"
+    path: https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb
+    status: external
 
 - heading: "Image Tutorials"
   style: divider
@@ -57,6 +59,8 @@ toc:
   style: divider
 - title: Pitch recognition
   path: /hub/tutorials/spice
+- title: Sound classification
+  path: /hub/tutorials/yamnet
 
 - heading: "Video Tutorials"
   style: divider
