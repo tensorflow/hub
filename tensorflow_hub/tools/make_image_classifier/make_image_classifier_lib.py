@@ -18,6 +18,7 @@ This library provides the major pieces for make_image_classifier (see there).
 """
 
 import collections
+import contextlib
 
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -29,6 +30,20 @@ def get_default_image_dir():
   """Returns the path to a default image dataset, downloading it if needed."""
   return tf.keras.utils.get_file("flower_photos",
                                  _DEFAULT_IMAGE_URL, untar=True)
+
+
+class NoStrategy:
+  scope = contextlib.contextmanager(lambda _: iter(range(1)))
+
+
+def get_distribution_strategy(distribution_strategy_name):
+  if distribution_strategy_name == "mirrored":
+    return tf.distribute.MirroredStrategy()
+  elif not distribution_strategy_name:
+    return NoStrategy()
+  else:
+    raise ValueError(
+        "Unknown distribution strategy {}".format(distribution_strategy_name))
 
 
 class HParams(
@@ -174,6 +189,7 @@ def _image_size_for_module(module_layer, requested_image_size=None):
 def build_model(module_layer, hparams, image_size, num_classes):
   """Builds the full classifier model from the given module_layer.
 
+  If using a DistributionStrategy, call this under its `.scope()`.
   Args:
     module_layer: Pre-trained tfhub model layer.
     hparams: A namedtuple of hyperparameters. This function expects
@@ -202,6 +218,7 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size,
                 log_dir=None):
   """Trains model with the given data and hyperparameters.
 
+  If using a DistributionStrategy, call this under its `.scope()`.
   Args:
     model: The tf.keras.Model from _build_model().
     hparams: A namedtuple of hyperparameters. This function expects
@@ -247,7 +264,10 @@ def train_model(model, hparams, train_data_and_size, valid_data_and_size,
       callbacks=callbacks)
 
 
-def make_image_classifier(tfhub_module, image_dir, hparams,
+def make_image_classifier(tfhub_module,
+                          image_dir,
+                          hparams,
+                          distribution_strategy=None,
                           requested_image_size=None,
                           log_dir=None):
   """Builds and trains a TensorFLow model for image classification.
@@ -257,17 +277,14 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
     image_dir: A Python string naming a directory with subdirectories of images,
       one per class.
     hparams: A HParams object with hyperparameters controlling the training.
+    distribution_strategy: The DistributionStrategy make_image_classifier is
+      running with.
     requested_image_size: A Python integer controlling the size of images to
       feed into the Hub module. If the module has a fixed input size, this
       must be omitted or set to that same value.
     log_dir: A directory to write logs for TensorBoard into (defaults to None,
       no logs will then be written).
   """
-  module_layer = hub.KerasLayer(tfhub_module,
-                                trainable=hparams.do_fine_tuning)
-  image_size = _image_size_for_module(module_layer, requested_image_size)
-  print("Using module {} with image size {}".format(
-      tfhub_module, image_size))
   augmentation_params = dict(
       rotation_range=hparams.rotation_range,
       horizontal_flip=hparams.horizontal_flip,
@@ -275,12 +292,18 @@ def make_image_classifier(tfhub_module, image_dir, hparams,
       height_shift_range=hparams.height_shift_range,
       shear_range=hparams.shear_range,
       zoom_range=hparams.zoom_range)
-  train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
-      image_dir, image_size, hparams.batch_size, hparams.validation_split,
-      hparams.do_data_augmentation, augmentation_params)
-  print("Found", len(labels), "classes:", ", ".join(labels))
 
-  model = build_model(module_layer, hparams, image_size, len(labels))
-  train_result = train_model(model, hparams, train_data_and_size,
-                             valid_data_and_size, log_dir)
+  with distribution_strategy.scope():
+    module_layer = hub.KerasLayer(
+        tfhub_module, trainable=hparams.do_fine_tuning)
+    image_size = _image_size_for_module(module_layer, requested_image_size)
+    print("Using module {} with image size {}".format(tfhub_module, image_size))
+    # TODO(b/142034371): Use tf.data.Dataset to align with `strategy`.
+    train_data_and_size, valid_data_and_size, labels = _get_data_with_keras(
+        image_dir, image_size, hparams.batch_size, hparams.validation_split,
+        hparams.do_data_augmentation, augmentation_params)
+    print("Found", len(labels), "classes:", ", ".join(labels))
+    model = build_model(module_layer, hparams, image_size, len(labels))
+    train_result = train_model(model, hparams, train_data_and_size,
+                               valid_data_and_size, log_dir)
   return model, labels, train_result

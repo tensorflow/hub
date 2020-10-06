@@ -187,6 +187,22 @@ class MakeImageClassifierTest(tf.test.TestCase):
     with self.assertRaisesRegex(ValueError, "none"):
       make_image_classifier_lib._image_size_for_module(module_layer, None)
 
+  def testGetDistributionStrategy(self):
+    self.assertIsInstance(
+        make_image_classifier_lib.get_distribution_strategy(None),
+        make_image_classifier_lib.NoStrategy)
+    self.assertIsInstance(
+        make_image_classifier_lib.get_distribution_strategy(""),
+        make_image_classifier_lib.NoStrategy)
+
+    self.assertIsInstance(
+        make_image_classifier_lib.get_distribution_strategy("mirrored"),
+        tf.distribute.MirroredStrategy)
+
+    with self.assertRaisesRegex(ValueError,
+                                "Unknown distribution strategy other"):
+      make_image_classifier_lib.get_distribution_strategy("other")
+
 
 if __name__ == "__main__":
   try:

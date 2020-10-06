@@ -141,6 +141,8 @@ flags.DEFINE_float("shear_range", _DEFAULT_HPARAMS.shear_range,
                    "Shear angle in counter-clockwise direction in degrees.")
 flags.DEFINE_float("zoom_range", _DEFAULT_HPARAMS.zoom_range,
                    "Range for random zoom.")
+flags.DEFINE_enum("distribution_strategy", None, ["", "mirrored"],
+                  "The distribution strategy the classifier should use.")
 FLAGS = flags.FLAGS
 
 
@@ -223,8 +225,9 @@ def main(args):
     _set_gpu_memory_growth()
 
   model, labels, train_result = lib.make_image_classifier(
-      FLAGS.tfhub_module, image_dir, hparams, FLAGS.image_size,
-      FLAGS.summaries_dir)
+      FLAGS.tfhub_module, image_dir, hparams,
+      lib.get_distribution_strategy(FLAGS.distribution_strategy),
+      FLAGS.image_size, FLAGS.summaries_dir)
   if FLAGS.assert_accuracy_at_least:
     _assert_accuracy(train_result, FLAGS.assert_accuracy_at_least)
   print("Done with training.")
