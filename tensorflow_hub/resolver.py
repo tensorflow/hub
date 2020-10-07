@@ -22,6 +22,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import urllib
 import uuid
 
 from absl import flags
@@ -450,3 +451,33 @@ class PathResolver(Resolver):
     if not tf.compat.v1.gfile.Exists(handle):
       raise IOError("%s does not exist." % handle)
     return handle
+
+
+class HttpResolverBase(Resolver):
+  """Base class for HTTP-based resolvers."""
+
+  def __init__(self):
+    self._context = None
+
+  def _append_format_query(self, handle, format_query):
+    """Append the given query args to the URL."""
+    # Convert the tuple from urlparse into list so it can be updated in place.
+    parsed = list(urllib.parse.urlparse(handle))
+    qsl = urllib.parse.parse_qsl(parsed[4])
+    qsl.append(format_query)
+    parsed[4] = urllib.parse.urlencode(qsl)
+    return urllib.parse.urlunparse(parsed)
+
+  def _set_url_context(self, context):
+    """Add an SSLContext to support custom certificate authorities."""
+    self._context = context
+
+  def _call_urlopen(self, request):
+    # Overriding this method allows setting SSL context in Python 3.
+    if self._context is None:
+      return urllib.request.urlopen(request)
+    else:
+      return urllib.request.urlopen(request, context=self._context)
+
+  def is_http_protocol(self, handle):
+    return handle.startswith(("http://", "https://"))

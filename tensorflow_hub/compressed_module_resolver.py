@@ -39,28 +39,20 @@ def _is_tarfile(filename):
   return filename.endswith((".tar", ".tar.gz", ".tgz"))
 
 
-def _append_compressed_format_query(handle):
-  # Convert the tuple from urlparse into list so it can be updated in place.
-  parsed = list(urllib.parse.urlparse(handle))
-  qsl = urllib.parse.parse_qsl(parsed[4])
-  qsl.append(_COMPRESSED_FORMAT_QUERY)
-  parsed[4] = urllib.parse.urlencode(qsl)
-  return urllib.parse.urlunparse(parsed)
-
-
-class HttpCompressedFileResolver(resolver.Resolver):
+class HttpCompressedFileResolver(resolver.HttpResolverBase):
   """Resolves HTTP handles by downloading and decompressing them to local fs."""
 
   def is_supported(self, handle):
     # HTTP(S) handles are assumed to point to tarfiles.
-    return handle.startswith(("http://", "https://"))
+    return self.is_http_protocol(handle)
 
   def __call__(self, handle):
     module_dir = _module_dir(handle)
 
     def download(handle, tmp_dir):
       """Fetch a module via HTTP(S), handling redirect and download headers."""
-      request = urllib.request.Request(_append_compressed_format_query(handle))
+      request = urllib.request.Request(
+          self._append_compressed_format_query(handle))
       response = self._call_urlopen(request)
       return resolver.DownloadManager(handle).download_and_uncompress(
           response, tmp_dir)
@@ -72,9 +64,8 @@ class HttpCompressedFileResolver(resolver.Resolver):
     # This method is provided as a convenience to simplify testing.
     return LOCK_FILE_TIMEOUT_SEC
 
-  def _call_urlopen(self, request):
-    # Overriding this method allows setting SSL context in Python 3.
-    return urllib.request.urlopen(request)
+  def _append_compressed_format_query(self, handle):
+    return self._append_format_query(handle, _COMPRESSED_FORMAT_QUERY)
 
 
 class GcsCompressedFileResolver(resolver.Resolver):

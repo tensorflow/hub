@@ -142,9 +142,10 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
         ("https://example.com/module?extra=abc&"
          "tf-hub-format=test&tf-hub-format=compressed"),
     )]
+    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
     for handle, expected in tests:
       self.assertTrue(
-          compressed_module_resolver._append_compressed_format_query(handle),
+          http_resolver._append_compressed_format_query(handle),
           expected)
 
   def testAbandondedLockFile(self):
