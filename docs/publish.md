@@ -1,6 +1,6 @@
 <!--* freshness: { owner: 'maringeo' } *-->
 
-# Becoming a publisher
+# Become a publisher
 
 ## Terms of service
 

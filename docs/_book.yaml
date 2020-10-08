@@ -49,15 +49,15 @@ upper_tabs:
         path: /hub/common_saved_model_apis/text
       # Publishing models to TF-Hub
       - heading: Publishing models to TF-Hub
-      - title: Exporting a model
-        path: /hub/exporting_tf2_saved_model
-      - title: Writing model documentation
-        path: /hub/writing_model_documentation
       - title: Become a publisher
-        path: /hub/becoming_a_publisher
+        path: /hub/publish
+      - title: Export a model
+        path: /hub/exporting_tf2_saved_model
+      - title: Write model documentation
+        path: /hub/writing_model_documentation
       - title: Contribute a model
         path: /hub/contribute_a_model
-      - title: Creating a collection
+      - title: Create a collection
         path: /hub/creating_a_collection
       - title: Data portability and deletion
         path: /hub/portability_and_deletion

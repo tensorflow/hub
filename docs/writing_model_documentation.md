@@ -1,6 +1,6 @@
 <!--* freshness: { owner: 'maringeo' reviewed: '2020-09-14' review_interval: '3 months' } *-->
 
-# Writing model documentation
+# Write model documentation
 
 The model documentation that is displayed on tfhub.dev is written in the
 Markdown format.
@@ -10,12 +10,12 @@ Markdown format.
 There are 3 types of markdown documentation used in tfhub.dev:
 
 *   Publisher markdown - contains information about a publisher (learn more in
-    the [becoming a publisher](becoming_a_publisher.md) guide).
+    the [become a publisher](publish.md) guide).
 *   Model markdown - contains information about a specific model. (learn more in
     the [contribute a model](contribute_a_model.md) guide).
 *   Collection markdown - contains information about a publisher-defined
     collection of models. (learn more in the
-    [creating a collection](creating_a_collection.md) guide).
+    [create a collection](creating_a_collection.md) guide).
 
 ## Content organization
 

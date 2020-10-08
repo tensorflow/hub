@@ -1,10 +1,10 @@
 <!--* freshness: { owner: 'kempy' reviewed: '2020-09-14' } *-->
 
-# Contributing
+# Contribute
 
 To learn more about how to publish a model or model collection on
-[tfhub.dev](https://tfhub.dev/) see the
-[becoming_a_publisher](becoming_a_publisher.md) guide.
+[tfhub.dev](https://tfhub.dev/) see the [becoming_a_publisher](publish.md)
+guide.
 
 You can find more information of how to contribute to the
 [TensorFlow Hub library](https://github.com/tensorflow/hub) in our

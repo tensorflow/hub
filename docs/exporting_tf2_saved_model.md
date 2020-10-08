@@ -1,6 +1,6 @@
 <!--* freshness: { owner: 'maringeo' reviewed: '2020-09-14' review_interval: '3 months' } *-->
 
-# Exporting a model
+# Export a model
 
 This page describes the process of exporting models in the
 [SavedModel format of TensorFlow 2](https://www.tensorflow.org/guide/saved_model).

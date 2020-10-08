@@ -25,7 +25,7 @@ print(embeddings.shape)  #(4,128)
 ## Next Steps
 
 -   [Find models on tfhub.dev](https://tfhub.dev)
--   [Publish models on tfhub.dev](becoming_a_publisher.md)
+-   [Publish models on tfhub.dev](publish.md)
 -   TensorFlow Hub library
     -   [Install TensorFlow Hub](installation.md)
     -   [Library overview](lib_overview.md)

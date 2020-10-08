@@ -1,6 +1,6 @@
 <!--* freshness: { owner: 'maringeo' reviewed: '2020-09-14' review_interval: '3 months' } *-->
 
-# Creating a collection
+# Create a collection
 
 Collections are a feature of tfhub.dev that enables publishers to bundle related
 models together to improve user search experience.
