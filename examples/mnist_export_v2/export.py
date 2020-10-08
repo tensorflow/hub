@@ -18,9 +18,6 @@ The module has as a single signature, accepting a batch of images with shape
 [None, 28, 28, 1] and returning a prediction vector.
 In this example, we are loading the MNIST Dataset from TFDS and training a
 simple digit classifier.
-
-For a more realistic exporting example, see:
-tensorflow/examples/saved_model/integration_tests/export_mnist_cnn.py.
 """
 
 import argparse

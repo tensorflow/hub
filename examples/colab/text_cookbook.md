@@ -92,10 +92,3 @@ sentence embedding module from token embeddings.
 
 [Text embedding module exporter v2](https://github.com/tensorflow/hub/blob/master/examples/text_embeddings_v2/export_v2.py) -
 same as above, but compatible with TensorFlow 2 and eager execution.
-
-### Create trainable RNN module
-[RNN model exporter](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/saved_model/integration_tests/export_text_rnn_model.py) -
-shows how to create an uninitialized trainable LSTM based module compatible with
-TensorFlow 2. The module exposes two signatures, one for training by directly
-feeding in sentences, the other for decoding - constructing a statistically most
-likely sentence.

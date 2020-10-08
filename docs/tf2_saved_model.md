@@ -210,10 +210,6 @@ print(layer.trainable_weights)  # [2.]
 print(layer.losses)  # 0.004
 ```
 
-The code at
-[tensorflow/examples/saved_model/integration_tests/](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/saved_model/integration_tests)
-contains larger examples, esp. the `export_mnist.py` and `use_mnist.py` pair.
-
 
 ## Fine-Tuning
 
@@ -281,9 +277,7 @@ e.g., output logits instead of softmax probabilities or top-k predictions.
 If the model use dropout, batch normalization, or similar training techniques
 that involve hyperparameters, set them to values that make sense across many
 expected target problems and batch sizes. (As of this writing, saving from
-Keras does not make it easy to let consumers adjust them, but see
-[tensorflow/examples/saved_model/integration_tests/export_mnist_cnn.py](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/saved_model/integration_tests/export_mnist_cnn.py)
-for some crude workarounds.)
+Keras does not make it easy to let consumers adjust them.)
 
 Weight regularizers on individual layers are saved (with their regularization
 strength coefficients), but weight regularization from within the optimizer
