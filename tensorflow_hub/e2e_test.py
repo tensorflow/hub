@@ -59,17 +59,9 @@ class End2EndTest(tf.test.TestCase):
     tar.close()
 
   def _generate_module(self):
-    spec = hub.create_module_spec(self._stateless_module_fn)
-    m = hub.Module(spec, name="test_module")
-    out = m(10)
-
-    export_path = os.path.join(self.get_temp_dir(), "module")
-    with tf.compat.v1.Session() as sess:
-      sess.run(tf.compat.v1.global_variables_initializer())
-      self.assertAllClose(sess.run(out), 100)
-      m.export(export_path, sess)
-
-    self._create_tgz(export_path)
+    module_export_path = os.path.join(self.get_temp_dir(), "module")
+    test_utils.export_module(module_export_path)
+    self._create_tgz(module_export_path)
 
   def test_http_locations(self):
     with tf.Graph().as_default():
