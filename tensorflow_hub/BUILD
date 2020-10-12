@@ -53,6 +53,7 @@ py_library(
         ":native_module",
         ":registry",
         ":resolver",
+        ":uncompressed_module_resolver",
     ],
 )
 
@@ -275,6 +276,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":resolver",
+        ":tensorflow_hub",
+        ":test_utils",
         ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
@@ -530,6 +533,27 @@ py_test(
     deps = [
         ":file_utils",
     ],
+)
+
+py_test(
+    name = "uncompressed_module_resolver_test",
+    srcs = ["uncompressed_module_resolver_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":resolver",
+        ":tensorflow_hub",
+        ":test_utils",
+        ":uncompressed_module_resolver",
+        "//tensorflow_hub:expect_tensorflow_installed",
+    ],
+)
+
+py_library(
+    name = "uncompressed_module_resolver",
+    srcs = ["uncompressed_module_resolver.py"],
+    srcs_version = "PY3",
+    deps = [":resolver"],
 )
 
 exports_files([

@@ -20,6 +20,7 @@ import sys
 import threading
 
 from absl import flags
+from tensorflow_hub import resolver
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -169,3 +170,58 @@ def export_module(module_export_path):
   with tf.compat.v1.Session() as sess:
     sess.run(tf.compat.v1.global_variables_initializer())
     m.export(module_export_path, sess)
+
+
+class RunningOnColabContext(object):
+  """Simulate running on Colab by faking that google.colab is available."""
+
+  def __enter__(self):
+    sys.modules["google.colab"] = None
+    return self
+
+  def __exit__(self, exc_type, exc_value, exc_traceback):
+    del sys.modules["google.colab"]
+    return True
+
+
+class EnvVariableContextManager(object):
+  """Set an environment variable for the context and unset it afterwards."""
+
+  def __init__(self, key, value):
+    self.key = key
+    self.value = value
+
+  def __enter__(self):
+    os.environ[self.key] = self.value
+    return self
+
+  def __exit__(self, exc_type, exc_value, exc_traceback):
+    del os.environ[self.key]
+    return True
+
+
+class CompressedLoadFormatContext(EnvVariableContextManager):
+  """Set the load format to COMPRESSED during the execution of the context."""
+
+  def __init__(self):
+    super(CompressedLoadFormatContext,
+          self).__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
+                         resolver.ModelLoadFormat.COMPRESSED.value)
+
+
+class UncompressedLoadFormatContext(EnvVariableContextManager):
+  """Set the load format to UNCOMPRESSED during the execution of the context."""
+
+  def __init__(self):
+    super(UncompressedLoadFormatContext,
+          self).__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
+                         resolver.ModelLoadFormat.UNCOMPRESSED.value)
+
+
+class AutoLoadFormatContext(EnvVariableContextManager):
+  """Set the load format to AUTO during the execution of the context."""
+
+  def __init__(self):
+    super(AutoLoadFormatContext,
+          self).__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
+                         resolver.ModelLoadFormat.AUTO.value)

@@ -24,10 +24,15 @@ import unittest
 import uuid
 
 from absl import flags
+import mock
 import tensorflow as tf
+import tensorflow_hub as hub
 
+from tensorflow_hub import compressed_module_resolver
 from tensorflow_hub import resolver
+from tensorflow_hub import test_utils
 from tensorflow_hub import tf_utils
+from tensorflow_hub import uncompressed_module_resolver
 
 
 FLAGS = flags.FLAGS
@@ -76,7 +81,7 @@ class FakeResolver(resolver.Resolver):
     return handle + "-resolved_by_" + self.prefix
 
 
-class ResolverTest(tf.test.TestCase):
+class CompressedResolverTest(tf.test.TestCase):
 
   def testCacheDir(self):
     # No cache dir set, None is returned.
@@ -362,6 +367,71 @@ class ResolverTest(tf.test.TestCase):
         assert False
       except tf.errors.NotFoundError as e:
         self.assertEqual("Test", e.message)
+
+
+class UncompressedResolverTest(tf.test.TestCase):
+
+  def testModuleRunningOnColab(self):
+    module_export_path = os.path.join(self.get_temp_dir(), "module")
+    with tf.Graph().as_default():
+      test_utils.export_module(module_export_path)
+      # Mock the server by returning the path to the local uncompressed module
+      with mock.patch.object(
+          uncompressed_module_resolver.HttpUncompressedFileResolver,
+          "_request_gcs_location",
+          return_value=module_export_path) as mocked_urlopen:
+        with test_utils.RunningOnColabContext():
+          m = hub.Module("https://tfhub.dev/google/model/1")
+        mocked_urlopen.assert_called_once_with(
+            "https://tfhub.dev/google/model/1?tf-hub-format=uncompressed")
+      out = m(11)
+      with tf.compat.v1.Session() as sess:
+        self.assertAllClose(sess.run(out), 121)
+
+
+class LoadFormatResolverBehaviorTest(tf.test.TestCase):
+  """Test that the right resolvers are called depending on the load format."""
+
+  def _assert_resolver_is_called(self, http_resolver):
+    module_url = "https://tfhub.dev/google/model/1"
+    with mock.patch.object(
+        http_resolver, "__call__", side_effect=ValueError) as mocked_call:
+      try:
+        hub.Module(module_url)
+        self.fail("Failure expected since mock raises it as side effect.")
+      except ValueError:
+        pass
+    mocked_call.assert_called_once_with(module_url)
+
+  def _assert_compressed_resolver_called(self):
+    self._assert_resolver_is_called(
+        compressed_module_resolver.HttpCompressedFileResolver)
+
+  def _assert_uncompressed_resolver_called(self):
+    self._assert_resolver_is_called(
+        uncompressed_module_resolver.HttpUncompressedFileResolver)
+
+  def test_load_format_auto(self):
+    # ModelLoadFormat is set to AUTO on default
+    # On Colab, use the uncompressed resolver
+    self._assert_compressed_resolver_called()
+    with test_utils.RunningOnColabContext():
+      self._assert_uncompressed_resolver_called()
+
+  def test_load_format_compressed(self):
+    # The compressed resolver should be called in both cases
+    with test_utils.CompressedLoadFormatContext():
+      self._assert_compressed_resolver_called()
+      with test_utils.RunningOnColabContext():
+        self._assert_compressed_resolver_called()
+
+  def test_load_format_uncompressed(self):
+    # The uncompressed resolver should be called in both cases
+    with test_utils.UncompressedLoadFormatContext():
+      self._assert_uncompressed_resolver_called()
+      with test_utils.RunningOnColabContext():
+        self._assert_uncompressed_resolver_called()
+
 
 if __name__ == "__main__":
   tf.test.main()

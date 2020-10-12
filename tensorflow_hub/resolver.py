@@ -16,6 +16,7 @@
 
 import abc
 import datetime
+import enum
 import os
 import socket
 import sys
@@ -34,14 +35,46 @@ from tensorflow_hub import tf_utils
 
 FLAGS = flags.FLAGS
 
+
+class ModelLoadFormat(enum.Enum):
+  # Download compressed SavedModels and extract them to a local cache directory
+  COMPRESSED = "COMPRESSED"
+  # Directly read SavedModels from their GCS buckets without caching them
+  UNCOMPRESSED = "UNCOMPRESSED"
+  # On Colab, set the mode to UNCOMPRESSED. Set to COMPRESSED otherwise.
+  AUTO = "AUTO"
+
+
 flags.DEFINE_string(
     "tfhub_cache_dir",
     None,
     "If set, TF-Hub will download and cache Modules into this directory. "
     "Otherwise it will attempt to find a network path.")
 
+flags.DEFINE_enum(
+    "tfhub_model_load_format", ModelLoadFormat.AUTO.value,
+    [model_load_format.value for model_load_format in ModelLoadFormat],
+    "If set to COMPRESSED, archived modules will be downloaded and extracted"
+    "to the `TFHUB_CACHE_DIR` before being loaded. If set to UNCOMPRESSED, the"
+    "modules will be read directly from their GCS storage location without"
+    "needing a cache dir. AUTO defaults to COMPRESSED behavior and to"
+    "UNCOMPRESSED behavior if the library is executed on Colab"
+    "to save disk space.")
+
 _TFHUB_CACHE_DIR = "TFHUB_CACHE_DIR"
 _TFHUB_DOWNLOAD_PROGRESS = "TFHUB_DOWNLOAD_PROGRESS"
+_TFHUB_MODEL_LOAD_FORMAT = "TFHUB_MODEL_LOAD_FORMAT"
+
+
+def get_env_setting(env_var, flag_name):
+  """Returns the environment variable or the specified flag."""
+
+  # Note: We are using FLAGS["tfhub_cache_dir"] (and not FLAGS.tfhub_cache_dir)
+  # to access the flag value in order to avoid parsing argv list. The flags
+  # should have been parsed by now in main() by tf.app.run(). If that was not
+  # the case (say in Colab env) we skip flag parsing because argv may contain
+  # unknown flags.
+  return os.getenv(env_var, "") or FLAGS[flag_name].value
 
 
 def tfhub_cache_dir(default_cache_dir=None, use_temp=False):
@@ -66,8 +99,7 @@ def tfhub_cache_dir(default_cache_dir=None, use_temp=False):
   # the case (say in Colab env) we skip flag parsing because argv may contain
   # unknown flags.
   cache_dir = (
-      os.getenv(_TFHUB_CACHE_DIR, "") or FLAGS["tfhub_cache_dir"].value or
-      default_cache_dir)
+      get_env_setting(_TFHUB_CACHE_DIR, "tfhub_cache_dir") or default_cache_dir)
   if not cache_dir and use_temp:
     # Place all TF-Hub modules under <system's temp>/tfhub_modules.
     cache_dir = os.path.join(tempfile.gettempdir(), "tfhub_modules")
@@ -75,6 +107,11 @@ def tfhub_cache_dir(default_cache_dir=None, use_temp=False):
     logging.log_first_n(logging.INFO, "Using %s to cache modules.", 1,
                         cache_dir)
   return cache_dir
+
+
+def model_load_format():
+  """Returns the load mode to use."""
+  return get_env_setting(_TFHUB_MODEL_LOAD_FORMAT, "tfhub_model_load_format")
 
 
 def create_local_module_dir(cache_dir, module_name):
@@ -458,6 +495,10 @@ class HttpResolverBase(Resolver):
 
   def __init__(self):
     self._context = None
+
+  def _is_running_on_colab(self):
+    # Recommended check for the Colab runtime
+    return "google.colab" in sys.modules
 
   def _append_format_query(self, handle, format_query):
     """Append the given query args to the URL."""

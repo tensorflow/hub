@@ -44,7 +44,14 @@ class HttpCompressedFileResolver(resolver.HttpResolverBase):
 
   def is_supported(self, handle):
     # HTTP(S) handles are assumed to point to tarfiles.
-    return self.is_http_protocol(handle)
+    if not self.is_http_protocol(handle):
+      return False
+    # AUTO defaults to UNCOMPRESSED on Colab
+    load_format = resolver.model_load_format()
+    if (load_format == resolver.ModelLoadFormat.AUTO.value and
+        not self._is_running_on_colab()):
+      return True
+    return load_format == resolver.ModelLoadFormat.COMPRESSED.value
 
   def __call__(self, handle):
     module_dir = _module_dir(handle)

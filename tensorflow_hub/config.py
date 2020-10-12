@@ -18,11 +18,13 @@ from tensorflow_hub import compressed_module_resolver
 from tensorflow_hub import native_module
 from tensorflow_hub import registry
 from tensorflow_hub import resolver
+from tensorflow_hub import uncompressed_module_resolver
 
 
 def _install_default_resolvers():
   for impl in [
       resolver.PathResolver(),
+      uncompressed_module_resolver.HttpUncompressedFileResolver(),
       compressed_module_resolver.GcsCompressedFileResolver(),
       compressed_module_resolver.HttpCompressedFileResolver()
   ]:
