@@ -17,6 +17,12 @@
 from absl import logging
 
 
+def _clear():
+  """Clear resolvers and loaders."""
+  resolver.clear_implementations()
+  loader.clear_implementations()
+
+
 class MultiImplRegister(object):
   """Utility class to inject multiple implementations of methods.
 
@@ -28,6 +34,10 @@ class MultiImplRegister(object):
 
   def __init__(self, name):
     self._name = name
+    self._impls = []
+
+  def clear_implementations(self):
+    """Remove all implementations."""
     self._impls = []
 
   def add_implementation(self, impl):

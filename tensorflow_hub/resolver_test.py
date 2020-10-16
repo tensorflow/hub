@@ -29,6 +29,8 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 from tensorflow_hub import compressed_module_resolver
+from tensorflow_hub import config
+from tensorflow_hub import registry
 from tensorflow_hub import resolver
 from tensorflow_hub import test_utils
 from tensorflow_hub import tf_utils
@@ -434,4 +436,7 @@ class LoadFormatResolverBehaviorTest(tf.test.TestCase):
 
 
 if __name__ == "__main__":
+  # Make OSS configuration used for resolvers/loaders.
+  registry._clear()
+  config._run()
   tf.test.main()
