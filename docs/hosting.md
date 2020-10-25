@@ -3,17 +3,17 @@
 # Model hosting protocol
 
 This document describes the URL coventions used when hosting all model types on
-[thub.dev](https://tfhub.dev) - TFJS, TF Lite and TensorFlow models. It also
+[tfhub.dev](https://tfhub.dev) - TFJS, TF Lite and TensorFlow models. It also
 describes describes the HTTP(S)-based protocol implemented by the
 `tensorflow_hub` library in order to load TensorFlow models from
-[thub.dev](https://tfhub.dev) and compatibe services into TensorFlow programs.
+[tfhub.dev](https://tfhub.dev) and compatibe services into TensorFlow programs.
 
 Its key feature is to use the same URL in code to load a model and in a browser
 to view the model documentation.
 
 ## General URL conventions
 
-[thub.dev](https://tfhub.dev) supports the following URL formats:
+[tfhub.dev](https://tfhub.dev) supports the following URL formats:
 
 *   TF Hub publishers follow `https://tfhub.dev/<publisher>`
 *   TF Hub collections follow
@@ -24,7 +24,7 @@ to view the model documentation.
     version of the model.
 
 TF Hub models can be downloaded as compressed assets by appending URL parameters
-to the [thub.dev](https://tfhub.dev) model URL. However, the URL paramters
+to the [tfhub.dev](https://tfhub.dev) model URL. However, the URL paramters
 required to achieve that depend on the model type:
 
 *   TensorFlow models (both SavedModel and TF1 Hub formats): append
@@ -103,7 +103,7 @@ locally may increase latency.
 
 ## tensorflow_hub library protocol
 
-This section describes how we host models on [thub.dev](https://tfhub.dev) for
+This section describes how we host models on [tfhub.dev](https://tfhub.dev) for
 use with the tensorflow_hub library. If you want to host your own model
 repository to work with the tensorflow_hub library, your HTTP(s) distribution
 service should provide an implementation of this protocol.
@@ -112,7 +112,7 @@ Note that this section does not address hosting TF Lite and TFJS models since
 they are not downloaded via the `tensorflow_hub` library. For more information
 on hosting these model types, please check [above](#general-url-conventions).
 
-Models are stored on [thub.dev](https://tfhub.dev) as compressed tar.gz files.
+Models are stored on [tfhub.dev](https://tfhub.dev) as compressed tar.gz files.
 The tensorflow_hub library automatically downloads the compressed model. They
 can also be manually downloaded by appending the `?tf-hub-format=compressed` to
 the model url, for example:
