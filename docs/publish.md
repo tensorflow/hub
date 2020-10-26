@@ -25,7 +25,7 @@ described in the [writing model documentation](writing_model_documentation)
 guide, with slight syntactic differences.
 
 The correct location for the publisher file on the TensorFlow Hub repo is:
-[hub/tfhub_dev/assets/](https://github.com/tensorflow/hub/tree/master/tfhub_dev/assets)/<publisher_name>/<publisher_name.md>
+[tfhub.dev/assets/docs](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/\<publisher_name>/\<publisher_name.md>
 
 See the minimal publisher documentation example:
 
