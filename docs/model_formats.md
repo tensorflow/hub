@@ -2,13 +2,13 @@
 
 # Model formats
 
-[thub.dev](https://tfhub.dev) hosts the following model formats: SavedModel, TF1
-Hub format, TF.js and TFLite. This page provides an overview of each model
+[tfhub.dev](https://tfhub.dev) hosts the following model formats: SavedModel,
+TF1 Hub format, TF.js and TFLite. This page provides an overview of each model
 format.
 
 ## TensorFlow formats
 
-[thub.dev](https://tfhub.dev) hosts TensorFlow models in the SavedModel format
+[tfhub.dev](https://tfhub.dev) hosts TensorFlow models in the SavedModel format
 and TF1 Hub format. We recommend using models in the standardized SavedModel
 format instead of the deprecated TF1 Hub format when possible.
 
@@ -19,7 +19,7 @@ learn more about the SavedModel format in the
 [TensorFlow SavedModel](https://www.tensorflow.org/guide/saved_model) guide.
 
 You can browse SavedModels on tfhub.dev by using the TF2 version filter on the
-[thub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder) or by
+[tfhub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder) or by
 following
 [this link](https://tfhub.dev/s?subtype=module,placeholder&tf-version=tf2).
 
@@ -44,7 +44,7 @@ absence of the `tfhub_module.pb` file.
 
 You can browse models in the TF1 Hub format on tfhub.dev by using the TF1
 version filter on the
-[thub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder) or by
+[tfhub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder) or by
 following
 [this link](https://tfhub.dev/s?subtype=module,placeholder&tf-version=tf1).
 
@@ -61,7 +61,7 @@ The TFLite format is used for on-device inference. You can learn more at the
 
 You can browse TF Lite models on tfhub.dev by using the TF Lite model format
 filter on the
-[thub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder) or by
+[tfhub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder) or by
 following [this link](https://tfhub.dev/lite).
 
 ## TFJS format
@@ -70,5 +70,5 @@ The TF.js format is used for in-browser ML. You can learn more at the
 [TF.js documentation](https://www.tensorflow.org/js).
 
 You can browse TF.js models on tfhub.dev by using the TF.js model format filter
-on the [thub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder) or
-by following [this link](https://tfhub.dev/js).
+on the [tfhub.dev browse page](https://tfhub.dev/s?subtype=module,placeholder)
+or by following [this link](https://tfhub.dev/js).
