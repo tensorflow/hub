@@ -105,4 +105,6 @@ if __name__ == "__main__":
   except ImportError as e:
     print("Skipping tests:", str(e))
     sys.exit(0)
+  # Load compressed models from tensorflow_hub
+  os.environ["TFHUB_MODEL_LOAD_FORMAT"] = "COMPRESSED"
   tf.test.main()
