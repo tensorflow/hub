@@ -13,16 +13,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
-# Current version 0.10.0-dev
-  * Under development
+# Release 0.10.0
+  * Enforce Python 3.5+ and TF1.15+.
+  * Add ModelLoadFormat setting to switch between (un)compressed model loading.
+  * Support for RaggedTensor inputs/outputs is backported from TF2 SavedModels
+     to the deprecated hub.Module class (Use of tf.compat.v1.ragged.placeholder()
+     in a module_fn is broken for TF2.3 and requires TF2.2 or TF2.4).
+  * Bug fixes.
 
-# Current version 0.9.0
+# Release 0.9.0
   * Add SavedModel.LoadOptions to hub.KerasLayer API to pass to load_v2.
   * Improved error messaging.
   * Documentation improvements.
   * Bug fixes.
 
-# Current version 0.8.0
+# Release 0.8.0
   * Implemented make_nearest_neighbour_index tool.
   * Added text FeatureColumn, hub.text_embedding_column_v2, for TF 2.x.
   * CORD-19 embedding colab.
