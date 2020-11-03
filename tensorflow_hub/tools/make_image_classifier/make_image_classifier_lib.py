@@ -99,8 +99,12 @@ def _get_data_with_keras(image_dir, image_size, batch_size, validation_split,
       the fixed height and width to which input images are resized.
     batch_size: A Python integer with the number of images per batch of
       training and validation data.
+    validation_split: A float representing the fraction of the dataset split
+      into a validation set.
     do_data_augmentation: An optional boolean, controlling whether the
       training dataset is augmented by randomly distorting input images.
+    augmentation_params: A dictionary containing the augmentation params as keys
+      and their respective values.
 
   Returns:
     A nested tuple ((train_data, train_size),

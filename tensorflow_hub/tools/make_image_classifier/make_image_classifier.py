@@ -122,7 +122,7 @@ flags.DEFINE_float(
 flags.DEFINE_float("label_smoothing", _DEFAULT_HPARAMS.label_smoothing,
                    "Coefficient of label smoothing used in loss function.")
 flags.DEFINE_float("validation_split", _DEFAULT_HPARAMS.validation_split,
-                   "The fractin of the dataset splitted into a validation set")
+                   "The fraction of the dataset split into a validation set")
 flags.DEFINE_bool(
     "do_data_augmentation", _DEFAULT_HPARAMS.do_data_augmentation,
     "Whether do data augmentation on training set."
