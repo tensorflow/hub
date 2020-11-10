@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeo' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2020-11-10' review_interval: '3 months' } *-->
 
 # Become a publisher
 
