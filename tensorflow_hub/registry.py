@@ -45,15 +45,15 @@ class MultiImplRegister(object):
     self._impls += [impl]
 
   def __call__(self, *args, **kwargs):
+    fails = []
     for impl in reversed(self._impls):
       if impl.is_supported(*args, **kwargs):
         return impl(*args, **kwargs)
       else:
-        logging.info("%s %s does not support the provided handle.", self._name,
-                     type(impl).__name__)
+        fails.append(type(impl).__name__)
     raise RuntimeError(
-        "Missing implementation that supports: %s(*%r, **%r)" % (
-            self._name, args, kwargs))
+        "Missing implementation that supports: %s(*%r, **%r). Tried %r" % (
+            self._name, args, kwargs, fails))
 
 
 resolver = MultiImplRegister("resolver")
