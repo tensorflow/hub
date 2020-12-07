@@ -119,7 +119,7 @@ landing_page:
     - heading: <span style="font-size:20px;">Contribute models</span>
       icon:
         name: publish
-      path: https://tfhub.dev/publish
+      path: /hub/publish
     - heading: <span style="font-size:20px;">Community discussion forum</span>
       icon:
         name: people
