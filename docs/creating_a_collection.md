@@ -9,7 +9,7 @@ See the [list of all collections](https://tfhub.dev/s?subtype=model-family) on
 tfhub.dev.
 
 The correct location for the collection file on the TensorFlow Hub repo is:
-[hub/tfhub_dev/assets/](https://github.com/tensorflow/hub/tree/master/tfhub_dev/assets)/<publisher_name>/<collection_name>/<collection_name.md>
+[tfhub.dev/assets/docs/](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/<publisher_name>/<collection_name>/<collection_name.md>
 
 See the minimal publisher documentation example:
 

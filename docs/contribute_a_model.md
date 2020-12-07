@@ -7,13 +7,13 @@
 After the right location of the markdown file is identified (see the
 [writing model documentation](writing_model_documentation.md) guide), the file
 can be pulled into the master branch of
-[tensorflow/hub](https://github.com/tensorflow/hub/tree/master/tensorflow_hub)
+[tensorflow/tfhub.dev](https://github.com/tensorflow/tfhub.dev/tree/master)
 by one of the following methods.
 
 ### Git CLI submission
 
 Assuming the identified markdown file path is
-`tfhub_dev/assets/publisher/model/1.md`, you can follow the standard Git[Hub]
+`assets/docs/publisher/model/1.md`, you can follow the standard Git[Hub]
 steps to create a new Pull Request with a newly added file.
 
 This starts with forking the TensorFlow Hub GitHub repository, then creating a
@@ -24,10 +24,10 @@ The following are typical CLI git commands needed to adding a new file to a
 master branch of the forked repository.
 
 ```bash
-git clone https://github.com/[github_username]/hub.git
-cd hub
-mkdir -p tfhub_dev/assets/publisher/model
-cp my_markdown_file.md ./tfhub_dev/assets/publisher/model/1.md
+git clone https://github.com/[github_username]/tfhub.dev.git
+cd tfhub.dev
+mkdir -p assets/docs/publisher/model
+cp my_markdown_file.md ./assets/docs/publisher/model/1.md
 git add *
 git commit -m "Added model file."
 git push origin master
@@ -42,9 +42,9 @@ or
 [file edits](https://help.github.com/en/github/managing-files-in-a-repository/editing-files-in-your-repository)
 directly through GUI.
 
-1.  On the [TensorFlow Hub GitHub page](https://github.com/tensorflow/hub),
+1.  On the [TensorFlow Hub GitHub page](https://github.com/tensorflow/tfhub.dev),
     press `Create new file` button.
-1.  Set the right file path: `hub/tfhub_dev/assets/publisher/model/1.md`
+1.  Set the right file path: `assets/docs/publisher/model/1.md`
 1.  Copy-paste the existing markdown.
 1.  At the bottom, select "Create a new branch for this commit and start a pull
     request."
@@ -53,7 +53,7 @@ directly through GUI.
 
 The model documentation is a markdown file with some add-on syntax. See example
 below for a minimal example or
-[a more realistic example markdown file](https://github.com/tensorflow/hub/blob/master/tfhub_dev/examples/example-markdown.md).
+[a more realistic example markdown file](https://github.com/tensorflow/tfhub.dev/blob/master/examples/docs/tf2_model_example.md).
 
 ### Example documentation
 
@@ -65,6 +65,7 @@ general properties described in
 
 ```markdown
 # Module google/text-embedding-model/1
+
 Simple one sentence description.
 
 <!-- asset-path: https://path/to/text-embedding-model/model.tar.gz -->
@@ -73,6 +74,7 @@ Simple one sentence description.
 <!-- format: saved_model_2 -->
 
 ## Overview
+
 Here we give more information about the model including how it was trained,
 expected use cases, and code snippets demonstrating how to use the model:
 
