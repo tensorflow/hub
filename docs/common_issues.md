@@ -133,5 +133,5 @@ result = session.run(embedded_text, feed_dict={text_input: ["Hello world"]})
 TensorFlow's SavedModels (shared on TF Hub or otherwise) contain
 operations that work on fixed data types (often, float32 for the weights
 and intermediate activations of neural networks). These cannot be
-changed after the fact when lodaing the SavedModel (but model publishers
+changed after the fact when loading the SavedModel (but model publishers
 can choose to publish different models with different data types).
