@@ -46,7 +46,7 @@ class EmbeddingGeneratorTest(tf.test.TestCase):
     FLAGS.data_file_pattern = _get_resource(MNNI_FOLDER,
                                             "test_data/data/titles.txt")
 
-    FLAGS.module_url = "https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1"
+    FLAGS.module_url = "https://tfhub.dev/google/nnlm-en-dim128/2"
     FLAGS.embed_output_dir = os.path.join(self.get_temp_dir(), "embeds")
 
   def test_run(self):

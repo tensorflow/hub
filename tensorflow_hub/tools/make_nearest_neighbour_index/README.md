@@ -45,14 +45,14 @@ Parameter              | Type    | Description  |
 
 The following is an example usage of the command. The command generates text
 embeddings for a set of titles in titles-\*.txt input files using the tf2
-[nnlm-en-128](https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1)
+[nnlm-en-128](https://tfhub.dev/google/nnlm-en-dim128/2)
 TF-Hub-module. In addition, it performs random projection of the generated
 embeddings to reduce the dimensionality from 128 to 64 (project-dim).
 
 ```
 make_nearest_neighbour_index generate \
 	--data_file_pattern=./data/titles-*.txt \
-	--module_url=https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1 \
+	--module_url=https://tfhub.dev/google/nnlm-en-dim128/2 \
 	--embed_output_dir=./output/embed/ \
 	--projected_dim=64
 ```
@@ -100,7 +100,7 @@ The following is an example usage of the command.
 ```
 make_nearest_neighbour_index e2e \
 	--data_file_pattern=./test_data/large.txt \
-	--module_url=https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1 \
+	--module_url=https://tfhub.dev/google/nnlm-en-dim128/2 \
 	--embed_output_dir=./output/embed/ \
 	--index_output_dir=./output/index/ \
 	--projected_dim=64 \
@@ -119,7 +119,7 @@ Parameter              | Type    | Description  |
 
 ```
 make_nearest_neighbour_index query \
-	--module_url=https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1 \
+	--module_url=https://tfhub.dev/google/nnlm-en-dim128/2 \
 	--index_output_dir=./output/index \
   --num_matches=10
 ```

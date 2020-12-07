@@ -10,7 +10,7 @@ amount of code. The main way to load a trained model is using the
 ```python
 import tensorflow_hub as hub
 
-embed = hub.KerasLayer("https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1")
+embed = hub.KerasLayer("https://tfhub.dev/google/nnlm-en-dim128/2")
 embeddings = embed(["A long sentence.", "single-word", "http://example.com"])
 print(embeddings.shape, embeddings.dtype)
 ```
