@@ -79,9 +79,5 @@ class HttpUncompressedFileResolver(resolver.HttpResolverBase):
   def is_supported(self, handle):
     if not self.is_http_protocol(handle):
       return False
-    # AUTO defaults to UNCOMPRESSED on Colab
     load_format = resolver.model_load_format()
-    if (load_format == resolver.ModelLoadFormat.AUTO.value and
-        self._is_running_on_colab()):
-      return True
     return load_format == resolver.ModelLoadFormat.UNCOMPRESSED.value

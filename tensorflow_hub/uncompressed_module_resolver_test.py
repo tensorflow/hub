@@ -14,11 +14,11 @@
 # ==============================================================================
 """Tests for tensorflow_hub.uncompressed_module_resolver."""
 
-import mock
 import io
-import tensorflow as tf
 import urllib
-import http
+
+import mock
+import tensorflow as tf
 from tensorflow_hub import resolver
 from tensorflow_hub import test_utils
 from tensorflow_hub import uncompressed_module_resolver
@@ -78,11 +78,6 @@ class UncompressedModuleResolverTest(tf.test.TestCase):
     with test_utils.AutoLoadFormatContext():
       for handle in self.handles:
         self.assertFalse(self.uncompressed_resolver.is_supported(handle))
-
-  def test_on_auto_load_format_on_colab(self):
-    with test_utils.AutoLoadFormatContext(), test_utils.RunningOnColabContext():
-      for handle in self.handles:
-        self.assertTrue(self.uncompressed_resolver.is_supported(handle))
 
   def test_server_returns_303_but_no_gcs_path(self):
     http_error = urllib.error.HTTPError(None, 303, None, None,

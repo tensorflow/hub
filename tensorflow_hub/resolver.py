@@ -41,7 +41,7 @@ class ModelLoadFormat(enum.Enum):
   COMPRESSED = "COMPRESSED"
   # Directly read SavedModels from their GCS buckets without caching them
   UNCOMPRESSED = "UNCOMPRESSED"
-  # On Colab, set the mode to UNCOMPRESSED. Set to COMPRESSED otherwise.
+  # This mode is currently unused and defaults to COMPRESSED.
   AUTO = "AUTO"
 
 
@@ -57,9 +57,7 @@ flags.DEFINE_enum(
     "If set to COMPRESSED, archived modules will be downloaded and extracted"
     "to the `TFHUB_CACHE_DIR` before being loaded. If set to UNCOMPRESSED, the"
     "modules will be read directly from their GCS storage location without"
-    "needing a cache dir. AUTO defaults to COMPRESSED behavior and to"
-    "UNCOMPRESSED behavior if the library is executed on Colab"
-    "to save disk space.")
+    "needing a cache dir. AUTO defaults to COMPRESSED behavior.")
 
 _TFHUB_CACHE_DIR = "TFHUB_CACHE_DIR"
 _TFHUB_DOWNLOAD_PROGRESS = "TFHUB_DOWNLOAD_PROGRESS"
@@ -495,10 +493,6 @@ class HttpResolverBase(Resolver):
 
   def __init__(self):
     self._context = None
-
-  def _is_running_on_colab(self):
-    # Recommended check for the Colab runtime
-    return "google.colab" in sys.modules
 
   def _append_format_query(self, handle, format_query):
     """Append the given query args to the URL."""

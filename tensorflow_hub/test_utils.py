@@ -16,13 +16,14 @@
 
 import os
 import socket
+import mock
 import sys
 import threading
 
 from absl import flags
-from tensorflow_hub import resolver
 import tensorflow as tf
 import tensorflow_hub as hub
+from tensorflow_hub import resolver
 
 
 def _do_redirect(handler, location):
@@ -170,18 +171,6 @@ def export_module(module_export_path):
   with tf.compat.v1.Session() as sess:
     sess.run(tf.compat.v1.global_variables_initializer())
     m.export(module_export_path, sess)
-
-
-class RunningOnColabContext(object):
-  """Simulate running on Colab by faking that google.colab is available."""
-
-  def __enter__(self):
-    sys.modules["google.colab"] = None
-    return self
-
-  def __exit__(self, exc_type, exc_value, exc_traceback):
-    del sys.modules["google.colab"]
-    return True
 
 
 class EnvVariableContextManager(object):

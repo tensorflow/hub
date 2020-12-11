@@ -373,7 +373,7 @@ class CompressedResolverTest(tf.test.TestCase):
 
 class UncompressedResolverTest(tf.test.TestCase):
 
-  def testModuleRunningOnColab(self):
+  def testModuleRunningWithUncompressedContext(self):
     module_export_path = os.path.join(self.get_temp_dir(), "module")
     with tf.Graph().as_default():
       test_utils.export_module(module_export_path)
@@ -382,7 +382,7 @@ class UncompressedResolverTest(tf.test.TestCase):
           uncompressed_module_resolver.HttpUncompressedFileResolver,
           "_request_gcs_location",
           return_value=module_export_path) as mocked_urlopen:
-        with test_utils.RunningOnColabContext():
+        with test_utils.UncompressedLoadFormatContext():
           m = hub.Module("https://tfhub.dev/google/model/1")
         mocked_urlopen.assert_called_once_with(
             "https://tfhub.dev/google/model/1?tf-hub-format=uncompressed")
@@ -415,24 +415,15 @@ class LoadFormatResolverBehaviorTest(tf.test.TestCase):
 
   def test_load_format_auto(self):
     # ModelLoadFormat is set to AUTO on default
-    # On Colab, use the uncompressed resolver
     self._assert_compressed_resolver_called()
-    with test_utils.RunningOnColabContext():
-      self._assert_uncompressed_resolver_called()
 
   def test_load_format_compressed(self):
-    # The compressed resolver should be called in both cases
     with test_utils.CompressedLoadFormatContext():
       self._assert_compressed_resolver_called()
-      with test_utils.RunningOnColabContext():
-        self._assert_compressed_resolver_called()
 
   def test_load_format_uncompressed(self):
-    # The uncompressed resolver should be called in both cases
     with test_utils.UncompressedLoadFormatContext():
       self._assert_uncompressed_resolver_called()
-      with test_utils.RunningOnColabContext():
-        self._assert_uncompressed_resolver_called()
 
 
 if __name__ == "__main__":
