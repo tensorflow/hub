@@ -4,36 +4,39 @@ toc:
 - title: Overview
   path: /hub/tutorials/_index.yaml
 
-- heading: "Text Tutorials"
+- heading: "NLP Tutorials"
   style: divider
 - title: Text classification
   path: /hub/tutorials/tf2_text_classification
-- title: BERT Experts
-  path: /hub/tutorials/bert_experts
+- title: Classify text with BERT
+  path: /tutorials/text/classify_text_with_bert
+  status: external
+- title: BERT on TPU
+  path: /tutorials/text/solve_glue_tasks_using_bert_on_tpu
+  status: external
 - title: Real-time semantic search
   path: /hub/tutorials/tf2_semantic_approximate_nearest_neighbors
-- title: Question answering
+- title: Multilingual question answering
   path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
-- title: "Additional text tutorials"
+- title: "Additional NLP tutorials"
   style: accordion
   section:
-  - title: Text cookbook
-    path: /hub/tutorials/text_cookbook
+  - title: BERT Experts
+    path: /hub/tutorials/bert_experts
   - title: Semantic similarity
     path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
   - title: Text classification on Kaggle
     path: /hub/tutorials/text_classification_with_tf_hub_on_kaggle
   - title: Bangla article classifier
     path: /hub/tutorials/bangla_article_classifier
-  - title: Explore text embeddings
+  - title: Explore CORD-19 text embeddings
     path: /hub/tutorials/cord_19_embeddings_keras
   - title: Retrieval based question answering
     path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
   - title: Multilingual universal sentence encoder
     path: /hub/tutorials/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder
-  - title: "BERT: Sentiment classification"
-    path: https://colab.sandbox.google.com/github/google-research/bert/blob/master/predicting_movie_reviews_with_bert_on_tf_hub.ipynb
-    status: external
+  - title: Text cookbook
+    path: /hub/tutorials/text_cookbook
 
 - heading: "Image Tutorials"
   style: divider
@@ -66,13 +69,11 @@ toc:
   style: divider
 - title: Action recognition
   path: /hub/tutorials/action_recognition_with_tf_hub
-- title: "Additional video tutorials"
-  style: accordion
-  section:
-  - title: Video interpolation
-    path: /hub/tutorials/tweening_conv3d
-  - title: Text-to-video retrieval
-    path: /hub/tutorials/text_to_video_retrieval_with_s3d_milnce
+- title: Video interpolation
+  path: /hub/tutorials/tweening_conv3d
+- title: Text-to-video retrieval
+  path: /hub/tutorials/text_to_video_retrieval_with_s3d_milnce
+
 - title: "Tutorials (TF1)"
   style: accordion
   status: deprecated
@@ -88,12 +89,12 @@ toc:
     path: /hub/tutorials/bigbigan_with_tf_hub
   - title: S3 GAN image generation
     path: /hub/tutorials/s3gan_generation_with_tf_hub
-  - heading: "Text Tutorials"
+  - heading: "NLP Tutorials"
   - title: Semantic similarity lite
     path: /hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder_lite
   - title: Nearest neighbor index for real-time semantic search
     path: /hub/tutorials/semantic_approximate_nearest_neighbors
-  - title: Explore text embeddings
+  - title: Explore CORD-19 text embeddings
     path: /hub/tutorials/cord_19_embeddings
   - title: Wiki40B Language Models
     path: /hub/tutorials/wiki40b_lm
