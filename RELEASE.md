@@ -13,6 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
 
+# Release 0.11.0
+  * Use the Keras load context in keras_layer.py.
+  * Always use compressed model loading by default.
+  * Documentation improvements.
+
 # Release 0.10.0
   * Enforce Python 3.5+ and TF1.15+.
   * Add ModelLoadFormat setting to switch between (un)compressed model loading.
