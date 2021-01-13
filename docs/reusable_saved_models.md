@@ -60,9 +60,10 @@ from May 2019).
 ### Relation to task-specific "Common SavedModel APIs"
 
 The interface definition on this page allows for any number and type of inputs
-and outputs. The [Common SavedModel APIs for TF
-Hub]../common_saved_model_apis/index.md) refine this general interface with
-usage conventions for specific tasks to make models easily interchangeable.
+and outputs. The
+[Common SavedModel APIs for TF Hub](common_saved_model_apis/index.md) refine
+this general interface with usage conventions for specific tasks to make models
+easily interchangeable.
 
 ## Interface definition
 
