@@ -18,9 +18,18 @@ import pickle
 
 import apache_beam as beam
 from apache_beam.transforms import util
-from sklearn.random_projection import gaussian_random_matrix
+
+# TODO(b/176884057): Find a supported alternative to gaussian_random_matrix,
+# which became private in scikit-learn 0.24 and is likely to break.
+# pylint: disable=g-import-not-at-top
+try:
+  from sklearn.random_projection import gaussian_random_matrix
+except ImportError:
+  from sklearn.random_projection import _gaussian_random_matrix as gaussian_random_matrix
+
 import tensorflow as tf
 import tensorflow_hub as hub
+# pylint: enable=g-import-not-at-top
 
 _RUNNER = 'DirectRunner'
 _RANDOM_PROJECTION_FILENAME = 'random_projection.matrix'
