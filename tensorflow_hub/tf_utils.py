@@ -207,7 +207,7 @@ def absolute_path(path):
   return path if b"://" in tf.compat.as_bytes(path) else os.path.abspath(path)
 
 
-# A whitelist of argument types that are supported by hub.Module.  In theory,
+# A allowlist of argument types that are supported by hub.Module.  In theory,
 # any composite tensor type should work, but since this is a deprecated
 # interface, we are limiting support to explicitly tested types.
 SUPPORTED_ARGUMENT_TYPES = (tf.Tensor, tf.SparseTensor, tf.RaggedTensor)
@@ -219,7 +219,7 @@ SUPPORTED_ARGUMENT_TYPES = (tf.Tensor, tf.SparseTensor, tf.RaggedTensor)
 # (aka TF Extension Types) in a manner that is both backwards compatible with
 # versions of TensorFlow that did not include composite tensors, and forward
 # compatible with the TF Extension Types RFC:
-# https://github.com/tensorflow/community/blob/master/rfcs/20200721-extension-types.md
+# https://github.com/tensorflow/community/blob/eb657a00e8c8c6dbdacbd7d06c304825ba0effd8/rfcs/20200721-extension-types.md
 
 
 def is_composite_tensor(x):
