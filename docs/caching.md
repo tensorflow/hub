@@ -9,7 +9,10 @@ models. By default, a model is downloaded as a compressed archive and cached on
 disk. Secondly, models can directly be read from remote storage into TensorFlow.
 Either way, the calls to `tensorflow_hub` functions in the actual Python code
 can and should continue to use the canonical tfhub.dev URLs of models, which are
-portable across systems and navigable for documentation.
+portable across systems and navigable for documentation. In the rare case that
+user code needs the actual filesystem location (after downloading  and
+decompressing, or after resolving a model handle into a filesystem path),
+it can be obtained by the function `hub.resolve(handle)`.
 
 ### Caching of compressed downloads
 
