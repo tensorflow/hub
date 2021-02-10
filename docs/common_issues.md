@@ -68,8 +68,10 @@ $ python
 
 If you are writing a Python program that applies a module many times on input
 data, you can apply the following recipes. (Note: For serving requests in
-production servives, consider go/servo or other scalable, Python-free
-solutions.)
+production servives, consider
+[TensorFlow Serving](https://www.tensorflow.org/tfx/guide/serving) or other
+scalable, Python-free solutions.)
+
 
 Assuming your use-case model is **initialization** and subsequent **requests**
 (for example Django, Flask, custom HTTP server, etc.), you can set-up the
