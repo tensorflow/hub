@@ -1,6 +1,6 @@
 <!--* freshness: { owner: 'maringeo' reviewed: '2020-12-29' review_interval: '3 months' } *-->
 
-# Exporing models in the TF1 Hub format
+# Exporting models in the TF1 Hub format
 
 You can read more about this format in [TF1 Hub format](tf1_hub_module.md)
 
