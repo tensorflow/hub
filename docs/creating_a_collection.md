@@ -8,10 +8,15 @@ models together to improve user search experience.
 See the [list of all collections](https://tfhub.dev/s?subtype=model-family) on
 tfhub.dev.
 
-The correct location for the collection file on the TensorFlow Hub repo is:
-[tfhub.dev/assets/docs/](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/<publisher_name>/<collection_name>/<collection_name.md>
+The correct location for the collection file in the repository
+[github.com/tensorflow/tfhub.dev](https://github.com/tensorflow/tfhub.dev) is
+[assets/docs](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/<b>&lt;publisher_name&gt;</b>/collections/<b>&lt;collection_name&gt;</b>/<b>1</b>.md
 
-See the minimal publisher documentation example:
+Here is a minimal example that would go into
+assets/docs/<b>vtab</b>/collections/<b>benchmark</b>/<b>1</b>.md.
+Note how the collection's name in the first line is shorter than the name
+of the file.
+
 
 ```markdown
 # Collection vtab/benchmark/1
