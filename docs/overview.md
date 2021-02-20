@@ -29,4 +29,4 @@ print(embeddings.shape)  #(4,128)
 -   TensorFlow Hub library
     -   [Install TensorFlow Hub](installation.md)
     -   [Library overview](lib_overview.md)
--   [Follow tutorials](tutorials/README.md)
+-   [Follow tutorials](tutorials)
