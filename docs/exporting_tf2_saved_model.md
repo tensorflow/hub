@@ -1,13 +1,17 @@
 <!--* freshness: { owner: 'maringeo' reviewed: '2020-12-29' review_interval: '3 months' } *-->
 
-# Export a model
+# Export a SavedModel
 
-This page describes the process of exporting models in the
+This page describes the details of exporting (saving) a model from a TensorFlow
+program to the
 [SavedModel format of TensorFlow 2](https://www.tensorflow.org/guide/saved_model).
 This format is the recommended way to share pre-trained models and model pieces
 on TensorFlow Hub. It replaces the older [TF1 Hub format](tf1_hub_module.md) and
 comes with a new set of APIs. You can find more information on exporting the TF1
 Hub format models in [TF1 Hub format export](exporting_hub_format.md).
+
+Some model-building toolkits already provide tools to do this (e.g., see below
+for [TensorFlow Model Garden](#tensorflow-model-garden)).
 
 ## Overview
 
@@ -111,6 +115,8 @@ Weight regularizers on individual layers are saved (with their regularization
 strength coefficients), but weight regularization from within the optimizer
 (like `tf.keras.optimizers.Ftrl.l1_regularization_strength=...)`) is lost.
 Advise consumers of your SavedModel accordingly.
+
+<a name="tensorflow-model-garden"></a>
 
 ## TensorFlow Model Garden
 
