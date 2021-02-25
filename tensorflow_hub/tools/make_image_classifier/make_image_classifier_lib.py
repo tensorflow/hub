@@ -280,7 +280,7 @@ def _image_size_for_module(module_layer, requested_image_size=None):
                            tuple(requested_image_size.as_list())))
 
 
-def _build_model(module_layer, hparams, image_size, num_classes):
+def build_model(module_layer, hparams, image_size, num_classes):
   """Builds the full classifier model from the given module_layer.
 
   If using a DistributionStrategy, call this under its `.scope()`.
@@ -308,7 +308,7 @@ def _build_model(module_layer, hparams, image_size, num_classes):
   return model
 
 
-def _train_model(model,
+def train_model(model,
                  hparams,
                  train_data_and_size,
                  valid_data_and_size,
@@ -406,7 +406,7 @@ def make_image_classifier(tfhub_module,
           image_dir, image_size, hparams.batch_size, hparams.validation_split,
           hparams.do_data_augmentation, augmentation_params)
     print("Found", len(labels), "classes:", ", ".join(labels))
-    model = _build_model(module_layer, hparams, image_size, len(labels))
-    train_result = _train_model(model, hparams, train_data_and_size,
+    model = build_model(module_layer, hparams, image_size, len(labels))
+    train_result = train_model(model, hparams, train_data_and_size,
                                 valid_data_and_size, log_dir)
   return model, labels, train_result
