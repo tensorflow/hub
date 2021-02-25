@@ -24,6 +24,8 @@ import sys
 
 from absl import logging
 from absl.testing import flagsaver
+from absl.testing import parameterized
+from distutils.version import LooseVersion
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -43,7 +45,7 @@ def _write_filled_jpeg_file(path, rgb, image_size):
                                         "channels_last", "jpeg")
 
 
-class MakeImageClassifierTest(tf.test.TestCase):
+class MakeImageClassifierTest(tf.test.TestCase, parameterized.TestCase):
   IMAGE_SIZE = 24
   IMAGES_PER_CLASS = 20
   CMY_NAMES_AND_RGB_VALUES = (("cyan", (0, 255, 255)),
@@ -111,7 +113,12 @@ class MakeImageClassifierTest(tf.test.TestCase):
       return interpreter.get_tensor(output_index)
     return lite_model
 
-  def testEndToEndSuccess(self):
+  @parameterized.named_parameters(("WithLegacyInput", False),
+                                  ("WithTFDataInput", True))
+  def testEndToEndSuccess(self, use_tf_data_input):
+    if use_tf_data_input and (LooseVersion(tf.__version__) <
+                              LooseVersion("2.5.0")):
+      return
     logging.info("Using testdata in %s", self.get_temp_dir())
     avg_model_dir = self._export_global_average_model()
     image_dir = self._write_cmy_dataset()
@@ -125,9 +132,11 @@ class MakeImageClassifierTest(tf.test.TestCase):
     self.assertFalse(os.path.isfile(labels_output_file))
 
     with flagsaver.flagsaver(
-        image_dir=image_dir, tfhub_module=avg_model_dir,
+        image_dir=image_dir,
+        tfhub_module=avg_model_dir,
         # This dataset is expected to be fit perfectly.
         assert_accuracy_at_least=0.9,
+        use_tf_data_input=use_tf_data_input,
         saved_model_dir=saved_model_dir,
         tflite_output_file=tflite_output_file,
         labels_output_file=labels_output_file,
@@ -147,15 +156,23 @@ class MakeImageClassifierTest(tf.test.TestCase):
       prediction = labels[np.argmax(output_batch[0])]
       self.assertEqual(class_name, prediction)
 
-  def testEndToEndAccuracyFailure(self):
+  @parameterized.named_parameters(("WithLegacyInput", False),
+                                  ("WithTFDataInput", True))
+  def testEndToEndAccuracyFailure(self, use_tf_data_input):
+    if use_tf_data_input and (LooseVersion(tf.__version__) <
+                              LooseVersion("2.5.0")):
+      return
     logging.info("Using testdata in %s", self.get_temp_dir())
     avg_model_dir = self._export_global_average_model()
     image_dir = self._write_random_dataset()
 
     with flagsaver.flagsaver(
-        image_dir=image_dir, tfhub_module=avg_model_dir,
-        # This is expeced to fail for this random dataset.
-        assert_accuracy_at_least=0.8, **self.DEFAULT_FLAGS):
+        image_dir=image_dir,
+        tfhub_module=avg_model_dir,
+        # This is expected to fail for this random dataset.
+        assert_accuracy_at_least=0.9,
+        use_tf_data_input=use_tf_data_input,
+        **self.DEFAULT_FLAGS):
       with self.assertRaisesRegex(AssertionError, "ACCURACY FAILED"):
         make_image_classifier.main([])
 

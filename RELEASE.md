@@ -12,6 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
+# Current version 0.12.0-dev
+  * Changes to make_image_classifier_tool:
+    * Add the option to read input with a tf.data.Dataset and use TF ops for 
+      preprocessing. Enabling this feature is
+    * Set the default value of shear_range to 0. shear_range is deprecated and
+      incompatible when using TF ops for preprocessing.
 
 # Release 0.11.0
   * Use the Keras load context in keras_layer.py.

@@ -6,10 +6,6 @@ from the command line, no coding required. The tool needs
 a number of example images for each class (many dozens or hundreds),
 but a default ("TF Flowers") is provided.
 
-**Note:** This tool and its documentation are still under development.
-It is meant to replace
-[image_retraining/retrain.py](https://github.com/tensorflow/hub/blob/master/examples/image_retraining/retrain.py).
-
 If you are a developer looking for a coding example, please take a look at
 [examples/colab/tf2_image_retraining.ipynb](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
 which demonstrates the key techniques of this program in your browser.
@@ -143,3 +139,10 @@ such as `--rotation_range` and `--horizontal_flip`. Generally, the
 default values can give a good performance. You can find a full list
 of hyperparameters available in `make_image_classifier.py` and their
 default values in `make_image_classifier_lib.py`.
+
+With `tensorflow>=2.5` and `tensorflow-hub>=0.12`, you can control whether to
+read input with a tf.data.Dataset and use TF ops for preprocessing using the
+`use_tf_data_input` flag. Note that the shear data augmentation is not
+supported in this mode. If set to `False`, Keras' legacy Python
+ImageDataGenerator with numpy ops will be used for data augmentation and other
+preprocessing.

@@ -44,6 +44,7 @@ import tempfile
 from absl import app
 from absl import flags
 from absl import logging
+from distutils.version import LooseVersion
 import tensorflow as tf
 import tensorflow_hub as hub
 
@@ -137,12 +138,20 @@ flags.DEFINE_float(
 flags.DEFINE_float(
     "height_shift_range", _DEFAULT_HPARAMS.height_shift_range,
     "Shift images vertically by pixels(if >=1) or by ratio(if <1).")
-flags.DEFINE_float("shear_range", _DEFAULT_HPARAMS.shear_range,
-                   "Shear angle in counter-clockwise direction in degrees.")
+flags.DEFINE_float(
+    "shear_range", _DEFAULT_HPARAMS.shear_range,
+    "Shear angle in counter-clockwise direction in degrees."
+    "DEPRECATED: Image shear is not available if using TF 2.5 or higher.")
 flags.DEFINE_float("zoom_range", _DEFAULT_HPARAMS.zoom_range,
                    "Range for random zoom.")
 flags.DEFINE_enum("distribution_strategy", None, ["", "mirrored"],
                   "The distribution strategy the classifier should use.")
+flags.DEFINE_bool(
+    "use_tf_data_input", None,
+    "Whether to read input with a tf.data.Dataset and use TF ops for "
+    "preprocessing. Use of Keras preprocessing layers is supported for TF "
+    "versions 2.5 or higher. If false, uses Keras' legacy Python "
+    "ImageDataGenerator with numpy ops.")
 FLAGS = flags.FLAGS
 
 
@@ -224,10 +233,22 @@ def main(args):
   if FLAGS.set_memory_growth:
     _set_gpu_memory_growth()
 
+  use_tf_data_input = FLAGS.use_tf_data_input
+  # For tensorflow<2.5 TF preprocessing layers do not support distribution
+  # strategy. so default use_tf_data_input to True for TF >= 2.5.
+  if use_tf_data_input is True and (LooseVersion(tf.__version__) <
+                                    LooseVersion("2.5.0")):
+    raise ValueError("use_tf_data_input is not supported for tensorflow<2.5")
+  # For tensorflow>=2.5 default to using tf.data.Dataset and TF preprocessing
+  # layers.
+  if use_tf_data_input is None and (LooseVersion(tf.__version__) >=
+                                    LooseVersion("2.5.0")):
+    use_tf_data_input = True
+
   model, labels, train_result = lib.make_image_classifier(
       FLAGS.tfhub_module, image_dir, hparams,
       lib.get_distribution_strategy(FLAGS.distribution_strategy),
-      FLAGS.image_size, FLAGS.summaries_dir)
+      FLAGS.image_size, FLAGS.summaries_dir, use_tf_data_input)
   if FLAGS.assert_accuracy_at_least:
     _assert_accuracy(train_result, FLAGS.assert_accuracy_at_least)
   print("Done with training.")
