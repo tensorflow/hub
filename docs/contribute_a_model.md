@@ -1,14 +1,16 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2020-12-29' review_interval: '3 months' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2021-02-25' review_interval: '3 months' } *-->
 
 # Contribute a model
 
+This page is about adding Markdown documentation files to GitHub. For more
+information on how to write the Markdown files in the first place, please see
+the [writing model documentation guide](writing_model_documentation.md).
+
 ## Submitting the model
 
-After the right location of the markdown file is identified (see the
-[writing model documentation](writing_model_documentation.md) guide), the file
-can be pulled into the master branch of
-[tensorflow/tfhub.dev](https://github.com/tensorflow/tfhub.dev/tree/master)
-by one of the following methods.
+The complete Markdown files can be pulled into the master branch of
+[tensorflow/tfhub.dev](https://github.com/tensorflow/tfhub.dev/tree/master) by
+one of the following methods.
 
 ### Git CLI submission
 
@@ -48,113 +50,3 @@ directly through GUI.
 1.  Copy-paste the existing markdown.
 1.  At the bottom, select "Create a new branch for this commit and start a pull
     request."
-
-## Model page specific markdown format
-
-The model documentation is a markdown file with some add-on syntax. See example
-below for a minimal example or
-[a more realistic example markdown file](https://github.com/tensorflow/tfhub.dev/blob/master/examples/docs/tf2_model_example.md).
-
-### Example documentation
-
-A high-quality model documentation contains code snippets, information how the
-model was trained and intended usage. You should also make use of model specific
-medata properties [below](#model-markdown-specific-metadata-properties) and
-general properties described in
-[writing model documentation](writing_model_documentation.md).
-
-```markdown
-# Module google/text-embedding-model/1
-
-Simple one sentence description.
-
-<!-- asset-path: https://path/to/text-embedding-model/model.tar.gz -->
-<!-- module-type: text-embedding -->
-<!-- fine-tunable: true -->
-<!-- format: saved_model_2 -->
-
-## Overview
-
-Here we give more information about the model including how it was trained,
-expected use cases, and code snippets demonstrating how to use the model:
-
-``
-Code snippet demonstrating use (e.g. for a TF model using the tensorflow_hub library)
-
-import tensorflow_hub as hub
-
-model = hub.KerasLayer(<model name>)
-inputs = ...
-output = model(inputs)
-``
-```
-
-### Model deployments and grouping deployments together.
-
-tfhub.dev allows for publishing TFJS, TFLite and Coral deployments of a
-TensorFlow model.
-
-The first line of the markdown file should specify the type of the deployment
-format. Use:
-
-*   `# Tfjs publisher/model/version` for TFJS deployments
-*   `# Lite publisher/model/version` for Lite deployments
-*   `# Coral publisher/model/version` for Coral deployments
-
-It it a good idea for these different deployments to show in the same model page
-on tfhub.dev. To associate a given TFJS, TFLite or Coral deployment to a
-TensorFlow model, specify the parent-model tag:
-
-```markdown
-<!-- parent-model: publisher/model/version -->
-```
-
-Sometimes you might want to publish one or more deployments without the
-TensorFlow model. In that case, you'll need to create a Placeholder model and
-specify its handle in the parent-model tag. The placeholder markdown is
-identical to TensorFlow model markdown, except that the first line is: `#
-Placeholder publisher/model/version` and it doesn't require the `asset-path`
-property.
-
-### Model markdown specific metadata properties
-
-Apart from the shared metadata properties described in
-[writing model documentation](writing_model_documentation.md), the model
-markdown supports the following properties:
-
-*   `fine-tunable`: whether the model is fine-tunable
-*   `format`: the TensorFlow Hub format of the model. Valid values are `hub`
-    when the model was exported via the legacy
-    [TF1 hub format](exporting_hub_format.md) or `saved_model_2` when the model
-    was exportd via a [TF2 Saved Model](exporting_tf2_saved_model.md).
-*   `asset-path`: the world-readable remote path to the actual model assets to
-    upload, such as on a Google Cloud Storage bucket.
-*   `licence`: see section below
-
-### License
-
-The default assumed license for a published model is
-[Apache 2.0 License](https://opensource.org/licenses/Apache-2.0). The other
-accepted options for license are listed in
-[OSI Approved Licenses](https://opensource.org/licenses). The possible (literal)
-values are:
-
-*   `Apache-2.0`
-*   `BSD-3-Clause`
-*   `BSD-2-Clause`
-*   `GPL-2.0`
-*   `GPL-3.0`
-*   `LGPL-2.0`
-*   `LGPL-2.1`
-*   `LGPL-3.0`
-*   `MIT`
-*   `MPL-2.0`
-*   `CDDL-1.0`
-*   `EPL-2.0`
-*   `custom` - a custom license will require special consideration case by case.
-
-An example metadata line with a license other than Apache 2.0:
-
-```markdown
-<!-- license: BSD-3-Clause -->
-```
