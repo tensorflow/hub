@@ -179,8 +179,8 @@ metadata properties:
 :             :                          : network-architecture             :
 | Placeholder | module-type              | dataset, fine-tunable, language, |
 :             :                          : license, network-architecture    :
-| SavedModel  | asset-path, module-type, | license                          |
-:             : fine-tunable, format     :                                  :
+| SavedModel  | asset-path, module-type, | dataset, language, license,      |
+:             : fine-tunable, format     : network-architecture             :
 | Tfjs        | asset-path, parent-model |                                  |
 | Lite        | asset-path, parent-model |                                  |
 | Coral       | asset-path, parent-model |                                  |
