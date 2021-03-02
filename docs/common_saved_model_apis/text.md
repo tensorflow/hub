@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'arnoegw' reviewed: '2020-11-11' } *-->
+<!--* freshness: { owner: 'arnoegw' reviewed: '2021-03-02' } *-->
 
 # Common SavedModel APIs for Text Tasks
 
@@ -173,6 +173,11 @@ scope. If, however, the preprocessor is used in an input pipeline (e.g., in a
 callable passed to `tf.data.Dataset.map()`), its loading must happen *outside*
 the distribution strategy scope, in order to place its variables (if any) on the
 host CPU.
+
+### Examples
+
+*   Colab tutorial
+    [Classify text with BERT](https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/text/classify_text_with_bert.ipynb).
 
 <a name="transformer-encoders"></a>
 
@@ -350,3 +355,9 @@ to minimize friction in interchanging encoders and reusing preprocessor models:
 For loading the preprocessor and encoder objects inside or outside a
 distribution strategy scope, the same rules apply as in the API for text
 embeddings with preprocessed inputs (see above).
+
+### Examples
+
+*   Colab tutorial
+    [Solve GLUE tasks using BERT on TPU
+](https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/text/solve_glue_tasks_using_bert_on_tpu.ipynb).
