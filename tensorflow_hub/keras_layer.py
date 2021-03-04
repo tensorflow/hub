@@ -46,7 +46,9 @@ class KerasLayer(tf.keras.layers.Layer):
   The callable is invoked with a single positional argument set to one tensor
   or a nest of tensors containing the inputs to the layer. If the callable
   accepts a `training` argument, a Python boolean is passed for it. It is True
-  if this layer is marked trainable *and* called for training.
+  if this layer is marked trainable *and* called for training, analogous to
+  tf.keras.layers.BatchNormalization. (By contrast, tf.keras.layers.Dropout
+  ignores the trainable state and applies the training argument verbatim.)
 
   If present, the following attributes of callable are understood to have
   special meanings:
@@ -231,6 +233,7 @@ class KerasLayer(tf.keras.layers.Layer):
         if training is None:
           training = tf.keras.backend.learning_phase()
       else:
+        # Behave like BatchNormalization. (Dropout is different, b/181839368.)
         training = False
       result = smart_cond.smart_cond(training,
                                      lambda: f(training=True),
