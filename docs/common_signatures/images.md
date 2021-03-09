@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-11' } *-->
+<!--* freshness: { owner: 'mroff' reviewed: '2021-03-09' } *-->
 
 # Common Signatures for Images
 
