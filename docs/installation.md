@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-09' } *-->
+<!--* freshness: { owner: 'wgierke' reviewed: '2021-03-09' } *-->
 
 # Installation
 
@@ -26,9 +26,8 @@ TensorFlow 2.
 
 ### Legacy use with TensorFlow 1
 
-The `tensorflow_hub` library requires TensorFlow version 1.7 or greater.
-
-We strongly recommend to install it with TensorFlow 1.15, which defaults to
+TensorFlow 1.15 is the only version of TensorFlow 1.x still supported by the
+`tensorflow_hub` library (as of release 0.11.0). TensorFlow 1.15 defaults to
 TF1-compatible behavior but contains many TF2 features under the hood to allow
 some use of TensorFlow Hub's TF2-style APIs.
 
