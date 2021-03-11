@@ -143,7 +143,6 @@ class KerasLayer(tf.keras.layers.Layer):
     self._signature = signature
     self._signature_outputs_as_dict = signature_outputs_as_dict
     self._output_key = output_key
-    # TODO(b/142213824): Remove setting shapes when shape inference works.
     if output_shape:
       # Autograph chokes on _convert_nest_to_shapes(), so we call it here
       # and not from within call().
@@ -250,7 +249,6 @@ class KerasLayer(tf.keras.layers.Layer):
             "(available: %s)." % (self._output_key, result.keys()))
       result = result[self._output_key]
 
-    # TODO(b/142213824): Remove setting shapes when shape inference works.
     result = self._apply_output_shape_if_set(inputs, result)
     return result
 
