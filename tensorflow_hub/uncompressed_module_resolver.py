@@ -24,7 +24,7 @@ class HttpUncompressedFileResolver(resolver.HttpResolverBase):
   """Resolves HTTP handles by requesting and reading their GCS location."""
 
   def __init__(self):
-    super(HttpUncompressedFileResolver, self).__init__()
+    super().__init__()
     self.path_resolver = resolver.PathResolver()
 
   def __call__(self, handle):
@@ -68,8 +68,7 @@ class HttpUncompressedFileResolver(resolver.HttpResolverBase):
               code))
 
     try:
-      response = super(HttpUncompressedFileResolver,
-                       self)._call_urlopen(request)
+      response = super()._call_urlopen(request)
       raise_on_unexpected_code(response.code)
     except urllib.error.HTTPError as error:
       if error.code != 303:

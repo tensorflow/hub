@@ -59,7 +59,7 @@ class TextEmbedding(tf.train.Checkpoint):
 class TextEmbeddingColumnTest(tf.test.TestCase):
 
   def setUp(self):
-    super(TextEmbeddingColumnTest, self).setUp()
+    super().setUp()
     self.model = os.path.join(self.get_temp_dir(), "model")
     tf.saved_model.save(TextEmbedding(), self.model)
     self.model_returning_dicts = os.path.join(self.get_temp_dir(),

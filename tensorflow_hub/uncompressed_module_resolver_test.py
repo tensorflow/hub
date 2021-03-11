@@ -27,7 +27,7 @@ from tensorflow_hub import uncompressed_module_resolver
 class UncompressedModuleResolverTest(tf.test.TestCase):
 
   def setUp(self):
-    super(UncompressedModuleResolverTest, self).setUp()
+    super().setUp()
     self.handles = ["http://example.com/module", "https://example.com/module"]
     self.uncompressed_resolver = uncompressed_module_resolver.HttpUncompressedFileResolver(
     )

@@ -34,7 +34,7 @@ class MNIST(tf.keras.models.Model):
   """Model representing a MNIST classifier."""
 
   def __init__(self, output_activation="softmax"):
-    super(MNIST, self).__init__()
+    super().__init__()
     self.layer_1 = tf.keras.layers.Dense(64)
     self.layer_2 = tf.keras.layers.Dense(10, activation=output_activation)
 

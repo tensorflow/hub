@@ -139,7 +139,7 @@ class _TextEmbeddingColumn(
   def __init__(self, key, module_spec_path, trainable):
     self.module_spec = module.as_module_spec(self.module_spec_path)
     _check_module_is_text_embedding(self.module_spec)
-    super(_TextEmbeddingColumn, self).__init__()
+    super().__init__()
 
   @property
   def _is_v2_column(self):
@@ -337,7 +337,7 @@ class _ImageEmbeddingColumn(DenseFeatureColumn,
     self.module_spec = module.as_module_spec(self.module_spec_path)
     _check_module_is_image_embedding(self.module_spec,
                                      check_image_size=self.image_size is None)
-    super(_ImageEmbeddingColumn, self).__init__()
+    super().__init__()
 
   @property
   def _is_v2_column(self):

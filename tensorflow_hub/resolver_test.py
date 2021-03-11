@@ -43,7 +43,7 @@ FLAGS = flags.FLAGS
 class PathResolverTest(tf.test.TestCase):
 
   def setUp(self):
-    super(PathResolverTest, self).setUp()
+    super().setUp()
     self.resolver = resolver.PathResolver()
 
   def testAlwaysSupported(self):

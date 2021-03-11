@@ -214,7 +214,7 @@ class _ModuleSpec(module_spec.ModuleSpec):
 class _ModuleImpl(module_impl.ModuleImpl):
 
   def __init__(self, name, trainable):
-    super(_ModuleImpl, self).__init__()
+    super().__init__()
     with tf.compat.v1.variable_scope(name):
       pass
 

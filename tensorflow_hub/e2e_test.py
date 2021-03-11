@@ -33,7 +33,7 @@ from tensorflow.python.ops.lookup_ops import index_to_string_table_from_file
 class End2EndTest(tf.test.TestCase):
 
   def setUp(self):
-    super(End2EndTest, self).setUp()
+    super().setUp()
     # Set current directory to test temp directory where we can create
     # files and serve them through the HTTP server.
     os.chdir(self.get_temp_dir())

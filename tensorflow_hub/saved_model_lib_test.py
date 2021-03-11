@@ -45,7 +45,7 @@ def _read_file_to_string(path):
 class SavedModelLibTest(tf.test.TestCase):
 
   def setUp(self):
-    super(SavedModelLibTest, self).setUp()
+    super().setUp()
     logging.set_verbosity(logging.DEBUG)
 
   def testAssets(self):

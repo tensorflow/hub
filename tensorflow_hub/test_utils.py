@@ -193,24 +193,21 @@ class CompressedLoadFormatContext(EnvVariableContextManager):
   """Set the load format to COMPRESSED during the execution of the context."""
 
   def __init__(self):
-    super(CompressedLoadFormatContext,
-          self).__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
-                         resolver.ModelLoadFormat.COMPRESSED.value)
+    super().__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
+                     resolver.ModelLoadFormat.COMPRESSED.value)
 
 
 class UncompressedLoadFormatContext(EnvVariableContextManager):
   """Set the load format to UNCOMPRESSED during the execution of the context."""
 
   def __init__(self):
-    super(UncompressedLoadFormatContext,
-          self).__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
-                         resolver.ModelLoadFormat.UNCOMPRESSED.value)
+    super().__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
+                     resolver.ModelLoadFormat.UNCOMPRESSED.value)
 
 
 class AutoLoadFormatContext(EnvVariableContextManager):
   """Set the load format to AUTO during the execution of the context."""
 
   def __init__(self):
-    super(AutoLoadFormatContext,
-          self).__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
-                         resolver.ModelLoadFormat.AUTO.value)
+    super().__init__(resolver._TFHUB_MODEL_LOAD_FORMAT,
+                     resolver.ModelLoadFormat.AUTO.value)

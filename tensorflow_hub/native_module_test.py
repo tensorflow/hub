@@ -546,7 +546,7 @@ def stateful_rv_module_fn():
 class TPUReplicateContext(ControlFlowContext):
 
   def __init__(self):
-    super(TPUReplicateContext, self).__init__()
+    super().__init__()
     self._name = "TPUReplicateContext"
 
   def AddOp(self, _):
@@ -556,7 +556,7 @@ class TPUReplicateContext(ControlFlowContext):
     return x
 
   def to_control_flow_context_def(self, context_def, export_scope=None):
-    super(TPUReplicateContext, self).to_control_flow_context_def(
+    super().to_control_flow_context_def(
         context_def, export_scope)
 
 

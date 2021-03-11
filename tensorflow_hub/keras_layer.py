@@ -174,7 +174,7 @@ class KerasLayer(tf.keras.layers.Layer):
   def _setup_layer(self, trainable=False, **kwargs):
     """Constructs keras layer with relevant weights and losses."""
     # Initialize an empty layer, then add_weight() etc. as needed.
-    super(KerasLayer, self).__init__(trainable=trainable, **kwargs)
+    super().__init__(trainable=trainable, **kwargs)
 
     # Add trainable and non-trainable weights from the callable.
     if hasattr(self._func, "trainable_variables"):
@@ -321,7 +321,7 @@ class KerasLayer(tf.keras.layers.Layer):
 
   def get_config(self):
     """Returns a serializable dict of keras layer configuration parameters."""
-    config = super(KerasLayer, self).get_config()
+    config = super().get_config()
     if not isinstance(self._handle, str):
       # Need to raise this type in order for tf.saved_model.save() to fall back
       # to not using config, instead of crashing.

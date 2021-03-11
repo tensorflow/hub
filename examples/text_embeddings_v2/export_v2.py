@@ -114,7 +114,7 @@ class TextEmbeddingModel(tf.train.Checkpoint):
                oov_buckets,
                num_lines_to_ignore=0,
                num_lines_to_use=None):
-    super(TextEmbeddingModel, self).__init__()
+    super().__init__()
     self._vocabulary, self._pretrained_vectors = load(vocab_file_path,
                                                       parse_line,
                                                       num_lines_to_ignore,

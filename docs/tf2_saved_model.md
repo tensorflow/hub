@@ -189,7 +189,7 @@ Conceptually, this looks like
 ```python
 class MyMulModel(tf.train.Checkpoint):
   def __init__(self, v_init):
-    super(MyMulModel, self).__init__()
+    super().__init__()
     self.v = tf.Variable(v_init)
     self.variables = [self.v]
     self.trainable_variables = [self.v]
