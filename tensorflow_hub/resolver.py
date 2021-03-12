@@ -361,6 +361,16 @@ def atomic_download(handle,
   lock_contents = _lock_file_contents(task_uid)
   tmp_dir = _temp_download_dir(module_dir, task_uid)
 
+  # Function to check whether model has already been downloaded.
+  check_module_exists = lambda: (
+      tf.compat.v1.gfile.Exists(module_dir) and tf.compat.v1.gfile.
+      ListDirectory(module_dir))
+
+  # Check whether the model has already been downloaded before locking
+  # the destination path.
+  if check_module_exists():
+    return module_dir
+
   # Attempt to protect against cases of processes being cancelled with
   # KeyboardInterrupt by using a try/finally clause to remove the lock
   # and tmp_dir.
@@ -371,8 +381,7 @@ def atomic_download(handle,
                                              overwrite=False)
         # Must test condition again, since another process could have created
         # the module and deleted the old lock file since last test.
-        if (tf.compat.v1.gfile.Exists(module_dir) and
-            tf.compat.v1.gfile.ListDirectory(module_dir)):
+        if check_module_exists():
           # Lock file will be deleted in the finally-clause.
           return module_dir
         if tf.compat.v1.gfile.Exists(module_dir):

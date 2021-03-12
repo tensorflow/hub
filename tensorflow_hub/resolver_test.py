@@ -251,6 +251,21 @@ class CompressedResolverTest(tf.test.TestCase):
         "Downloader Hostname: %s .PID:%d." % (re.escape(socket.gethostname()),
                                               os.getpid()))
 
+    # Try downloading the model again. Mock
+    # tf_utils.atomic_write_string_to_file() to throw an exception. Since the
+    # model is already downloaded, the function will never get called and the
+    # download succeeds.
+    with mock.patch.object(
+        tf_utils, "atomic_write_string_to_file",
+        side_effect=ValueError("This error should never be raised!")):
+      self.assertEqual(
+          module_dir,
+          resolver.atomic_download("module", fake_download_fn_with_rogue_behavior,
+                                   module_dir))
+      self.assertEqual(tf.compat.v1.gfile.ListDirectory(module_dir), ["file"])
+      self.assertFalse(tf.compat.v1.gfile.Exists(
+          resolver._lock_filename(module_dir)))
+
   def testModuleDownloadedWhenEmptyFolderExists(self):
     # Simulate the case when a module is cached in /tmp/module_dir but module
     # files inside the folder are deleted. In this case, the download should
