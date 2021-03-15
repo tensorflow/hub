@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'arnoegw' reviewed: '2020-09-11' } *-->
+<!--* freshness: { owner: 'kempy' reviewed: '2021-03-09' } *-->
 
 # Reusable SavedModels
 
