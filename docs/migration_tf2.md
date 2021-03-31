@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2020-12-29' review_interval: '3 months' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2021-04-01' review_interval: '3 months' } *-->
 
 # Migrating from TF1 to TF2 with TensorFlow Hub
 
