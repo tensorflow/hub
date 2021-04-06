@@ -41,6 +41,8 @@ toc:
 - heading: "Image Tutorials"
   style: divider
 - title: Image classification
+  path: /hub/tutorials/image_classification
+- title: Transfer Learning for Image classification
   path: /hub/tutorials/tf2_image_retraining
 - title: Style transfer
   path: /hub/tutorials/tf2_arbitrary_image_stylization
