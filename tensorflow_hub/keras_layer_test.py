@@ -102,6 +102,47 @@ def _save_half_plus_one_hub_module_v1(path):
   _export_module_spec_with_init_weights(spec, path)
 
 
+def _save_2d_text_embedding(export_dir, save_from_keras=False):
+  """Writes SavedModel to compute y = length(text)*w, with w trainable."""
+
+  class StringLengthLayer(tf.keras.layers.Layer):
+
+    def call(self, inputs):
+      return tf.strings.length(inputs)
+
+  inp = tf.keras.layers.Input(shape=(1,), dtype=tf.string)
+  text_length = StringLengthLayer()
+  times_w = tf.keras.layers.Dense(
+      units=2,
+      kernel_initializer=tf.keras.initializers.Constant([0.1, 0.3]),
+      kernel_regularizer=tf.keras.regularizers.l2(0.01),
+      use_bias=False)
+  outp = times_w(text_length(inp))
+  model = tf.keras.Model(inp, outp)
+
+  if save_from_keras:
+    tf.saved_model.save(model, export_dir)
+    return
+
+  @tf.function(
+      input_signature=[tf.TensorSpec(shape=(None, 1), dtype=tf.string)])
+  def call_fn(inputs):
+    return model(inputs, training=False)
+
+  obj = tf.train.Checkpoint()
+  obj.__call__ = call_fn
+  obj.variables = model.trainable_variables + model.non_trainable_variables
+  assert len(obj.variables) == 1, "Expect 1 weight, received {}.".format(
+      len(obj.variables))
+  obj.trainable_variables = [times_w.kernel]
+  assert len(model.losses) == 1, ("Expect 1 regularization loss, received "
+                                  "{}.".format(len(model.losses)))
+  obj.regularization_losses = [
+      tf.function(lambda: model.losses[0], input_signature=[])
+  ]
+  tf.saved_model.save(obj, export_dir)
+
+
 def _tensors_names_set(tensor_sequence):
   """Converts tensor sequence to a set of tensor references."""
   # Tensor name stands as a proxy for the uniqueness of the tensors.
@@ -525,10 +566,33 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
   def testComputeOutputShape(self, save_from_keras):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _save_half_plus_one_model(export_dir, save_from_keras=save_from_keras)
-    layer = hub.KerasLayer(export_dir, output_shape=[1])
+    layer = hub.KerasLayer(export_dir)
     self.assertEqual([10, 1],
                      layer.compute_output_shape(tuple([10, 1])).as_list())
     layer.get_config()
+
+  @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
+  def testComputeOutputShapeDifferentDtypes(self, save_from_keras):
+    export_dir = os.path.join(self.get_temp_dir(), "2d-text-embed")
+    _save_2d_text_embedding(export_dir, save_from_keras=save_from_keras)
+    # Output shape is required when computing output shape with dtypes that
+    # don't match.
+    layer = hub.KerasLayer(export_dir, output_shape=(2,))
+
+    self.assertEqual([None, 2], layer.compute_output_shape((None, 1)).as_list())
+    self.assertEqual([3, 2], layer.compute_output_shape((3, 1)).as_list())
+
+  def testComputeOutputShapeNonEager(self):
+    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
+    _save_half_plus_one_hub_module_v1(export_dir)
+
+    with tf.compat.v1.Graph().as_default():
+      # Output shape is required when computing output shape outside of eager
+      # mode.
+      layer = hub.KerasLayer(export_dir, output_shape=(1,))
+      self.assertEqual([None, 1],
+                       layer.compute_output_shape((None, 1)).as_list())
+      self.assertEqual([3, 1], layer.compute_output_shape((3, 1)).as_list())
 
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testGetConfigFromConfig(self, save_from_keras):

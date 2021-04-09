@@ -374,6 +374,27 @@ class KerasLayer(tf.keras.layers.Layer):
     """Returns the callable object to which `handle` resolved in `__init__`."""
     return self._func
 
+  def compute_output_shape(self, input_shape):
+    """Computes the output shape of the layer.
+
+    This relies on the `output_shape` provided during initialization, if any,
+    else falls back to the default behavior from `tf.keras.layers.Layer`.
+
+    Args:
+      input_shape: Shape tuple (tuple of integers) or list of shape tuples (one
+        per output tensor of the layer). Shape tuples can include None for free
+        dimensions, instead of an integer.
+
+    Returns:
+      An input shape tuple.
+    """
+    if hasattr(self, "_output_shape"):
+      output_shape = getattr(self, "_output_shape")
+      batch_size = tf.nest.flatten(input_shape)[0]
+      return tf.TensorShape((batch_size,)).concatenate(output_shape)
+
+    return super(KerasLayer, self).compute_output_shape(input_shape)
+
 
 def _convert_nest_to_shapes(x):
   """In a nest, converts raw tuples/lists of int or None to tf.TensorShape."""
