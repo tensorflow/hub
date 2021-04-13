@@ -14,8 +14,8 @@ limitations under the License.
 ==============================================================================-->
 # Current version 0.12.0-dev
   * Changes to make_image_classifier_tool:
-    * Add the option to read input with a tf.data.Dataset and use TF ops for 
-      preprocessing. Enabling this feature is
+    * Add the option to read input with a tf.data.Dataset and use TF ops for
+      preprocessing. Enabling this feature requires TF 2.5 or higher.
     * Set the default value of shear_range to 0. shear_range is deprecated and
       incompatible when using TF ops for preprocessing.
 
