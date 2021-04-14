@@ -12,9 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
-# Current version 0.13.0-dev
-  * Under development
-
 # Release 0.12.0
   * Improve support for `compute_output_shape` in `hub.KerasLayer`:
     * This will now use the `output_shape` value provided on init, if present,
