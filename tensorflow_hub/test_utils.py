@@ -16,7 +16,6 @@
 
 import os
 import socket
-import mock
 import sys
 import threading
 

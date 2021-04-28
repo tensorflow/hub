@@ -21,13 +21,12 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 import uuid
 
 from absl import flags
-import mock
 import tensorflow as tf
 import tensorflow_hub as hub
-
 from tensorflow_hub import compressed_module_resolver
 from tensorflow_hub import config
 from tensorflow_hub import registry

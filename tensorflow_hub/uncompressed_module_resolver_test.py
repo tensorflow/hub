@@ -15,9 +15,9 @@
 """Tests for tensorflow_hub.uncompressed_module_resolver."""
 
 import io
+from unittest import mock
 import urllib
 
-import mock
 import tensorflow as tf
 from tensorflow_hub import resolver
 from tensorflow_hub import test_utils
