@@ -72,7 +72,6 @@ production servives, consider
 [TensorFlow Serving](https://www.tensorflow.org/tfx/guide/serving) or other
 scalable, Python-free solutions.)
 
-
 Assuming your use-case model is **initialization** and subsequent **requests**
 (for example Django, Flask, custom HTTP server, etc.), you can set-up the
 serving as follows:
@@ -132,8 +131,16 @@ result = session.run(embedded_text, feed_dict={text_input: ["Hello world"]})
 
 ## Cannot change a model's dtype (e.g., float32 to bfloat16)
 
-TensorFlow's SavedModels (shared on TF Hub or otherwise) contain
-operations that work on fixed data types (often, float32 for the weights
-and intermediate activations of neural networks). These cannot be
-changed after the fact when loading the SavedModel (but model publishers
-can choose to publish different models with different data types).
+TensorFlow's SavedModels (shared on TF Hub or otherwise) contain operations that
+work on fixed data types (often, float32 for the weights and intermediate
+activations of neural networks). These cannot be changed after the fact when
+loading the SavedModel (but model publishers can choose to publish different
+models with different data types).
+
+## Update a model version
+
+The documentation metadata of model versions can be updated. However, the
+version's assets (model files) are immutable. If you want to change the model
+assets, you can publish a newer version of the model. It's a good practice to
+extend the documentation with a change log that describes what changed between
+versions.
