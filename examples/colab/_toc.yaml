@@ -50,6 +50,8 @@ toc:
   path: /hub/tutorials/tf2_object_detection
 - title: GANs for image generation
   path: /hub/tutorials/tf_hub_generative_image_module
+- title: Human Pose Estimation
+  path: /hub/tutorials/movenet
 - title: "Additional image tutorials"
   style: accordion
   section:
