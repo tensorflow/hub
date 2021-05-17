@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'wgierke' reviewed: '2021-02-25' review_interval: '3 months' } *-->
+<!--* freshness: { owner: 'wgierke' reviewed: '2021-05-17' review_interval: '3 months' } *-->
 
 # Write model documentation
 
@@ -147,10 +147,9 @@ The following metadata properties exist:
     upload, such as to a Google Cloud Storage bucket. The URL should be allowed
     to be fetched from by the robots.txt file (for this reason,
     "https://github.com/.*/releases/download/.*" is not supported as it is
-    forbidden by https://github.com/robots.txt). Depending on the model type,
-    the path should lead to:
-    *   SavedModel/TF.js model: a tar.gz archive
-    *   TFLite/Coral model: a .tflite file
+    forbidden by https://github.com/robots.txt). See
+    [below](#model-specific-asset-content) for more information on the expected
+    file type and content.
 *   `parent-model`: For TF.js/TFLite/Coral models: handle of the accompanying
     SavedModel/Placeholder
 *   `module-type`: the problem domain, e.g. "text-embedding" or
@@ -187,3 +186,38 @@ metadata properties:
 | Tfjs        | asset-path, parent-model |                                  |
 | Lite        | asset-path, parent-model |                                  |
 | Coral       | asset-path, parent-model |                                  |
+
+### Model-specific asset content
+
+Depending on the model type, the following file types and contents are expected:
+
+*   SavedModel: a tar.gz archive containing content like so:
+
+```
+saved_model.tar.gz
+├── assets/            # Optional.
+├── assets.extra/      # Optional.
+├── variables/
+│     ├── variables.data-?????-of-?????
+│     └──  variables.index
+├── saved_model.pb
+├── keras_metadata.pb  # Optional, only required for Keras models.
+└── tfhub_module.pb    # Optional, only required for TF1 models.
+```
+
+*   TF.js: a tar.gz archive containing content like so:
+
+```
+tf_js_model.tar.gz
+├── group*
+├── *.json
+├── *.txt
+└── *.pb
+```
+
+*   TFlite: a .tflite file
+*   Coral: a .tflite file
+
+Generally, all files and directories (whether compressed or uncompressed) must
+start with a word character so e.g. dots are no valid prefix of file
+names/directories.
