@@ -147,7 +147,10 @@ The following metadata properties exist:
     upload, such as to a Google Cloud Storage bucket. The URL should be allowed
     to be fetched from by the robots.txt file (for this reason,
     "https://github.com/.*/releases/download/.*" is not supported as it is
-    forbidden by https://github.com/robots.txt)
+    forbidden by https://github.com/robots.txt). Depending on the model type,
+    the path should lead to:
+    *   SavedModel/TF.js model: a tar.gz archive
+    *   TFLite/Coral model: a .tflite file
 *   `parent-model`: For TF.js/TFLite/Coral models: handle of the accompanying
     SavedModel/Placeholder
 *   `module-type`: the problem domain, e.g. "text-embedding" or
