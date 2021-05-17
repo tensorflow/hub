@@ -57,6 +57,8 @@ toc:
   section:
   - title: "CropNet: Cassava Disease Detection"
     path: /hub/tutorials/cropnet_cassava
+  - title: "CropNet: Fine tuning models for on-device inference"
+    path: /hub/tutorials/cropnet_on_device
   - title: Boundless GAN
     path: /hub/tutorials/boundless
   - title: Super resolution
