@@ -89,6 +89,13 @@ landing_page:
     description: >
       Check out <a href="https://blog.tensorflow.org/search?label=TensorFlow+Hub">our blog</a> for more announcements and view the latest <a href="https://twitter.com/search?q=%23TFHub%20from%3ATensorFlow&src=typed_query&f=live">#TFHub updates</a> on Twitter
     items:
+    - heading: TensorFlow Hub for Real World Impact at Google I/O
+      youtube_id: BE5nkhFe3AE
+      description: >
+        Learn how you can use TensorFlow Hub to build ML solutions with real world impact.
+      buttons:
+      - label: Watch the video<span class="material-icons icon-after" aria-hidden="true">north_east</span>
+        path: https://www.youtube.com/watch?v=BE5nkhFe3AE
     - heading: "On-device ML solutions"
       description: >
         To explore ML solutions for your mobile and web apps including TensorFlow Hub, visit the Google on-device machine learning page.
@@ -113,13 +120,6 @@ landing_page:
       buttons:
       - label: Read the blog<span class="material-icons icon-after" aria-hidden="true">arrow_forward</span>
         path: https://blog.tensorflow.org/2020/06/estimating-pitch-with-spice-and-tensorflow-hub.html
-    - heading: TensorFlow Hub at the Dev Summit
-      youtube_id: 3seWxHGnDqM
-      description: >
-        Learn about how to use TensorFlow Hub to find models for your use case.
-      buttons:
-      - label: Watch the video<span class="material-icons icon-after" aria-hidden="true">north_east</span>
-        path: https://www.youtube.com/watch?v=3seWxHGnDqM
   - options:
     - cards
     - centered-header
