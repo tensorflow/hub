@@ -96,7 +96,7 @@ landing_page:
         image_path: /hub/images/odml.png
         buttons:
         - label: Visit the site<span class="material-icons icon-after" aria-hidden="true">north_east</span>
-          path: https://blog.tensorflow.org/2020/12/making-bert-easier-with-preprocessing-models-from-tensorflow-hub.html
+          path: https://g.co/on-device-ml
       - heading: "Making BERT Easier with Preprocessing Models From TensorFlow Hub"
         description: >
           TensorFlow Hub makes BERT simple to use with new preprocessing models.
