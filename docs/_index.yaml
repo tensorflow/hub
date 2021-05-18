@@ -81,7 +81,6 @@ landing_page:
         buttons:
         - label: See the model<span class="material-icons icon-after" aria-hidden="true">north_east</span>
           path: https://tfhub.dev/google/lite-model/aiy/vision/classifier/food_V1/1
-
   - options:
     - cards
     - centered-header
@@ -90,6 +89,14 @@ landing_page:
     description: >
       Check out <a href="https://blog.tensorflow.org/search?label=TensorFlow+Hub">our blog</a> for more announcements and view the latest <a href="https://twitter.com/search?q=%23TFHub%20from%3ATensorFlow&src=typed_query&f=live">#TFHub updates</a> on Twitter
     items:
+      - heading: "On-device ML solutions"
+        description: >
+          To explore ML solutions for your mobile and web apps including TensorFlow Hub, visit the Google on-device machine learning page.
+        path: https://g.co/on-device-ml
+        image_path: /hub/images/odml.png
+        buttons:
+        - label: Visit the site<span class="material-icons icon-after" aria-hidden="true">north_east</span>
+          path: https://blog.tensorflow.org/2020/12/making-bert-easier-with-preprocessing-models-from-tensorflow-hub.html
       - heading: "Making BERT Easier with Preprocessing Models From TensorFlow Hub"
         description: >
           TensorFlow Hub makes BERT simple to use with new preprocessing models.
@@ -106,14 +113,6 @@ landing_page:
         buttons:
         - label: Read the blog<span class="material-icons icon-after" aria-hidden="true">arrow_forward</span>
           path: https://blog.tensorflow.org/2020/06/estimating-pitch-with-spice-and-tensorflow-hub.html
-      - heading: "BigTransfer (BiT): State-of-the-art transfer learning for computer vision"
-        description: >
-            Use the BiT model for training state-of-the-art custom image classifiers.
-        path: https://blog.tensorflow.org/2020/05/bigtransfer-bit-state-of-art-transfer-learning-computer-vision.html
-        image_path: /hub/images/bit_blog.jpg
-        buttons:
-        - label: Read the blog<span class="material-icons icon-after" aria-hidden="true">arrow_forward</span>
-          path: https://blog.tensorflow.org/2020/05/bigtransfer-bit-state-of-art-transfer-learning-computer-vision.html
       - heading: TensorFlow Hub at the Dev Summit
         youtube_id: 3seWxHGnDqM
         description: >
