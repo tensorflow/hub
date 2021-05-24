@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2021-02-11' review_interval: '3 months' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2021-05-24' review_interval: '6 months' } *-->
 
 # Become a publisher
 
