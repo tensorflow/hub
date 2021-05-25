@@ -37,6 +37,8 @@ toc:
     path: /hub/tutorials/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder
   - title: Text cookbook
     path: /hub/tutorials/text_cookbook
+  - title: SentEval for Universal Sentence Encoder CMLM model.
+    path: /hub/tutorials/senteval_for_universal_sentence_encoder_cmlm
 
 - heading: "Image Tutorials"
   style: divider
