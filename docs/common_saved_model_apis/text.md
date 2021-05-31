@@ -359,5 +359,4 @@ embeddings with preprocessed inputs (see above).
 ### Examples
 
 *   Colab tutorial
-    [Solve GLUE tasks using BERT on TPU
-](https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/text/solve_glue_tasks_using_bert_on_tpu.ipynb).
+    [Solve GLUE tasks using BERT on TPU](https://colab.research.google.com/github/tensorflow/text/blob/master/docs/tutorials/bert_glue.ipynb).
