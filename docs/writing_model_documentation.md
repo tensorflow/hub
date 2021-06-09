@@ -79,6 +79,7 @@ Simple one sentence description.
 
 <!-- asset-path: https://path/to/text-embedding-model/model.tar.gz -->
 <!-- module-type: text-embedding -->
+<!-- task: text-embedding -->
 <!-- fine-tunable: true -->
 <!-- format: saved_model_2 -->
 
@@ -152,8 +153,9 @@ The following metadata properties exist:
     file type and content.
 *   `parent-model`: For TF.js/TFLite/Coral models: handle of the accompanying
     SavedModel/Placeholder
-*   `module-type`: the problem domain, e.g. "text-embedding" or
-    "image-classification"
+*   `task`: the problem domain, e.g. "text-embedding" or "image-classification"
+*   `module-type`: should be set to the same value as the `task` tag. We'll
+    deprecate and remove this tag in favor of `task` soon.
 *   `dataset`: the dataset the model was trained on, e.g. "ImageNet-21k" or
     "Wikipedia"
 *   `network-architecture`: the network architecture the model is based on, e.g.
@@ -174,18 +176,18 @@ The following metadata properties exist:
 The Markdown documentation types support different required and optional
 metadata properties:
 
-| Type        | Required                 | Optional                         |
-| ----------- | ------------------------ | -------------------------------- |
-| Publisher   |                          |                                  |
-| Collection  | module-type              | dataset, language,               |
-:             :                          : network-architecture             :
-| Placeholder | module-type              | dataset, fine-tunable, language, |
-:             :                          : license, network-architecture    :
-| SavedModel  | asset-path, module-type, | dataset, language, license,      |
-:             : fine-tunable, format     : network-architecture             :
-| Tfjs        | asset-path, parent-model |                                  |
-| Lite        | asset-path, parent-model |                                  |
-| Coral       | asset-path, parent-model |                                  |
+| Type        | Required                   | Optional                         |
+| ----------- | -------------------------- | -------------------------------- |
+| Publisher   |                            |                                  |
+| Collection  | module-type, task          | dataset, language,               |
+:             :                            : network-architecture             :
+| Placeholder | module-type, task          | dataset, fine-tunable, language, |
+:             :                            : license, network-architecture    :
+| SavedModel  | asset-path, module-type,   | dataset, language, license,      |
+:             : task, fine-tunable, format : network-architecture             :
+| Tfjs        | asset-path, parent-model   |                                  |
+| Lite        | asset-path, parent-model   |                                  |
+| Coral       | asset-path, parent-model   |                                  |
 
 ### Model-specific asset content
 
