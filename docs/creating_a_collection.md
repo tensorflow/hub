@@ -23,7 +23,7 @@ of the file.
 Collection of visual representations that have been evaluated on the VTAB
 benchmark.
 
-<!-- module-type: image-feature-vector -->
+<!-- task: image-feature-vector -->
 
 ## Overview
 This is the list of visual representations in TensorFlow Hub that have been
