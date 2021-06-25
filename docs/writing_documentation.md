@@ -1,64 +1,94 @@
 <!--* freshness: { owner: 'wgierke' reviewed: '2021-05-17' review_interval: '3 months' } *-->
 
-# Write model documentation
+# Write documentation
 
-For contributing models to tfhub.dev, a documentation in Markdown must be
-provided. For a full overview of the process of adding models to tfhub.dev see
-the [contribute a model](contribute_a_model.md) guide.
+For contributing to tfhub.dev, documentation in Markdown format must be
+provided. For a full overview of the process of contributing models to tfhub.dev
+see the [contribute a model](contribute_a_model.md) guide.
 
 ## Types of Markdown documentation
 
 There are 3 types of Markdown documentation used in tfhub.dev:
 
-*   Publisher Markdown - contains information about a publisher (learn more in
-    the [become a publisher](publish.md) guide).
-*   Model Markdown - contains information about a specific model.
+*   Publisher Markdown - information about a publisher
+    ([see markdown syntax](#publisher))
+*   Model Markdown - information about a specific model and how to use it
+    ([see markdown syntax](#model))
 *   Collection Markdown - contains information about a publisher-defined
-    collection of models (learn more in the
-    [create a collection](creating_a_collection.md) guide).
+    collection of models ([see markdown syntax](#collection))
 
 ## Content organization
 
-The following content organization is recommended when contributing to the
+The following content organization is required when contributing to the
 [TensorFlow Hub GitHub](https://github.com/tensorflow/hub) repository:
 
-*   each publisher directory is in the `assets` directory.
+*   each publisher directory is in the `assets/docs` directory
 *   each publisher directory contains optional `models` and `collections`
     directories
 *   each model should have its own directory under
-    `assets/publisher_name/models`
+    `assets/docs/<publisher_name>/models`
 *   each collection should have its own directory under
-    `assets/publisher_name/collections`
+    `assets/docs/<publisher_name>/collections`
 
-Publisher and collection Markdowns are unversioned, while models can have
-different versions. Each model version requires a separate Markdown file named
-after the version it describes (i.e. 1.md, 2.md).
+Publisher markdowns are unversioned, while models can have different versions.
+Each model version requires a separate Markdown file named after the version it
+describes (i.e. 1.md, 2.md). Collections are versioned but only a single version
+(1.md) is supported.
 
 All model versions for a given model should be located in the model directory.
 
 Below is an illustration on how the Markdown content is organized:
 
 ```
-assets
-├── publisher_name_a
-│   ├── publisher_name_a.md  -> Documentation of the publisher.
+assets/docs
+├── <publisher_name_a>
+│   ├── <publisher_name_a>.md  -> Documentation of the publisher.
 │   └── models
-│       └── model          -> Model name with slashes encoded as sub-path.
-│           ├── 1.md       -> Documentation of the model version 1.
-│           └── 2.md       -> Documentation of the model version 2.
-├── publisher_name_b
-│   ├── publisher_name_b.md  -> Documentation of the publisher.
+│       └── <model_name>       -> Model name with slashes encoded as sub-path.
+│           ├── 1.md           -> Documentation of the model version 1.
+│           └── 2.md           -> Documentation of the model version 2.
+├── <publisher_name_b>
+│   ├── <publisher_name_b>.md  -> Documentation of the publisher.
 │   ├── models
 │   │   └── ...
 │   └── collections
-│       └── collection     -> Documentation for the collection feature.
-│           └── 1.md
-├── publisher_name_c
+│       └── <collection_name>
+│           └── 1.md           -> Documentation for the collection.
+├── <publisher_name_c>
 │   └── ...
 └── ...
 ```
 
-## Model page specific Markdown format
+## Publisher markdown format {:#publisher}
+
+Publisher documentation is declared in the same kind of markdown files as
+models, with slight syntactic differences.
+
+The correct location for the publisher file on the TensorFlow Hub repo is:
+[tfhub.dev/assets/docs](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/\<publisher_name>/\<publisher_name.md>
+
+See the minimal publisher documentation example for the "vtab" publisher:
+
+```markdown
+# Publisher vtab
+Visual Task Adaptation Benchmark
+
+[![Icon URL]](https://storage.googleapis.com/vtab/vtab_logo_120.png)
+
+## VTAB
+The Visual Task Adaptation Benchmark (VTAB) is a diverse, realistic and
+challenging benchmark to evaluate image representations.
+```
+
+The example above specifies the publisher id, a short description, path to icon
+to use, and a longer free-form markdown documentation.
+
+### Publisher name guideline
+
+Your publisher name can be your GitHub username or the name of the GitHub
+organization you manage.
+
+## Model page markdown format {:#model}
 
 The model documentation is a Markdown file with some add-on syntax. See the
 example below for a minimal example or
@@ -68,11 +98,10 @@ example below for a minimal example or
 
 A high-quality model documentation contains code snippets, information how the
 model was trained and intended usage. You should also make use of model-specific
-metadata properties
-[explained below](#model-markdown-specific-metadata-properties) so users can
-find your models on tfhub.dev faster.
+metadata properties [explained below](#metadata) so users can find your models
+on tfhub.dev faster.
 
-```markdown
+~~~markdown
 # Module google/text-embedding-model/1
 
 Simple one sentence description.
@@ -87,7 +116,7 @@ Simple one sentence description.
 Here we give more information about the model including how it was trained,
 expected use cases, and code snippets demonstrating how to use the model:
 
-``
+```
 Code snippet demonstrating use (e.g. for a TF model using the tensorflow_hub library)
 
 import tensorflow_hub as hub
@@ -95,24 +124,25 @@ import tensorflow_hub as hub
 model = hub.KerasLayer(<model name>)
 inputs = ...
 output = model(inputs)
-``
 ```
+~~~
 
 ### Model deployments and grouping deployments together
 
 tfhub.dev allows publishing TF.js, TFLite and Coral deployments of a TensorFlow
-model.
+SavedModel.
 
-The first line of the Markdown file should specify the type of the deployment
-format:
+The first line of the Markdown file should specify the type of the format:
 
+*   `# Module publisher/model/version` for SavedModels
 *   `# Tfjs publisher/model/version` for TF.js deployments
 *   `# Lite publisher/model/version` for Lite deployments
 *   `# Coral publisher/model/version` for Coral deployments
 
-It is a good idea for these different deployments to show up on the same model
-page on tfhub.dev. To associate a given TF.js, TFLite or Coral deployment to a
-TensorFlow model, specify the parent-model tag:
+It is a good idea for these different formats of the same conceptual model to
+show up on the same model page on tfhub.dev. To associate a given TF.js, TFLite
+or Coral deployment to a TensorFlow SavedModel model, specify the parent-model
+tag:
 
 ```markdown
 <!-- parent-model: publisher/model/version -->
@@ -124,12 +154,14 @@ its handle in the `parent-model` tag. The placeholder Markdown is identical to
 TensorFlow model Markdown, except that the first line is: `# Placeholder
 publisher/model/version` and it doesn't require the `asset-path` property.
 
-### Model Markdown specific metadata properties
+### Model Markdown specific metadata properties {:#metadata}
 
-The Markdown files can contain metadata properties. These are represented as
-Markdown comments after the description of the Markdown file, e.g.
+The Markdown files can contain metadata properties. These are used to provide
+filters and tags to help users find your model. The metadata attributes are
+included as Markdown comments after the short description of the Markdown file,
+e.g.
 
-```
+```markdown
 # Module google/universal-sentence-encoder/1
 Encoder of greater-than-word length text trained on a variety of data.
 
@@ -137,7 +169,7 @@ Encoder of greater-than-word length text trained on a variety of data.
 ...
 ```
 
-The following metadata properties exist:
+The following metadata properties are supported:
 
 *   `format`: For TensorFlow models: the TensorFlow Hub format of the model.
     Valid values are `hub` when the model was exported via the legacy
@@ -228,9 +260,49 @@ tf_js_model.tar.gz
 └── *.pb
 ```
 
-*   TFlite: a .tflite file
+*   TFLite: a .tflite file
 *   Coral: a .tflite file
 
 Generally, all files and directories (whether compressed or uncompressed) must
 start with a word character so e.g. dots are no valid prefix of file
 names/directories.
+
+## Collection page markdown format {:#collection}
+
+Collections are a feature of tfhub.dev that enables publishers to bundle related
+models together to improve user search experience.
+
+See the [list of all collections](https://tfhub.dev/s?subtype=model-family) on
+tfhub.dev.
+
+The correct location for the collection file in the repository
+[github.com/tensorflow/tfhub.dev](https://github.com/tensorflow/tfhub.dev) is
+[assets/docs](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/<b>publisher_name&gt;</b>/collections/<b>&lt;collection_name&gt;</b>/<b>1</b>.md
+
+Here is a minimal example that would go into
+assets/docs/<b>vtab</b>/collections/<b>benchmark</b>/<b>1</b>.md. Note that the
+collection's name in the first line does not include the `collections/` part
+which is included in the filepath.
+
+```markdown
+# Collection vtab/benchmark/1
+Collection of visual representations that have been evaluated on the VTAB
+benchmark.
+
+<!-- task: image-feature-vector -->
+
+## Overview
+This is the list of visual representations in TensorFlow Hub that have been
+evaluated on VTAB. Results can be seen in
+[google-research.github.io/task_adaptation/](https://google-research.github.io/task_adaptation/)
+
+#### Models
+|                   |
+|-------------------|
+| [vtab/sup-100/1](https://tfhub.dev/vtab/sup-100/1)   |
+| [vtab/rotation/1](https://tfhub.dev/vtab/rotation/1) |
+|------------------------------------------------------|
+```
+
+The example specifies the name of the collection, a short one sentence
+description, problem domain metadata and free-form markdown documentation.

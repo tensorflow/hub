@@ -49,16 +49,14 @@ upper_tabs:
         path: /hub/common_saved_model_apis/text
       # Publishing models to TF-Hub
       - heading: Publishing models to TF-Hub
-      - title: Become a publisher
+      - title: Publishing process
         path: /hub/publish
       - title: Export a model
         path: /hub/exporting_tf2_saved_model
-      - title: Write model documentation
-        path: /hub/writing_model_documentation
-      - title: Contribute a model
+      - title: Write documentation
+        path: /hub/writing_documentation
+      - title: Submit a pull request
         path: /hub/contribute_a_model
-      - title: Create a collection
-        path: /hub/creating_a_collection
       - title: Data portability and deletion
         path: /hub/portability_and_deletion
       - title: "Deprecated: TF1 Hub format export"

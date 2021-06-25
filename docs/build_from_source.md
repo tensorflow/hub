@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 =============================================================================-->
+
 # Creating the TensorFlow Hub pip package using Linux
 
 Note: This document is for developers interested in modifying TensorFlow Hub
@@ -32,9 +33,7 @@ This requires:
 Alternatively, if you install the protobuf compiler you can
 [try out your changes without using bazel](#develop).
 
-## Setup a virtualenv
-
-<a id="setup"></a>
+## Setup a virtualenv {:#setup}
 
 ### Activate virtualenv
 

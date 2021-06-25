@@ -1,6 +1,6 @@
 <!--* freshness: { owner: 'maringeo' reviewed: '2021-05-24' review_interval: '6 months' } *-->
 
-# Become a publisher
+# Publishing process
 
 ## Terms of service
 
@@ -11,39 +11,13 @@ Service at [https://tfhub.dev/terms](https://tfhub.dev/terms).
 
 The full process of publishing consists of:
 
-1.  Creating the model (see how to
+1.  Exporting the model asset to publish (see how to
     [export a model](exporting_tf2_saved_model.md))
-1.  Writing documentation (see how to
-    [write model documentation](writing_model_documentation.md)
-1.  Creating a publishing request (see how to
+1.  Writing publisher page and model documentation (see how to
+    [write documentation](writing_documentation.md))
+1.  Sending a pull request for review (see how to
     [contribute](contribute_a_model.md))
 
-## Publisher page specific markdown format
-
-Publisher documentation is declared in the same kind of markdown files as
-described in the [writing model documentation](writing_model_documentation)
-guide, with slight syntactic differences.
-
-The correct location for the publisher file on the TensorFlow Hub repo is:
-[tfhub.dev/assets/docs](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/\<publisher_name>/\<publisher_name.md>
-
-See the minimal publisher documentation example:
-
-```markdown
-# Publisher vtab
-Visual Task Adaptation Benchmark
-
-[![Icon URL]](https://storage.googleapis.com/vtab/vtab_logo_120.png)
-
-## VTAB
-The Visual Task Adaptation Benchmark (VTAB) is a diverse, realistic and
-challenging benchmark to evaluate image representations.
-```
-
-The example above specifies the publisher name, a short description, path to
-icon to use, and a longer free-form markdown documentation.
-
-### Publisher name guideline
-
-Your publisher name can be your GitHub username or the name of the GitHub
-organization you manage.
+Important: You are encouraged to send a small PR (e.g. fixing a typo in the
+repo) or a PR with only your publisher page as your first contribution before
+sending a PR publishing a model.
