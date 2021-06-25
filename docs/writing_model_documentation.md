@@ -152,39 +152,53 @@ The following metadata properties exist:
     file type and content.
 *   `parent-model`: For TF.js/TFLite/Coral models: handle of the accompanying
     SavedModel/Placeholder
-*   `task`: the problem domain, e.g. "text-embedding" or "image-classification"
-*   `dataset`: the dataset the model was trained on, e.g. "ImageNet-21k" or
-    "Wikipedia"
+*   `fine-tunable`: Boolean, whether the model can be fine-tuned by the user.
+*   `task`: the problem domain, e.g. "text-embedding". All supported values are
+    defined in
+    [task.yaml](https://github.com/tensorflow/tfhub.dev/blob/master/tags/task.yaml).
+*   `dataset`: the dataset the model was trained on, e.g. "wikipedia". All
+    supported values are defined in
+    [dataset.yaml](https://github.com/tensorflow/tfhub.dev/blob/master/tags/dataset.yaml).
 *   `network-architecture`: the network architecture the model is based on, e.g.
-    "BERT" or "Mobilenet V3"
+    "mobilenet-v3". All supported values are defined in
+    [network_architecture.yaml](https://github.com/tensorflow/tfhub.dev/blob/master/tags/network_architecture.yaml).
 *   `language`: the language code of the language a text model was trained on,
-    e.g. "en" or "fr"
-*   `fine-tunable`: Boolean, whether the model can be fine-tuned by the user
-*   `license`: The license that applies to the model. The default assumed
-    license for a published model is
-    [Apache 2.0 License](https://opensource.org/licenses/Apache-2.0). The other
-    accepted options are listed in
-    [OSI Approved Licenses](https://opensource.org/licenses). The possible
-    (literal) values are: `Apache-2.0`, `BSD-3-Clause`, `BSD-2-Clause`,
-    `GPL-2.0`, `GPL-3.0`, `LGPL-2.0`, `LGPL-2.1`, `LGPL-3.0`, `MIT`, `MPL-2.0`,
-    `CDDL-1.0`, `EPL-2.0`, `custom`. Note that a custom license will require
-    special consideration case by case.
+    e.g. "en". All supported values are defined in
+    [language.yaml](https://github.com/tensorflow/tfhub.dev/blob/master/tags/language.yaml).
+*   `license`: The license that applies to the model, e.g. "mit". The default
+    assumed license for a published model is
+    [Apache 2.0 License](https://opensource.org/licenses/Apache-2.0). All
+    supported values are defined in
+    [license.yaml](https://github.com/tensorflow/tfhub.dev/blob/master/tags/license.yaml).
+    Note that the `custom` license will require special consideration case by
+    case.
+*   `colab`: HTTPS URL to a notebook that demonstrates how the model can be used
+    or trained
+    ([example](https://colab.sandbox.google.com/github/tensorflow/hub/blob/master/examples/colab/bigbigan_with_tf_hub.ipynb)
+    for [bigbigan-resnet50](https://tfhub.dev/deepmind/bigbigan-resnet50/1)).
+    Must lead to `colab.research.google.com`. Note that Jupyter notebooks hosted
+    on GitHub can be accessed via
+    `https://colab.research.google.com/github/ORGANIZATION/PROJECT/
+    blob/master/.../my_notebook.ipynb`.
+*   `demo`: HTTPS URL to a website that demonstrates how the TF.js model can be
+    used ([example](https://teachablemachine.withgoogle.com/train/pose) for
+    [posenet](https://tfhub.dev/tensorflow/tfjs-model/posenet/mobilenet/float/075/1/default/1)).
 
 The Markdown documentation types support different required and optional
 metadata properties:
 
-| Type        | Required                 | Optional                         |
-| ----------- | ------------------------ | -------------------------------- |
-| Publisher   |                          |                                  |
-| Collection  | task                     | dataset, language,               |
-:             :                          : network-architecture             :
-| Placeholder | task                     | dataset, fine-tunable, language, |
-:             :                          : license, network-architecture    :
-| SavedModel  | asset-path, task,        | dataset, language, license,      |
-:             : fine-tunable, format     : network-architecture             :
-| Tfjs        | asset-path, parent-model |                                  |
-| Lite        | asset-path, parent-model |                                  |
-| Coral       | asset-path, parent-model |                                  |
+| Type        | Required                 | Optional                           |
+| ----------- | ------------------------ | ---------------------------------- |
+| Publisher   |                          |                                    |
+| Collection  | task                     | dataset, language,                 |
+:             :                          : network-architecture               :
+| Placeholder | task                     | dataset, fine-tunable, language,   |
+:             :                          : license, network-architecture      :
+| SavedModel  | asset-path, task,        | colab, dataset, language, license, |
+:             : fine-tunable, format     : network-architecture               :
+| Tfjs        | asset-path, parent-model | colab, demo                        |
+| Lite        | asset-path, parent-model | colab                              |
+| Coral       | asset-path, parent-model | colab                              |
 
 ### Model-specific asset content
 
