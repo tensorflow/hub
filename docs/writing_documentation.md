@@ -215,22 +215,29 @@ The following metadata properties are supported:
 *   `demo`: HTTPS URL to a website that demonstrates how the TF.js model can be
     used ([example](https://teachablemachine.withgoogle.com/train/pose) for
     [posenet](https://tfhub.dev/tensorflow/tfjs-model/posenet/mobilenet/float/075/1/default/1)).
+*   `interactive-visualizer`: name of the visualizer that should be embedded on
+    the model page, e.g. "vision". Displaying a visualizer allows users to
+    explore the model's predictions interactively. All supported values are
+    defined in
+    [interactive_visualizer.yaml](https://github.com/tensorflow/tfhub.dev/blob/master/tags/interactive_visualizer.yaml).
 
 The Markdown documentation types support different required and optional
 metadata properties:
 
-| Type        | Required                 | Optional                           |
-| ----------- | ------------------------ | ---------------------------------- |
-| Publisher   |                          |                                    |
-| Collection  | task                     | dataset, language,                 |
-:             :                          : network-architecture               :
-| Placeholder | task                     | dataset, fine-tunable, language,   |
-:             :                          : license, network-architecture      :
-| SavedModel  | asset-path, task,        | colab, dataset, language, license, |
-:             : fine-tunable, format     : network-architecture               :
-| Tfjs        | asset-path, parent-model | colab, demo                        |
-| Lite        | asset-path, parent-model | colab                              |
-| Coral       | asset-path, parent-model | colab                              |
+| Type        | Required                 | Optional                            |
+| ----------- | ------------------------ | ----------------------------------- |
+| Publisher   |                          |                                     |
+| Collection  | task                     | dataset, language,                  |
+:             :                          : network-architecture                :
+| Placeholder | task                     | dataset, fine-tunable,              |
+:             :                          : interactive-visualizer, language,   :
+:             :                          : license, network-architecture       :
+| SavedModel  | asset-path, task,        | colab, dataset,                     |
+:             : fine-tunable, format     : interactive-visualizer, language,   :
+:             :                          : license, network-architecture       :
+| Tfjs        | asset-path, parent-model | colab, demo, interactive-visualizer |
+| Lite        | asset-path, parent-model | colab, interactive-visualizer       |
+| Coral       | asset-path, parent-model | colab, interactive-visualizer       |
 
 ### Model-specific asset content
 
