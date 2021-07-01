@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2021-04-01' review_interval: '3 months' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2021-06-30' review_interval: '6 months' } *-->
 
 # Migrating from TF1 to TF2 with TensorFlow Hub
 
@@ -27,8 +27,8 @@ In general, it is recommended to use new API wherever possible.
 
 ## Summary of the new API
 
-`hub.load()` is the new low-level function to load a SavedModel from
-TensorFlow Hub (or compatible services). It wraps TF2's `tf.saved_model.load()`;
+`hub.load()` is the new low-level function to load a SavedModel from TensorFlow
+Hub (or compatible services). It wraps TF2's `tf.saved_model.load()`;
 TensorFlow's [SavedModel Guide](https://www.tensorflow.org/guide/saved_model)
 describes what you can do with the result.
 
@@ -37,9 +37,9 @@ m = hub.load(handle)
 outputs = m(inputs)
 ```
 
-The `hub.KerasLayer` class calls `hub.load()` and adapts the result for
-use in Keras alongside other Keras layers. (It may even be a convenient
-wrapper for loaded SavedModels used in other ways.)
+The `hub.KerasLayer` class calls `hub.load()` and adapts the result for use in
+Keras alongside other Keras layers. (It may even be a convenient wrapper for
+loaded SavedModels used in other ways.)
 
 ```python
 model = tf.keras.Sequential([
@@ -49,17 +49,16 @@ model = tf.keras.Sequential([
 
 Many tutorials show these APIs in action. See in particular
 
-  * [Text classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
-  * [Image classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
+*   [Text classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
+*   [Image classification example notebook](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
 
 ### Using the new API in Estimator training
 
 If you use a TF2 SavedModel in an Estimator for training with parameter servers
-(or otherwise in a TF1 Session with variables placed on remote devices),
-you need to set `experimental.share_cluster_devices_in_session` in the
-tf.Session's ConfigProto, or else you will get an error like
-"Assigned device '/job:ps/replica:0/task:0/device:CPU:0'
-does not match any device."
+(or otherwise in a TF1 Session with variables placed on remote devices), you
+need to set `experimental.share_cluster_devices_in_session` in the tf.Session's
+ConfigProto, or else you will get an error like "Assigned device
+'/job:ps/replica:0/task:0/device:CPU:0' does not match any device."
 
 The necessary option can be set like
 
@@ -70,8 +69,8 @@ run_config = tf.estimator.RunConfig(..., session_config=session_config)
 estimator = tf.estimator.Estimator(..., config=run_config)
 ```
 
-Starting with TF2.2, this option is no longer experimental, and
-the `.experimental` piece can be dropped.
+Starting with TF2.2, this option is no longer experimental, and the
+`.experimental` piece can be dropped.
 
 ## Loading legacy models in TF1 Hub format
 
@@ -101,6 +100,7 @@ Legacy TF1 Hub format models can be loaded via `tf.saved_model.load`. Instead of
 m = hub.Module(handle, tags={"foo", "bar"})
 tensors_out_dict = m(dict(x1=..., x2=...), signature="sig", as_dict=True)
 ```
+
 it is recommended to use:
 
 ```python
@@ -109,8 +109,7 @@ m = hub.load(path, tags={"foo", "bar"})
 tensors_out_dict = m.signatures["sig"](x1=..., x2=...)
 ```
 
-In these examples `m.signatures` is a dict of TensorFlow [concrete
-functions](https://www.tensorflow.org/tutorials/customization/performance#tracing)
-keyed by signature names. Calling such a function computes all its outputs,
-even if unused. (This is different from the lazy evaluation of TF1's
-graph mode.)
+In these examples `m.signatures` is a dict of TensorFlow
+[concrete functions](https://www.tensorflow.org/tutorials/customization/performance#tracing)
+keyed by signature names. Calling such a function computes all its outputs, even
+if unused. (This is different from the lazy evaluation of TF1's graph mode.)
