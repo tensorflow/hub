@@ -201,7 +201,8 @@ class KerasLayer(tf.keras.layers.Layer):
     """Calls add_weight() to register but not create an existing weight."""
     if trainable is None: trainable = weight.trainable
     self.add_weight(name=weight.name, shape=weight.shape, dtype=weight.dtype,
-                    trainable=trainable, getter=lambda *_, **__: weight)
+                    trainable=trainable, experimental_autocast=False,
+                    getter=lambda *_, **__: weight)
 
   def _call_loss_if_trainable(self, loss):
     """Returns `loss` conditioned on whether this layer is trainable."""

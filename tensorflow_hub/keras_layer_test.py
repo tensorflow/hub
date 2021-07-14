@@ -582,6 +582,34 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual([None, 2], layer.compute_output_shape((None, 1)).as_list())
     self.assertEqual([3, 2], layer.compute_output_shape((3, 1)).as_list())
 
+  @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
+  def testResaveWithMixedPrecision(self, save_from_keras):
+    """Tests importing a float32 model then saving it with mixed_float16."""
+    major, minor, _ = tf.version.VERSION.split(".")
+    if not tf.executing_eagerly() or (int(major), int(minor)) < (2, 4):
+      self.skipTest("Test uses non-experimental mixed precision API, which is "
+                    "only available in TF 2.4 or above")
+    export_dir1 = os.path.join(self.get_temp_dir(), "mixed-precision")
+    export_dir2 = os.path.join(self.get_temp_dir(), "mixed-precision2")
+    # TODO(b/193472950): Currently, KerasLayer only works with mixed precision
+    # when the model takes non-floating point inputs, which is why an embedding
+    # model is used in this test.
+    _save_2d_text_embedding(export_dir1, save_from_keras=save_from_keras)
+    try:
+      tf.compat.v2.keras.mixed_precision.set_global_policy("mixed_float16")
+      inp = tf.keras.layers.Input(shape=(1,), dtype=tf.string)
+      imported = hub.KerasLayer(export_dir1, trainable=True)
+      outp = imported(inp)
+      model = tf.keras.Model(inp, outp)
+      model.compile(tf.keras.optimizers.SGD(0.002, momentum=0.001),
+                    "mean_squared_error", run_eagerly=True)
+      x = [["a"], ["aa"], ["aaa"]]
+      y = [len(xi) for xi in x]
+      model.fit(x, y)
+      tf.saved_model.save(model, export_dir2)
+    finally:
+      tf.compat.v2.keras.mixed_precision.set_global_policy("float32")
+
   def testComputeOutputShapeNonEager(self):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _save_half_plus_one_hub_module_v1(export_dir)
