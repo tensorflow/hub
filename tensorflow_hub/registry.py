@@ -35,6 +35,7 @@ class MultiImplRegister(object):
   def __init__(self, name):
     self._name = name
     self._impls = []
+    self._bypass_cert = bypass_cert
 
   def clear_implementations(self):
     """Remove all implementations."""
@@ -44,7 +45,7 @@ class MultiImplRegister(object):
     """Register an implementation."""
     self._impls += [impl]
 
-  def __call__(self, *args, **kwargs):
+  def __call__(self, bypass_cert=False, *args, **kwargs):
     fails = []
     for impl in reversed(self._impls):
       if impl.is_supported(*args, **kwargs):
