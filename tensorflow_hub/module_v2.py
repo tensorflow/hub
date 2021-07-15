@@ -20,7 +20,7 @@ from tensorflow_hub import native_module
 from tensorflow_hub import registry
 
 
-def resolve(handle):
+def resolve(handle, bypass_cert):
   """Resolves a module handle into a path.
 
   This function works both for plain TF2 SavedModels and the legacy TF1 Hub
@@ -44,10 +44,14 @@ def resolve(handle):
   Returns:
     A string representing the Module path.
   """
-  return registry.resolver(handle)
+  return registry.resolver(handle, bypass_cert)
 
+def _by_pass_cert_validation(bypass=False):
+  # TODO Document this and add more error logic
+  # bypass should be True or [False]
+  return bypass
 
-def load(handle, tags=None, options=None):
+def load(handle, tags=None, options=None, bypass_cert=False):
   """Resolves a handle and loads the resulting module.
 
   This is the preferred API to load a Hub module in low-level TensorFlow 2.
@@ -79,6 +83,8 @@ def load(handle, tags=None, options=None):
     options: Optional, `tf.saved_model.LoadOptions` object that specifies
       options for loading. This argument can only be used from TensorFlow 2.3
       onwards.
+    bypass_cert: (bool) Optional, if set to true then certificates will not be 
+      checked.
 
   Returns:
     A trackable object (see tf.saved_model.load() documentation for details).
@@ -87,13 +93,17 @@ def load(handle, tags=None, options=None):
     NotImplementedError: If the code is running against incompatible (1.x)
                          version of TF.
   """
+  
+
+  
   if not isinstance(handle, str):
     raise ValueError("Expected a string, got %s" % handle)
-  module_path = resolve(handle)
+  module_path = resolve(handle, bypass_cert)
   is_hub_module_v1 = tf.io.gfile.exists(
       native_module.get_module_proto_path(module_path))
   if tags is None and is_hub_module_v1:
     tags = []
+    
 
   if options:
     if not hasattr(getattr(tf, "saved_model", None), "LoadOptions"):
