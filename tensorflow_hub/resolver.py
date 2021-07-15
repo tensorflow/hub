@@ -25,6 +25,7 @@ import tempfile
 import time
 import urllib
 import uuid
+import ssl
 
 from absl import flags
 from absl import logging
@@ -518,6 +519,11 @@ class HttpResolverBase(Resolver):
 
   def _call_urlopen(self, request):
     # Overriding this method allows setting SSL context in Python 3.
+
+    self._context = ssl.create_default_context();
+    self._context.check_hostname=False
+    self._context.verify_mode=ssl.CERT_NONE
+
     if self._context is None:
       return urllib.request.urlopen(request)
     else:
