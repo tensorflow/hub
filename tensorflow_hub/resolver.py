@@ -521,7 +521,7 @@ class HttpResolverBase(Resolver):
   def _call_urlopen(self, request):
     # Overriding this method allows setting SSL context in Python 3.
 
-    if hub.DISABLE_CERT_VALIDATION == True:
+    if hub.module_v2.DISABLE_CERT_VALIDATION == True:
       # Disable Certificate Verification
       self._context = ssl.create_default_context();
       self._context.check_hostname=False
