@@ -18,11 +18,11 @@ import hashlib
 import urllib
 
 import tensorflow as tf
-from tensorflow_hub import resolver, _bypass_cert_validation_check
+from tensorflow_hub import resolver, _bypass_cert_validation
 
 
 LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
-TF_HUB_DISABLE_CERT_VALIDATION_CHECK = _bypass_cert_validation_check()
+TF_HUB_DISABLE_CERT_VALIDATION_CHECK = _bypass_cert_validation()
 _COMPRESSED_FORMAT_QUERY = ("tf-hub-format", "compressed")
 
 
