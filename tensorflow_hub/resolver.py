@@ -501,7 +501,8 @@ class PathResolver(Resolver):
 class HttpResolverBase(Resolver):
   """Base class for HTTP-based resolvers."""
 
-  def __init__(self, bypass_cert_validation=None):
+  def __init__(self):
+    self._context = None
 
   def _append_format_query(self, handle, format_query):
     """Append the given query args to the URL."""
@@ -516,21 +517,16 @@ class HttpResolverBase(Resolver):
     """Add an SSLContext to support custom certificate authorities."""
     self._context = context
 
-  def _call_urlopen(self, request, bypass_cert_validation=None):
+  def _call_urlopen(self, request):
     # Overriding this method allows setting SSL context in Python 3.
-    
-    # bypass_cert_validation should be None or True
-    
-    self._context = bypass_cert_validation
 
+    self._context = ssl.create_default_context();
+    self._context.check_hostname=False
+    self._context.verify_mode=ssl.CERT_NONE
 
     if self._context is None:
       return urllib.request.urlopen(request)
     else:
-      
-      self._context = ssl.create_default_context();
-      self._context.check_hostname=False
-      self._context.verify_mode=ssl.CERT_NONE
       return urllib.request.urlopen(request, context=self._context)
 
   def is_http_protocol(self, handle):
