@@ -102,6 +102,7 @@ from tensorflow_hub.module import Module
 from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.module_v2 import load
 from tensorflow_hub.module_v2 import resolve
+from tensorflow_hub.module_v2 import DISABLE_CERT_VALIDATION
 from tensorflow_hub.native_module import add_signature
 from tensorflow_hub.native_module import attach_message
 from tensorflow_hub.native_module import create_module_spec
@@ -141,6 +142,7 @@ __all__ = [
     "attach_message",
     "create_module_spec",
     "create_module_spec_from_saved_model",
+    "DISABLE_CERT_VALIDATION",
     "load",
     "load_module_spec",
     "resolve",
