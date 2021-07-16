@@ -337,7 +337,6 @@ def _wait_for_lock_to_disappear(handle, lock_file, lock_file_timeout_sec):
 def atomic_download(handle,
                     download_fn,
                     module_dir,
-                    bypass_cert=False
                     lock_file_timeout_sec=10 * 60):
   """Returns the path to a Module directory for a given TF-Hub Module handle.
 
@@ -502,8 +501,7 @@ class PathResolver(Resolver):
 class HttpResolverBase(Resolver):
   """Base class for HTTP-based resolvers."""
 
-  def __init__(self):
-    self.context=None
+  def __init__(self, bypass_cert_validation=None):
 
   def _append_format_query(self, handle, format_query):
     """Append the given query args to the URL."""
@@ -518,7 +516,7 @@ class HttpResolverBase(Resolver):
     """Add an SSLContext to support custom certificate authorities."""
     self._context = context
 
-  def _call_urlopen(self, request, bypass_cert_validaition):
+  def _call_urlopen(self, request, bypass_cert_validation=None):
     # Overriding this method allows setting SSL context in Python 3.
     
     # bypass_cert_validation should be None or True
