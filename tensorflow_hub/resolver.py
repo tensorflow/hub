@@ -19,6 +19,7 @@ import datetime
 import enum
 import os
 import socket
+import ssl
 import sys
 import tarfile
 import tempfile
@@ -31,6 +32,7 @@ from absl import logging
 import tensorflow as tf
 from tensorflow_hub import file_utils
 from tensorflow_hub import tf_utils
+import tensorflow_hub as hub
 
 
 FLAGS = flags.FLAGS
@@ -518,6 +520,14 @@ class HttpResolverBase(Resolver):
 
   def _call_urlopen(self, request):
     # Overriding this method allows setting SSL context in Python 3.
+
+    if hub.DISABLE_CERT_VALIDATION == True:
+      # Disable Certificate Verification
+      self._context = ssl.create_default_context();
+      self._context.check_hostname=False
+      self._context.verify_mode=ssl.CERT_NONE
+
+
     if self._context is None:
       return urllib.request.urlopen(request)
     else:
