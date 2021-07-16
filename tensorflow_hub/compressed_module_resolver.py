@@ -18,11 +18,11 @@ import hashlib
 import urllib
 
 import tensorflow as tf
-from tensorflow_hub import resolver, _bypass_cert_validation_check
+from tensorflow_hub import resolver
 
 
 LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
-TF_HUB_DISABLE_CERT_VALIDATION_CHECK = _bypass_cert_validation_check()
+
 _COMPRESSED_FORMAT_QUERY = ("tf-hub-format", "compressed")
 
 
@@ -60,7 +60,7 @@ class HttpCompressedFileResolver(resolver.HttpResolverBase):
       """Fetch a module via HTTP(S), handling redirect and download headers."""
       request = urllib.request.Request(
           self._append_compressed_format_query(handle))
-      response = self._call_urlopen(request, bypass_cert_validation=TF_HUB_DISABLE_CERT_VALIDATION_CHECK)
+      response = self._call_urlopen(request)
       return resolver.DownloadManager(handle).download_and_uncompress(
           response, tmp_dir)
 
