@@ -527,7 +527,6 @@ class HttpResolverBase(Resolver):
       self._context.check_hostname=False
       self._context.verify_mode=ssl.CERT_NONE
 
-
     if self._context is None:
       return urllib.request.urlopen(request)
     else:

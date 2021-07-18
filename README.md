@@ -21,7 +21,6 @@ Both link to g3doc/overview.md and g3doc/*.md for detailed docs.
 
 # TensorFlow Hub
 
-**Edited for SSL Cert Error**
 
 [TensorFlow Hub](https://tfhub.dev) is a repository of reusable assets
 for machine learning with [TensorFlow](https://www.tensorflow.org/).
