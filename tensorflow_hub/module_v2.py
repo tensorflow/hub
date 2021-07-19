@@ -19,8 +19,6 @@ import tensorflow as tf
 from tensorflow_hub import native_module
 from tensorflow_hub import registry
 
-DISABLE_CERT_VALIDATION = False
-
 def resolve(handle):
   """Resolves a module handle into a path.
 
