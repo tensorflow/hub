@@ -147,6 +147,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
       self.assertTrue(
           http_resolver._append_compressed_format_query(handle),
           expected)
+
   def testGetModulePathTarGz_NoCert(self):
     os.environ[resolver. _TFHUB_DISABLE_CERT_VALIDATION] = "true"
     FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
