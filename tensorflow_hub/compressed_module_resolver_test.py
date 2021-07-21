@@ -147,6 +147,13 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
       self.assertTrue(
           http_resolver._append_compressed_format_query(handle),
           expected)
+  def testGetModulePathTarGz_NoCert(self):
+    os.environ[resolver. _TFHUB_DISABLE_CERT_VALIDATION] = "true"
+    FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
+    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
+    path = http_resolver(self.module_handle)
+    files = os.listdir(path)
+    self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
   def testAbandondedLockFile(self):
     # Tests that the caching procedure is resilient to an abandonded lock
@@ -215,6 +222,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
           "http://localhost:%d/bad_archive.tar.gz does not appear "
           "to be a valid module." %
           self.redirect_server_port, str(e))
+
 
 
 if __name__ == "__main__":
