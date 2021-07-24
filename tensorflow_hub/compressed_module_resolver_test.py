@@ -17,12 +17,14 @@
 import os
 import re
 import socket
+import ssl
 import tarfile
 import tempfile
 import unittest
 import uuid
 
 from absl import flags
+from absl.testing import parameterized
 import tensorflow as tf
 
 from tensorflow_hub import compressed_module_resolver
@@ -34,7 +36,7 @@ from tensorflow_hub import tf_utils
 FLAGS = flags.FLAGS
 
 
-class HttpCompressedFileResolverTest(tf.test.TestCase):
+class HttpCompressedFileResolverTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     # Set current directory to test temp directory where we can create
@@ -148,13 +150,26 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
           http_resolver._append_compressed_format_query(handle),
           expected)
 
-  def testGetModulePathTarGz_NoCert(self):
-    os.environ[resolver. _TFHUB_DISABLE_CERT_VALIDATION] = "true"
-    FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
-    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
-    path = http_resolver(self.module_handle)
-    files = os.listdir(path)
-    self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
+  @parameterized.parameters(("TRUE", ssl.CERT_REQUIRED), ("true", ssl.CERT_NONE))
+  def testGetModulePathTarGz_withEnvVariable(self, env_value, ssl_value):
+    # Tests whether Certificate Validation when resolving a url is off or on. 
+    # This Environment variable defaults to "off" but can be turned on by 
+    # setting it to "true"
+    with unittest.mock.patch.dict(os.environ, {resolver._TFHUB_DISABLE_CERT_VALIDATION: env_value}):
+      FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
+      http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
+      path = http_resolver(self.module_handle)
+      files = os.listdir(path)
+      expected_cert = ssl.create_default_context()
+      if ssl_value == ssl.CERT_NONE:
+        expected_cert.check_hostname = False
+      else: expected_cert.check_hostname = True
+      expected_cert.verify_mode = ssl_value
+      # Check to see if context(s) match
+      self.assertEqual(http_resolver._context.verify_mode, expected_cert.verify_mode)
+      self.assertEqual(http_resolver._context.check_hostname, expected_cert.check_hostname)
+      # Check to see if resolver was able to extract files
+      self.assertListEqual(sorted(files), ["file1", "file2", "file3"])
 
   def testAbandondedLockFile(self):
     # Tests that the caching procedure is resilient to an abandonded lock
@@ -223,7 +238,6 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
           "http://localhost:%d/bad_archive.tar.gz does not appear "
           "to be a valid module." %
           self.redirect_server_port, str(e))
-
 
 
 if __name__ == "__main__":

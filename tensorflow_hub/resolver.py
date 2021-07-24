@@ -32,7 +32,6 @@ from absl import logging
 import tensorflow as tf
 from tensorflow_hub import file_utils
 from tensorflow_hub import tf_utils
-import tensorflow_hub as hub
 
 
 FLAGS = flags.FLAGS
@@ -64,7 +63,9 @@ flags.DEFINE_enum(
 _TFHUB_CACHE_DIR = "TFHUB_CACHE_DIR"
 _TFHUB_DOWNLOAD_PROGRESS = "TFHUB_DOWNLOAD_PROGRESS"
 _TFHUB_MODEL_LOAD_FORMAT = "TFHUB_MODEL_LOAD_FORMAT"
+# When downloading a model, disables certificate validation when resolving url
 _TFHUB_DISABLE_CERT_VALIDATION = "TFHUB_DISABLE__CERT_VALIDATION"
+_TFHUB_DISABLE_CERT_VALIDATION_VALUE = "true"
 
 def get_env_setting(env_var, flag_name):
   """Returns the environment variable or the specified flag."""
@@ -503,7 +504,8 @@ class HttpResolverBase(Resolver):
   """Base class for HTTP-based resolvers."""
 
   def __init__(self):
-    self._context = None
+    self._context = ssl.create_default_context()
+    # Keep this function here because _set_url_context is never called
     self._maybe_disable_cert_validation()
 
   def _append_format_query(self, handle, format_query):
@@ -518,7 +520,6 @@ class HttpResolverBase(Resolver):
   def _set_url_context(self, context):
     """Add an SSLContext to support custom certificate authorities."""
     self._context = context
-    self._maybe_disable_cert_validation()
 
   def _call_urlopen(self, request):
     # Overriding this method allows setting SSL context in Python 3.
@@ -531,8 +532,17 @@ class HttpResolverBase(Resolver):
     return handle.startswith(("http://", "https://"))
 
   def _maybe_disable_cert_validation(self):
+    """Checks whether you want to disable certificate validation
+    when resolving a URL for a TensorFlow Hub model
+    Generally you would not want to disable certificate
+    validation because it is unsafe and if the URL is untrustworthy,
+    you can download bad data. But due to SSL Verification Checks
+    Returning errors on some IP addresses,
+    this functionality is still available"""
     if os.getenv(_TFHUB_DISABLE_CERT_VALIDATION) == "true":
         if self._context is None:
           self._context = ssl.create_default_context()
         self._context.check_hostname = False
         self._context.verify_mode = ssl.CERT_NONE
+        # Log Warning
+        logging.warning("Warning: Not using certificate validation to resolve handle.")
