@@ -17,12 +17,14 @@
 import os
 import re
 import socket
+import ssl
 import tarfile
 import tempfile
 import unittest
 import uuid
 
 from absl import flags
+from absl.testing import parameterized
 import tensorflow as tf
 
 from tensorflow_hub import compressed_module_resolver
@@ -34,7 +36,7 @@ from tensorflow_hub import tf_utils
 FLAGS = flags.FLAGS
 
 
-class HttpCompressedFileResolverTest(tf.test.TestCase):
+class HttpCompressedFileResolverTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     # Set current directory to test temp directory where we can create
@@ -147,6 +149,23 @@ class HttpCompressedFileResolverTest(tf.test.TestCase):
       self.assertTrue(
           http_resolver._append_compressed_format_query(handle),
           expected)
+
+  @parameterized.parameters(("", ssl.CERT_REQUIRED),
+                            ("TRUE", ssl.CERT_REQUIRED),
+                            ("true", ssl.CERT_NONE))
+  def testGetModulePathTarGz_withEnvVariable(self, env_value, expected_mode):
+    # Tests whether Certificate Validation when resolving a url is off or on. 
+    # This Environment variable defaults to "off" but can be turned on by 
+    # setting it to "true"
+    FLAGS.tfhub_cache_dir = os.path.join(self.get_temp_dir(), "cache_dir")
+
+    with unittest.mock.patch.dict(
+        os.environ, {resolver._TFHUB_DISABLE_CERT_VALIDATION: env_value}):
+      http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
+      path = http_resolver(self.module_handle)
+
+    self.assertEqual(http_resolver._context.verify_mode, expected_mode)
+    self.assertCountEqual(os.listdir(path), ["file1", "file2", "file3"])
 
   def testAbandondedLockFile(self):
     # Tests that the caching procedure is resilient to an abandonded lock

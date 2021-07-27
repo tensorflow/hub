@@ -19,6 +19,7 @@ import datetime
 import enum
 import os
 import socket
+import ssl
 import sys
 import tarfile
 import tempfile
@@ -62,7 +63,9 @@ flags.DEFINE_enum(
 _TFHUB_CACHE_DIR = "TFHUB_CACHE_DIR"
 _TFHUB_DOWNLOAD_PROGRESS = "TFHUB_DOWNLOAD_PROGRESS"
 _TFHUB_MODEL_LOAD_FORMAT = "TFHUB_MODEL_LOAD_FORMAT"
-
+# When downloading a model, disables certificate validation when resolving url
+_TFHUB_DISABLE_CERT_VALIDATION = "TFHUB_DISABLE_CERT_VALIDATION"
+_TFHUB_DISABLE_CERT_VALIDATION_VALUE = "true"
 
 def get_env_setting(env_var, flag_name):
   """Returns the environment variable or the specified flag."""
@@ -501,7 +504,8 @@ class HttpResolverBase(Resolver):
   """Base class for HTTP-based resolvers."""
 
   def __init__(self):
-    self._context = None
+    self._context = ssl.create_default_context()
+    self._maybe_disable_cert_validation()
 
   def _append_format_query(self, handle, format_query):
     """Append the given query args to the URL."""
@@ -525,3 +529,17 @@ class HttpResolverBase(Resolver):
 
   def is_http_protocol(self, handle):
     return handle.startswith(("http://", "https://"))
+
+  def _maybe_disable_cert_validation(self):
+    """Disables cert validation if TFHUB_DISABLE_CERT_VALIDATION is set.
+
+    Checks whether certificate validation should be disabled when resolving an
+    URL for downloading a model. This should only be done if the URL is
+    trustworthy.
+    """
+    if os.getenv(
+        _TFHUB_DISABLE_CERT_VALIDATION) == _TFHUB_DISABLE_CERT_VALIDATION_VALUE:
+      self._context.check_hostname = False
+      self._context.verify_mode = ssl.CERT_NONE
+      logging.warning("Disabled certificate validation for resolving handles.")
+
