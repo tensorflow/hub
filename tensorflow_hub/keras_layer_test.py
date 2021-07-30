@@ -299,6 +299,28 @@ def _save_plus_one_saved_model_v2(path, save_from_keras=False):
   tf.saved_model.save(obj, path)
 
 
+def _save_plus_one_saved_model_v2_keras_default_callable(path):
+  """Writes Hub-style SavedModel that increments the input by one."""
+  obj = tf.train.Checkpoint()
+
+  @tf.function(input_signature=[tf.TensorSpec(None, dtype=tf.float32)])
+  def plus_one(x):
+    return x + 1
+
+  @tf.function(input_signature=[
+      tf.TensorSpec(None, dtype=tf.float32),
+      tf.TensorSpec((), dtype=tf.bool)
+  ])
+  def keras_default(x, training=False):
+    if training:
+      return x + 1
+    return x
+
+  obj.__call__ = keras_default
+  obj.plus_one = plus_one
+  tf.saved_model.save(obj, path, signatures={"plus_one": obj.plus_one})
+
+
 def _save_plus_one_hub_module_v1(path):
   """Writes a model in TF1 Hub format that increments the input by one."""
 
@@ -987,6 +1009,19 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
       self.assertEqual(output["output_0"], expected_outputs)
     else:
       self.assertEqual(output, expected_outputs)
+
+  def test_load_callable_keras_default_saved_model_v2_with_signature(self):
+    export_dir = os.path.join(self.get_temp_dir(), "plus_one_keras_default")
+    _save_plus_one_saved_model_v2_keras_default_callable(export_dir)
+    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
+    layer = hub.KerasLayer(
+        export_dir,
+        signature="plus_one",
+        signature_outputs_as_dict=True)
+    output = layer(inputs)
+
+    self.assertIsInstance(output, dict)
+    self.assertEqual(output["output_0"], expected_outputs)
 
   @parameterized.parameters(
       ("TF1HubModule", None, None, True),

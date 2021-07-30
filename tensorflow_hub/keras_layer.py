@@ -151,7 +151,6 @@ class KerasLayer(tf.keras.layers.Layer):
 
     self._load_options = load_options
     self._func = load_module(handle, tags, self._load_options)
-    self._has_training_argument = func_has_training_argument(self._func)
     self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
 
     # Update with the defaults when using legacy TF1 Hub format.
@@ -169,6 +168,7 @@ class KerasLayer(tf.keras.layers.Layer):
                        "a signature (or using a legacy TF1 Hub format).")
 
     self._callable = self._get_callable()
+    self._has_training_argument = func_has_training_argument(self._callable)
     self._setup_layer(trainable, **kwargs)
 
   def _setup_layer(self, trainable=False, **kwargs):
