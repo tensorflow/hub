@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'wgierke' reviewed: '2021-05-17' review_interval: '3 months' } *-->
+<!--* freshness: { owner: 'wgierke' reviewed: '2021-08-17' review_interval: '3 months' } *-->
 
 # Write documentation
 
@@ -269,6 +269,12 @@ tf_js_model.tar.gz
 
 *   TFLite: a .tflite file
 *   Coral: a .tflite file
+
+For tar.gz archives: assuming your model files are in the directory `my_model`
+(e.g. `my_model/saved_model.pb` for SavedModels or `my_model/model.json` for
+TF.js models), you can create a valid tar.gz archive using the
+[tar](https://www.gnu.org/software/tar/manual/tar.html) tool via `cd my_model &&
+tar -czvf ../model.tar.gz *`.
 
 Generally, all files and directories (whether compressed or uncompressed) must
 start with a word character so e.g. dots are no valid prefix of file

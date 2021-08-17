@@ -8,7 +8,9 @@ program to the
 This format is the recommended way to share pre-trained models and model pieces
 on TensorFlow Hub. It replaces the older [TF1 Hub format](tf1_hub_module.md) and
 comes with a new set of APIs. You can find more information on exporting the TF1
-Hub format models in [TF1 Hub format export](exporting_hub_format.md).
+Hub format models in [TF1 Hub format export](exporting_hub_format.md). You can
+find details on how to compress the SavedModel for sharing it on TensorFlow Hub
+[here](writing_documentation.md#model-specific_asset_content).
 
 Some model-building toolkits already provide tools to do this (e.g., see below
 for [TensorFlow Model Garden](#tensorflow-model-garden)).
