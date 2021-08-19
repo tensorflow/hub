@@ -65,7 +65,7 @@ Publisher documentation is declared in the same kind of markdown files as
 models, with slight syntactic differences.
 
 The correct location for the publisher file on the TensorFlow Hub repo is:
-[tfhub.dev/assets/docs](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/\<publisher_name>/\<publisher_name.md>
+[tfhub.dev/assets/docs](https://github.com/tensorflow/tfhub.dev/tree/master/assets/docs)/\<publisher_id>/\<publisher_id.md>
 
 See the minimal publisher documentation example for the "vtab" publisher:
 
@@ -80,8 +80,9 @@ The Visual Task Adaptation Benchmark (VTAB) is a diverse, realistic and
 challenging benchmark to evaluate image representations.
 ```
 
-The example above specifies the publisher id, a short description, path to icon
-to use, and a longer free-form markdown documentation.
+The example above specifies the publisher id, the publisher name, the path to
+the icon to use, and a longer free-form markdown documentation. Note that the
+publisher id should only contain lowercase letters, digits, and hyphens.
 
 ### Publisher name guideline
 
