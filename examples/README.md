@@ -2,6 +2,11 @@
 
 ## Notebooks
 
+#### [`colab/wav2vec2_saved_model_finetuning.ipynb`](colab/wav2vec2_saved_model_finetuning.ipynb)
+
+Shows how to fine-tune Wav2Vec2 SavedModel with a language modeling head for
+Automatic Speech Recognition
+
 #### [`colab/text_classification_with_tf_hub_on_kaggle.ipynb`](colab/text_classification_with_tf_hub_on_kaggle.ipynb)
 
 Shows how to solve a problem on Kaggle with TF-Hub.
