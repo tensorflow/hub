@@ -20,7 +20,7 @@ There are 3 types of Markdown documentation used in tfhub.dev:
 ## Content organization
 
 The following content organization is required when contributing to the
-[TensorFlow Hub GitHub](https://github.com/tensorflow/hub) repository:
+[TensorFlow Hub GitHub](https://github.com/tensorflow/tfhub.dev) repository:
 
 *   each publisher directory is in the `assets/docs` directory
 *   each publisher directory contains optional `models` and `collections`
