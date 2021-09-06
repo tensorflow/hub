@@ -20,7 +20,6 @@ from absl import logging
 import tensorflow as tf
 from tensorflow_hub import tf_utils
 
-
 # A collection of pairs (key: string, module: Module) used internally to
 # propagate modules from where they are defined to the export hook.
 # The collection key is a tuple (not a string) in order to make it invisible
@@ -53,8 +52,8 @@ def register_module_for_export(module, export_name):
   for used_name, _ in tf.compat.v1.get_collection(_EXPORT_MODULES_COLLECTION):
     if used_name == export_name:
       raise ValueError(
-          "There is already a module registered to be exported as %r"
-          % export_name)
+          "There is already a module registered to be exported as %r" %
+          export_name)
   tf.compat.v1.add_to_collection(_EXPORT_MODULES_COLLECTION,
                                  (export_name, module))
 
@@ -95,8 +94,8 @@ class LatestModuleExporter(tf.compat.v1.estimator.Exporter):
       name: unique name of this `Exporter`, which will be used in the export
         path.
       serving_input_fn: A function with no arguments that returns a
-        ServingInputReceiver. This is used with the `estimator` passed
-        to `export()` to build the graph (in PREDICT mode) that registers the
+        ServingInputReceiver. This is used with the `estimator` passed to
+        `export()` to build the graph (in PREDICT mode) that registers the
         modules for export. The model in that graph is never run, so the actual
         data provided by this input fn does not matter.
       exports_to_keep: Number of exports to keep. Older exports will be garbage
@@ -117,8 +116,12 @@ class LatestModuleExporter(tf.compat.v1.estimator.Exporter):
   def name(self):
     return self._name
 
-  def export(self, estimator, export_path, checkpoint_path=None,
-             eval_result=None, is_the_final_export=None):
+  def export(self,
+             estimator,
+             export_path,
+             checkpoint_path=None,
+             eval_result=None,
+             is_the_final_export=None):
     """Actually performs the export of registered Modules.
 
     This method creates a timestamped directory under `export_path`
@@ -186,8 +189,8 @@ def _make_estimator_serving_session(estimator, serving_input_fn,
     estimator: tf.Estimator to use when constructing the session.
     serving_input_fn: A function that takes no arguments and returns a
       `ServingInputReceiver`. It is used to construct the session.
-    checkpoint_path: The checkpoint path to restore in the session. Must not
-      be None.
+    checkpoint_path: The checkpoint path to restore in the session. Must not be
+      None.
   """
   with tf.Graph().as_default() as g:
     mode = tf.compat.v1.estimator.ModeKeys.PREDICT
@@ -211,6 +214,7 @@ def _make_estimator_serving_session(estimator, serving_input_fn,
     with session.as_default():
       # TODO(b/71839662): Consider if this needs to support TPUEstimatorSpec
       # which does not have a scaffold member.
+      # pylint: disable=line-too-long
       saver_for_restore = estimator_spec.scaffold.saver or tf.compat.v1.train.Saver(
           sharded=True)
       saver_for_restore.restore(session, checkpoint_path)

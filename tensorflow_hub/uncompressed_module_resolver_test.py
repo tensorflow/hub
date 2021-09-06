@@ -29,6 +29,7 @@ class UncompressedModuleResolverTest(tf.test.TestCase):
   def setUp(self):
     super().setUp()
     self.handles = ["http://example.com/module", "https://example.com/module"]
+    # pylint: disable=line-too-long
     self.uncompressed_resolver = uncompressed_module_resolver.HttpUncompressedFileResolver(
     )
 
@@ -85,10 +86,8 @@ class UncompressedModuleResolverTest(tf.test.TestCase):
     with mock.patch.object(
         resolver.HttpResolverBase, "_call_urlopen", side_effect=http_error):
       with self.assertRaisesWithLiteralMatch(
-          ValueError,
-          "Expected server to return a GCS location but received "
-          "file://somefile"
-      ):
+          ValueError, "Expected server to return a GCS location but received "
+          "file://somefile"):
         self.uncompressed_resolver("https://tfhub.dev/google/model/1")
 
   def test_server_returns_200(self):

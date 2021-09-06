@@ -62,8 +62,8 @@ def _save_half_plus_one_model(export_dir, save_from_keras=False):
     tf.saved_model.save(model, export_dir)
     return
 
-  @tf.function(input_signature=[
-      tf.TensorSpec(shape=(None, 1), dtype=tf.float32)])
+  @tf.function(
+      input_signature=[tf.TensorSpec(shape=(None, 1), dtype=tf.float32)])
   def call_fn(inputs):
     return model(inputs, training=False)
 
@@ -72,9 +72,10 @@ def _save_half_plus_one_model(export_dir, save_from_keras=False):
   obj.variables = model.trainable_variables + model.non_trainable_variables
   assert len(obj.variables) == 3, "Expect 2 kernels and 1 bias."
   obj.trainable_variables = [times_w.kernel]
-  assert(len(model.losses) == 1), "Expect 1 regularization loss."
+  assert (len(model.losses) == 1), "Expect 1 regularization loss."
   obj.regularization_losses = [
-      tf.function(lambda: model.losses[0], input_signature=[])]
+      tf.function(lambda: model.losses[0], input_signature=[])
+  ]
   tf.saved_model.save(obj, export_dir)
 
 
@@ -165,9 +166,10 @@ def _save_batch_norm_model(export_dir, save_from_keras=False):
   @tf.function
   def call_fn(inputs, training=False):
     return model(inputs, training=training)
+
   for training in (True, False):
-    call_fn.get_concrete_function(tf.TensorSpec((None, 1), tf.float32),
-                                  training=training)
+    call_fn.get_concrete_function(
+        tf.TensorSpec((None, 1), tf.float32), training=training)
 
   obj = tf.train.Checkpoint()
   obj.__call__ = call_fn
@@ -176,8 +178,9 @@ def _save_batch_norm_model(export_dir, save_from_keras=False):
   assert _tensors_names_set(obj.trainable_variables) == _tensors_names_set(
       model.trainable_variables)
   obj.variables = [bn.beta, bn.gamma, bn.moving_mean, bn.moving_variance]
-  assert _tensors_names_set(obj.variables) == _tensors_names_set(
-      model.trainable_variables + model.non_trainable_variables)
+  assert _tensors_names_set(
+      obj.variables) == _tensors_names_set(model.trainable_variables +
+                                           model.non_trainable_variables)
   obj.regularization_losses = []
   assert not model.losses
   tf.saved_model.save(obj, export_dir)
@@ -189,17 +192,20 @@ def _get_batch_norm_vars(imported):
   variables = sorted(imported.variables, key=lambda v: v.name)
   names = [v.name for v in variables]
   assert len(variables) == 4
-  assert all(name.endswith(suffix + ":0")
-             for name, suffix in zip(names, expected_suffixes))
+  assert all(
+      name.endswith(suffix + ":0")
+      for name, suffix in zip(names, expected_suffixes))
   return variables
 
 
 def _save_model_with_hparams(export_dir):
   """Writes a Hub-style SavedModel to compute y = ax + b with hparams a, b."""
+
   @tf.function(input_signature=[
       tf.TensorSpec(shape=(None, 1), dtype=tf.float32),
       tf.TensorSpec(shape=(), dtype=tf.float32),
-      tf.TensorSpec(shape=(), dtype=tf.float32)])
+      tf.TensorSpec(shape=(), dtype=tf.float32)
+  ])
   def call_fn(x, a=1., b=0.):
     return tf.add(tf.multiply(a, x), b)
 
@@ -208,7 +214,8 @@ def _save_model_with_hparams(export_dir):
   tf.saved_model.save(obj, export_dir)
 
 
-def _save_model_with_custom_attributes(export_dir, temp_dir,
+def _save_model_with_custom_attributes(export_dir,
+                                       temp_dir,
                                        save_from_keras=False):
   """Writes a Hub-style SavedModel with a custom attributes."""
   # Calling the module parses an integer.
@@ -220,7 +227,8 @@ def _save_model_with_custom_attributes(export_dir, temp_dir,
   else:
     model = tf.train.Checkpoint()
     model.__call__ = tf.function(
-        input_signature=[tf.TensorSpec(shape=(None, 1), dtype=tf.string)])(f)
+        input_signature=[tf.TensorSpec(shape=(None, 1), dtype=tf.string)])(
+            f)
 
   # Running on the `sample_input` file yields the `sample_output` value.
   asset_source_file_name = os.path.join(temp_dir, "number.txt")
@@ -238,18 +246,21 @@ def _save_model_with_custom_attributes(export_dir, temp_dir,
 
 def _save_model_with_dict_input_output(export_dir):
   """Writes SavedModel using dicts to compute x+y, x+2y and maybe x-y."""
+
   @tf.function
   def call_fn(d, return_dict=False):
     x = d["x"]
     y = d["y"]
-    sigma = tf.concat([tf.add(x, y), tf.add(x, 2*y)], axis=-1)
+    sigma = tf.concat([tf.add(x, y), tf.add(x, 2 * y)], axis=-1)
     if return_dict:
       return dict(sigma=sigma, delta=tf.subtract(x, y))
     else:
       return sigma
+
   # Trigger traces.
-  d_spec = dict(x=tf.TensorSpec(shape=(None, 1), dtype=tf.float32),
-                y=tf.TensorSpec(shape=(None, 1), dtype=tf.float32))
+  d_spec = dict(
+      x=tf.TensorSpec(shape=(None, 1), dtype=tf.float32),
+      y=tf.TensorSpec(shape=(None, 1), dtype=tf.float32))
   for return_dict in (False, True):
     call_fn.get_concrete_function(d_spec, return_dict=return_dict)
 
@@ -260,13 +271,15 @@ def _save_model_with_dict_input_output(export_dir):
 
 def _save_model_with_obscurely_shaped_list_output(export_dir):
   """Writes SavedModel with hard-to-predict output shapes."""
-  def broadcast_obscurely_to(input, shape):
+
+  def broadcast_obscurely_to(input_tensor, shape):
     """Like tf.broadcast_to(), but hostile to static shape propagation."""
-    obscured_shape = tf.cast(tf.cast(shape, tf.float32)
-                             # Add small random noise that gets rounded away.
-                             + 0.1*tf.sin(tf.random.uniform((), -3, +3)) + 0.3,
-                             tf.int32)
-    return tf.broadcast_to(input, obscured_shape)
+    obscured_shape = tf.cast(
+        tf.cast(shape, tf.float32)
+        # Add small random noise that gets rounded away.
+        + 0.1 * tf.sin(tf.random.uniform((), -3, +3)) + 0.3,
+        tf.int32)
+    return tf.broadcast_to(input_tensor, obscured_shape)
 
   @tf.function(
       input_signature=[tf.TensorSpec(shape=(None, 1), dtype=tf.float32)])
@@ -276,9 +289,11 @@ def _save_model_with_obscurely_shaped_list_output(export_dir):
     #   value 2*x broadcast to shape (2,2)
     #   value 3*x broadcast to shape (3,3,3)
     batch_size = tf.shape(x)[0]
-    return [broadcast_obscurely_to(tf.reshape(i*x, [batch_size] + [1]*i),
-                                   tf.concat([[batch_size], [i]*i], axis=0))
-            for i in range(1, 4)]
+    return [
+        broadcast_obscurely_to(
+            tf.reshape(i * x, [batch_size] + [1] * i),
+            tf.concat([[batch_size], [i] * i], axis=0)) for i in range(1, 4)
+    ]
 
   obj = tf.train.Checkpoint()
   obj.__call__ = call_fn
@@ -287,7 +302,8 @@ def _save_model_with_obscurely_shaped_list_output(export_dir):
 
 def _save_plus_one_saved_model_v2(path, save_from_keras=False):
   """Writes Hub-style SavedModel that increments the input by one."""
-  if save_from_keras: raise NotImplementedError()
+  if save_from_keras:
+    raise NotImplementedError()
 
   obj = tf.train.Checkpoint()
 
@@ -379,24 +395,28 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(len(model.non_trainable_weights), 2)
     self.assertCountEqual([v.shape.rank for v in model.non_trainable_weights],
                           [2, 1])  # Kernel and bias from the plus_1 layer.
-    self.assertNoCommonElements(_tensors_names_set(model.trainable_weights),
-                                _tensors_names_set(model.non_trainable_weights))
+    self.assertNoCommonElements(
+        _tensors_names_set(model.trainable_weights),
+        _tensors_names_set(model.non_trainable_weights))
     # Retrain on y = x/2 + 6 for x near 10.
     # (Console output should show loss below 0.2.)
-    model.compile(tf.keras.optimizers.SGD(0.002),
-                  "mean_squared_error", run_eagerly=True)
+    model.compile(
+        tf.keras.optimizers.SGD(0.002), "mean_squared_error", run_eagerly=True)
     x = [[9.], [10.], [11.]] * 10
-    y = [[xi[0]/2. + 6] for xi in x]
+    y = [[xi[0] / 2. + 6] for xi in x]
     model.fit(np.array(x), np.array(y), batch_size=len(x), epochs=10, verbose=2)
     # The bias is non-trainable and has to stay at 1.0.
-    self.assertAllEqual(model(np.array([[0.]], dtype=np.float32)),
-                        np.array([[1.]], dtype=np.float32))
+    self.assertAllEqual(
+        model(np.array([[0.]], dtype=np.float32)),
+        np.array([[1.]], dtype=np.float32))
     # To compensate, the kernel weight will grow to almost 1.0.
-    self.assertAllClose(model(np.array([[10.]], dtype=np.float32)),
-                        np.array([[11.]], dtype=np.float32),
-                        atol=0.0, rtol=0.03)
-    self.assertAllClose(model.losses, np.array([0.01], dtype=np.float32),
-                        atol=0.0, rtol=0.06)
+    self.assertAllClose(
+        model(np.array([[10.]], dtype=np.float32)),
+        np.array([[11.]], dtype=np.float32),
+        atol=0.0,
+        rtol=0.03)
+    self.assertAllClose(
+        model.losses, np.array([0.01], dtype=np.float32), atol=0.0, rtol=0.06)
 
   @parameterized.parameters(("TF2SavedModel_SavedRaw"),
                             ("TF2SavedModel_SavedFromKeras"))
@@ -434,10 +454,10 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     # which has mean 12.0 and some variance of a less obvious value.
     # The module learns scale and offset parameters that achieve the
     # mapping x --> 2*x for the observed mean and variance.
-    model.compile(tf.keras.optimizers.SGD(0.1),
-                  "mean_squared_error", run_eagerly=True)
+    model.compile(
+        tf.keras.optimizers.SGD(0.1), "mean_squared_error", run_eagerly=True)
     x = [[11.], [12.], [13.]]
-    y = [[2*xi[0]] for xi in x]
+    y = [[2 * xi[0]] for xi in x]
     model.fit(np.array(x), np.array(y), batch_size=len(x), epochs=100)
     self.assertAllClose(var_mean.numpy(), np.array([12.0]))
     self.assertAllClose(var_beta.numpy(), np.array([24.0]))
@@ -447,8 +467,9 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     #   computing x --> 2*x independent of input distribution.
     # - Update ops are not run, so this doesn't change over time.
     for _ in range(100):
-      self.assertAllClose(model(np.array([[10.], [20.], [30.]], np.float32)),
-                          np.array([[20.], [40.], [60.]]))
+      self.assertAllClose(
+          model(np.array([[10.], [20.], [30.]], np.float32)),
+          np.array([[20.], [40.], [60.]]))
     self.assertAllClose(var_mean.numpy(), np.array([12.0]))
     self.assertAllClose(var_beta.numpy(), np.array([24.0]))
 
@@ -472,10 +493,10 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(var_gamma.numpy(), np.array([1.0]))
     self.assertAllClose(var_mean.numpy(), np.array([0.0]))
     self.assertAllClose(var_variance.numpy(), np.array([1.0]))
-    model.compile(tf.keras.optimizers.SGD(0.1),
-                  "mean_squared_error", run_eagerly=True)
+    model.compile(
+        tf.keras.optimizers.SGD(0.1), "mean_squared_error", run_eagerly=True)
     x = [[1.], [2.], [3.]]
-    y = [[2*xi[0]] for xi in x]
+    y = [[2 * xi[0]] for xi in x]
     model.fit(np.array(x), np.array(y), batch_size=len(x), epochs=20)
     self.assertAllClose(var_beta.numpy(), np.array([0.0]))
     self.assertAllClose(var_gamma.numpy(), np.array([1.0]))
@@ -490,8 +511,8 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     base_dir = os.path.join(self.get_temp_dir(), "custom-attributes")
     export_dir = os.path.join(base_dir, "model")
     temp_dir = os.path.join(base_dir, "scratch")
-    _save_model_with_custom_attributes(export_dir, temp_dir,
-                                       save_from_keras=save_from_keras)
+    _save_model_with_custom_attributes(
+        export_dir, temp_dir, save_from_keras=save_from_keras)
     imported = hub.KerasLayer(export_dir)
     expected_outputs = imported.resolved_object.sample_output.value().numpy()
     asset_path = imported.resolved_object.sample_input.asset_path.numpy()
@@ -529,13 +550,10 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     outputs = model(dict(x=x, y=y))
     self.assertLen(outputs, 3)
     delta, sigma, concat = [x.numpy() for x in outputs]
-    self.assertAllClose(delta,
-                        np.array([[10.], [20.], [30.]]))
-    self.assertAllClose(sigma,
-                        np.array([[12., 13.], [24., 26.], [36., 39.]]))
+    self.assertAllClose(delta, np.array([[10.], [20.], [30.]]))
+    self.assertAllClose(sigma, np.array([[12., 13.], [24., 26.], [36., 39.]]))
     self.assertAllClose(
-        concat,
-        np.array([[10., 12., 13.], [20., 24., 26.], [30., 36., 39.]]))
+        concat, np.array([[10., 12., 13.], [20., 24., 26.], [30., 36., 39.]]))
     # Test round-trip through config.
     config = imported.get_config()
     new_layer = hub.KerasLayer.from_config(_json_cycle(config))
@@ -567,15 +585,16 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     # without crash verifies that no incompatible shapes were set.
     # See EstimatorTest below for graph-mode Tensors.
     self.assertAllClose(single, np.array([[1.], [10.]]))
-    self.assertAllClose(double, np.array([[[2., 2.], [2., 2.]],
-                                          [[20., 20.], [20., 20.]]]))
-    self.assertAllClose(triple, np.array(
-        [[[[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
-          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
-          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]]],
-         [[[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
-          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
-          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]]]]))
+    self.assertAllClose(
+        double, np.array([[[2., 2.], [2., 2.]], [[20., 20.], [20., 20.]]]))
+    self.assertAllClose(
+        triple,
+        np.array([[[[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+                   [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+                   [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]]],
+                  [[[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+                   [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+                   [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]]]]))
     # Test round-trip through config.
     config = imported.get_config()
     new_layer = hub.KerasLayer.from_config(_json_cycle(config))
@@ -623,8 +642,10 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
       imported = hub.KerasLayer(export_dir1, trainable=True)
       outp = imported(inp)
       model = tf.keras.Model(inp, outp)
-      model.compile(tf.keras.optimizers.SGD(0.002, momentum=0.001),
-                    "mean_squared_error", run_eagerly=True)
+      model.compile(
+          tf.keras.optimizers.SGD(0.002, momentum=0.001),
+          "mean_squared_error",
+          run_eagerly=True)
       x = [["a"], ["aa"], ["aaa"]]
       y = [len(xi) for xi in x]
       model.fit(x, y)
@@ -694,8 +715,8 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
 
   def _half_plus_one_model_fn(self, features, labels, mode, params):
     inp = features  # This estimator takes a single feature, not a dict.
-    imported = hub.KerasLayer(params["hub_module"],
-                              trainable=params["hub_trainable"])
+    imported = hub.KerasLayer(
+        params["hub_module"], trainable=params["hub_trainable"])
     model = tf.keras.Sequential([imported])
     outp = model(inp, training=(mode == tf.estimator.ModeKeys.TRAIN))
     # https://www.tensorflow.org/alpha/guide/migration_guide#using_a_custom_model_fn
@@ -714,7 +735,8 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     if mode == tf.estimator.ModeKeys.TRAIN:
       optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.002)
       train_op = optimizer.minimize(
-          total_loss, var_list=model.trainable_variables,
+          total_loss,
+          var_list=model.trainable_variables,
           global_step=tf.compat.v1.train.get_or_create_global_step())
 
     return tf.estimator.EstimatorSpec(
@@ -731,11 +753,12 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
         params=dict(hub_module=export_dir, hub_trainable=True))
 
     # The consumer model computes y = x/2 + 1 as expected.
-    predictions = next(estimator.predict(
-        tf.compat.v1.estimator.inputs.numpy_input_fn(
-            np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
-            shuffle=False),
-        yield_single_examples=False))
+    predictions = next(
+        estimator.predict(
+            tf.compat.v1.estimator.inputs.numpy_input_fn(
+                np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
+                shuffle=False),
+            yield_single_examples=False))
     self.assertAllEqual(predictions["output"],
                         np.array([[1.], [5.], [6.], [7.]], dtype=np.float32))
     self.assertAllEqual(predictions["regularization_loss"],
@@ -744,31 +767,37 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     # Retrain on y = x/2 + 6 for x near 10.
     # (Console output should show loss below 0.2.)
     x = [[9.], [10.], [11.]] * 10
-    y = [[xi[0]/2. + 6] for xi in x]
+    y = [[xi[0] / 2. + 6] for xi in x]
     estimator.train(
         tf.compat.v1.estimator.inputs.numpy_input_fn(
             np.array(x, dtype=np.float32),
             np.array(y, dtype=np.float32),
-            batch_size=len(x), num_epochs=None, shuffle=False),
+            batch_size=len(x),
+            num_epochs=None,
+            shuffle=False),
         steps=10)
     # The bias is non-trainable and has to stay at 1.0.
     # To compensate, the kernel weight will grow to almost 1.0.
-    predictions = next(estimator.predict(
-        tf.compat.v1.estimator.inputs.numpy_input_fn(
-            np.array([[0.], [10.]], dtype=np.float32), shuffle=False),
-        yield_single_examples=False))
+    predictions = next(
+        estimator.predict(
+            tf.compat.v1.estimator.inputs.numpy_input_fn(
+                np.array([[0.], [10.]], dtype=np.float32), shuffle=False),
+            yield_single_examples=False))
     self.assertAllEqual(predictions["output"][0],
                         np.array([1.], dtype=np.float32))
-    self.assertAllClose(predictions["output"][1],
-                        np.array([11.], dtype=np.float32),
-                        atol=0.0, rtol=0.03)
-    self.assertAllClose(predictions["regularization_loss"],
-                        np.array(0.01, dtype=np.float32),
-                        atol=0.0, rtol=0.06)
+    self.assertAllClose(
+        predictions["output"][1],
+        np.array([11.], dtype=np.float32),
+        atol=0.0,
+        rtol=0.03)
+    self.assertAllClose(
+        predictions["regularization_loss"],
+        np.array(0.01, dtype=np.float32),
+        atol=0.0,
+        rtol=0.06)
 
   @parameterized.parameters(("TF2SavedModel_SavedRaw"),
-                            ("TF2SavedModel_SavedFromKeras"),
-                            ("TF1HubModule"))
+                            ("TF2SavedModel_SavedFromKeras"), ("TF1HubModule"))
   def testHalfPlusOneFrozen(self, model_format):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _dispatch_model_format(model_format, _save_half_plus_one_model,
@@ -778,11 +807,12 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
         params=dict(hub_module=export_dir, hub_trainable=False))
 
     # The consumer model computes y = x/2 + 1 as expected.
-    predictions = next(estimator.predict(
-        tf.compat.v1.estimator.inputs.numpy_input_fn(
-            np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
-            shuffle=False),
-        yield_single_examples=False))
+    predictions = next(
+        estimator.predict(
+            tf.compat.v1.estimator.inputs.numpy_input_fn(
+                np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
+                shuffle=False),
+            yield_single_examples=False))
     self.assertAllEqual(predictions["output"],
                         np.array([[1.], [5.], [6.], [7.]], dtype=np.float32))
     self.assertAllEqual(predictions["regularization_loss"],
@@ -804,9 +834,12 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
           use_bias=False)
       model = tf.keras.Sequential([imported, dense])
     outp = model(inp, training=(mode == tf.estimator.ModeKeys.TRAIN))
-    predictions = dict(output=outp,
-                       beta=var_beta.value(), gamma=var_gamma.value(),
-                       mean=var_mean.value(), variance=var_variance.value())
+    predictions = dict(
+        output=outp,
+        beta=var_beta.value(),
+        gamma=var_gamma.value(),
+        mean=var_mean.value(),
+        variance=var_variance.value())
 
     # https://www.tensorflow.org/alpha/guide/migration_guide#using_a_custom_model_fn
     # recommends model.get_updates_for() instead of model.updates.
@@ -821,7 +854,8 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
       optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.1)
       with tf.control_dependencies(update_ops):
         train_op = optimizer.minimize(
-            loss, var_list=model.trainable_variables,
+            loss,
+            var_list=model.trainable_variables,
             global_step=tf.compat.v1.train.get_or_create_global_step())
 
     return tf.estimator.EstimatorSpec(
@@ -841,14 +875,16 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     # The module learns scale and offset parameters that achieve the
     # mapping x --> 2*x for the observed mean and variance.
     x = [[11.], [12.], [13.]]
-    y = [[2*xi[0]] for xi in x]
+    y = [[2 * xi[0]] for xi in x]
     train_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
         np.array(x, dtype=np.float32),
         np.array(y, dtype=np.float32),
-        batch_size=len(x), num_epochs=None, shuffle=False)
+        batch_size=len(x),
+        num_epochs=None,
+        shuffle=False)
     estimator.train(train_input_fn, steps=100)
-    predictions = next(estimator.predict(train_input_fn,
-                                         yield_single_examples=False))
+    predictions = next(
+        estimator.predict(train_input_fn, yield_single_examples=False))
     self.assertAllClose(predictions["mean"], np.array([12.0]))
     self.assertAllClose(predictions["beta"], np.array([24.0]))
     self.assertAllClose(predictions["output"], np.array(y))
@@ -859,11 +895,13 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     # - Update ops are not run, so this doesn't change over time.
     predict_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
         np.array([[10.], [20.], [30.]], dtype=np.float32),
-        batch_size=3, num_epochs=100, shuffle=False)
-    for predictions in estimator.predict(predict_input_fn,
-                                         yield_single_examples=False):
-      self.assertAllClose(predictions["output"],
-                          np.array([[20.], [40.], [60.]]))
+        batch_size=3,
+        num_epochs=100,
+        shuffle=False)
+    for predictions in estimator.predict(
+        predict_input_fn, yield_single_examples=False):
+      self.assertAllClose(predictions["output"], np.array([[20.], [40.],
+                                                           [60.]]))
     self.assertAllClose(predictions["mean"], np.array([12.0]))
     self.assertAllClose(predictions["beta"], np.array([24.0]))
 
@@ -876,11 +914,13 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
         model_fn=self._batch_norm_model_fn,
         params=dict(hub_module=export_dir, train_batch_norm=False))
     x = [[1.], [2.], [3.]]
-    y = [[2*xi[0]] for xi in x]
+    y = [[2 * xi[0]] for xi in x]
     input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
         np.array(x, dtype=np.float32),
         np.array(y, dtype=np.float32),
-        batch_size=len(x), num_epochs=None, shuffle=False)
+        batch_size=len(x),
+        num_epochs=None,
+        shuffle=False)
     predictions = next(estimator.predict(input_fn, yield_single_examples=False))
     self.assertAllClose(predictions["beta"], np.array([0.0]))
     self.assertAllClose(predictions["gamma"], np.array([1.0]))
@@ -908,15 +948,15 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
 
     out_list = model(features, training=(mode == tf.estimator.ModeKeys.TRAIN))
     for j, out in enumerate(out_list):
-      i = j+1  # Sample shapes count from one.
+      i = j + 1  # Sample shapes count from one.
       actual_shape = out.shape.as_list()[1:]  # Without batch size.
-      expected_shape = [i]*i if "output_shape" in params else [None]*i
+      expected_shape = [i] * i if "output_shape" in params else [None] * i
       self.assertEqual(actual_shape, expected_shape)
     predictions = {["one", "two", "three"][i]: out_list[i] for i in range(3)}
     imported.get_config()
 
-    return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions,
-                                      loss=None, train_op=None)
+    return tf.estimator.EstimatorSpec(
+        mode=mode, predictions=predictions, loss=None, train_op=None)
 
   @parameterized.named_parameters(("NoOutputShapes", False),
                                   ("WithOutputShapes", True))
@@ -928,26 +968,28 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     if pass_output_shapes:
       params["output_shape"] = [[1], [2, 2], [3, 3, 3]]
     estimator = tf.estimator.Estimator(
-        model_fn=self._output_shape_list_model_fn,
-        params=params)
+        model_fn=self._output_shape_list_model_fn, params=params)
     x = [[1.], [10.]]
     input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
         np.array(x, dtype=np.float32),
-        batch_size=len(x), num_epochs=None, shuffle=False)
+        batch_size=len(x),
+        num_epochs=None,
+        shuffle=False)
     predictions = next(estimator.predict(input_fn, yield_single_examples=False))
     single = predictions["one"]
     double = predictions["two"]
     triple = predictions["three"]
     self.assertAllClose(single, np.array([[1.], [10.]]))
-    self.assertAllClose(double, np.array([[[2., 2.], [2., 2.]],
-                                          [[20., 20.], [20., 20.]]]))
-    self.assertAllClose(triple, np.array(
-        [[[[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
-          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
-          [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]]],
-         [[[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
-          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
-          [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]]]]))
+    self.assertAllClose(
+        double, np.array([[[2., 2.], [2., 2.]], [[20., 20.], [20., 20.]]]))
+    self.assertAllClose(
+        triple,
+        np.array([[[[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+                   [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]],
+                   [[3., 3., 3.], [3., 3., 3.], [3., 3., 3.]]],
+                  [[[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+                   [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]],
+                   [[30., 30., 30.], [30., 30., 30.], [30., 30., 30.]]]]))
 
 
 class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
@@ -977,9 +1019,11 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
     _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
                            _save_plus_one_hub_module_v1, export_dir)
     inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
-    layer = hub.KerasLayer(export_dir, signature=signature,
-                           output_key=output_key,
-                           signature_outputs_as_dict=as_dict)
+    layer = hub.KerasLayer(
+        export_dir,
+        signature=signature,
+        output_key=output_key,
+        signature_outputs_as_dict=as_dict)
     output = layer(inputs)
     if as_dict:
       self.assertEqual(output, {"default": expected_outputs})
@@ -1015,9 +1059,7 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
     _save_plus_one_saved_model_v2_keras_default_callable(export_dir)
     inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
     layer = hub.KerasLayer(
-        export_dir,
-        signature="plus_one",
-        signature_outputs_as_dict=True)
+        export_dir, signature="plus_one", signature_outputs_as_dict=True)
     output = layer(inputs)
 
     self.assertIsInstance(output, dict)
@@ -1039,9 +1081,11 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
     _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
                            _save_plus_one_hub_module_v1, export_dir)
     inputs = 10.  # Test modules perform increment op.
-    layer = hub.KerasLayer(export_dir, signature=signature,
-                           output_key=output_key,
-                           signature_outputs_as_dict=as_dict)
+    layer = hub.KerasLayer(
+        export_dir,
+        signature=signature,
+        output_key=output_key,
+        signature_outputs_as_dict=as_dict)
     outputs = layer(inputs)
     config = layer.get_config()
     new_layer = hub.KerasLayer.from_config(_json_cycle(config))
@@ -1076,9 +1120,11 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, "When using a signature, either output_key or "
         "signature_outputs_as_dict=True should be set."):
-      hub.KerasLayer(export_dir, signature="default",
-                     signature_outputs_as_dict=True,
-                     output_key="output")
+      hub.KerasLayer(
+          export_dir,
+          signature="default",
+          signature_outputs_as_dict=True,
+          output_key="output")
 
   def test_keras_layer_fails_if_output_is_not_dict(self):
     export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
@@ -1106,9 +1152,11 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
   def test_keras_layer_fails_if_signature_trainable(self):
     export_dir = os.path.join(self.get_temp_dir(), "saved_model_v2_mini")
     _save_plus_one_saved_model_v2(export_dir, save_from_keras=False)
-    layer = hub.KerasLayer(export_dir, signature="serving_default",
-                           signature_outputs_as_dict=True,
-                           trainable=True)
+    layer = hub.KerasLayer(
+        export_dir,
+        signature="serving_default",
+        signature_outputs_as_dict=True,
+        trainable=True)
     layer.trainable = True
     with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
       layer(10.)

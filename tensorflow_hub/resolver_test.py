@@ -35,7 +35,6 @@ from tensorflow_hub import test_utils
 from tensorflow_hub import tf_utils
 from tensorflow_hub import uncompressed_module_resolver
 
-
 FLAGS = flags.FLAGS
 
 
@@ -148,9 +147,8 @@ class CompressedResolverTest(tf.test.TestCase):
     module_dir = os.path.join(self.get_temp_dir(), "module")
     task_uid = uuid.uuid4().hex
     lock_filename = resolver._lock_filename(module_dir)
-    tf_utils.atomic_write_string_to_file(lock_filename,
-                                         resolver._lock_file_contents(task_uid),
-                                         overwrite=False)
+    tf_utils.atomic_write_string_to_file(
+        lock_filename, resolver._lock_file_contents(task_uid), overwrite=False)
     self.assertEqual(task_uid, resolver._task_uid_from_lock_file(lock_filename))
 
   def testWaitForLockToDisappear_DownloadCompletes(self):
@@ -158,12 +156,16 @@ class CompressedResolverTest(tf.test.TestCase):
     task_uid = uuid.uuid4().hex
     lock_filename = resolver._lock_filename(module_dir)
     # Write lock file
-    tf_utils.atomic_write_string_to_file(lock_filename,
-                                         resolver._lock_file_contents(task_uid),
-                                         overwrite=False)
+    tf_utils.atomic_write_string_to_file(
+        lock_filename, resolver._lock_file_contents(task_uid), overwrite=False)
     # Wait for the lock file to disappear (in a separate thread)
-    thread = threading.Thread(target=resolver._wait_for_lock_to_disappear,
-                              args=("module", lock_filename, 600,))
+    thread = threading.Thread(
+        target=resolver._wait_for_lock_to_disappear,
+        args=(
+            "module",
+            lock_filename,
+            600,
+        ))
     thread.start()
     # Delete the lock file.
     tf.compat.v1.gfile.Remove(lock_filename)
@@ -211,8 +213,13 @@ class CompressedResolverTest(tf.test.TestCase):
     tmp_dir = resolver._temp_download_dir(self.get_temp_dir(), task_uid)
     tf.compat.v1.gfile.MakeDirs(tmp_dir)
 
-    thread = threading.Thread(target=resolver._wait_for_lock_to_disappear,
-                              args=("module", lock_filename, 10,))
+    thread = threading.Thread(
+        target=resolver._wait_for_lock_to_disappear,
+        args=(
+            "module",
+            lock_filename,
+            10,
+        ))
     thread.start()
     thread.join(30)
     # Because nobody was writing to tmp_dir, the lock file got reclaimed by
@@ -224,6 +231,7 @@ class CompressedResolverTest(tf.test.TestCase):
     # right before the current process can perform a rename of a temp directory
     # to a permanent module directory.
     module_dir = os.path.join(self.get_temp_dir(), "module")
+
     def fake_download_fn_with_rogue_behavior(handle, tmp_dir):
       del handle, tmp_dir
       # Create module directory
@@ -236,40 +244,42 @@ class CompressedResolverTest(tf.test.TestCase):
         resolver.atomic_download("module", fake_download_fn_with_rogue_behavior,
                                  module_dir))
     self.assertEqual(tf.compat.v1.gfile.ListDirectory(module_dir), ["file"])
-    self.assertFalse(tf.compat.v1.gfile.Exists(
-        resolver._lock_filename(module_dir)))
+    self.assertFalse(
+        tf.compat.v1.gfile.Exists(resolver._lock_filename(module_dir)))
     parent_dir = os.path.abspath(os.path.join(module_dir, ".."))
     self.assertEqual(
         sorted(tf.compat.v1.gfile.ListDirectory(parent_dir)),
         ["module", "module.descriptor.txt"])
     self.assertRegexpMatches(
         tf_utils.read_file_to_string(
-            resolver._module_descriptor_file(module_dir)),
-        "Module: module\n"
+            resolver._module_descriptor_file(module_dir)), "Module: module\n"
         "Download Time: .*\n"
-        "Downloader Hostname: %s .PID:%d." % (re.escape(socket.gethostname()),
-                                              os.getpid()))
+        "Downloader Hostname: %s .PID:%d." %
+        (re.escape(socket.gethostname()), os.getpid()))
 
     # Try downloading the model again. Mock
     # tf_utils.atomic_write_string_to_file() to throw an exception. Since the
     # model is already downloaded, the function will never get called and the
     # download succeeds.
     with mock.patch.object(
-        tf_utils, "atomic_write_string_to_file",
+        tf_utils,
+        "atomic_write_string_to_file",
         side_effect=ValueError("This error should never be raised!")):
       self.assertEqual(
           module_dir,
-          resolver.atomic_download("module", fake_download_fn_with_rogue_behavior,
+          resolver.atomic_download("module",
+                                   fake_download_fn_with_rogue_behavior,
                                    module_dir))
       self.assertEqual(tf.compat.v1.gfile.ListDirectory(module_dir), ["file"])
-      self.assertFalse(tf.compat.v1.gfile.Exists(
-          resolver._lock_filename(module_dir)))
+      self.assertFalse(
+          tf.compat.v1.gfile.Exists(resolver._lock_filename(module_dir)))
 
   def testModuleDownloadedWhenEmptyFolderExists(self):
     # Simulate the case when a module is cached in /tmp/module_dir but module
     # files inside the folder are deleted. In this case, the download should
     # still be conducted.
     module_dir = os.path.join(self.get_temp_dir(), "module")
+
     def fake_download_fn(handle, tmp_dir):
       del handle, tmp_dir
       tf.compat.v1.gfile.MakeDirs(module_dir)
@@ -284,19 +294,18 @@ class CompressedResolverTest(tf.test.TestCase):
         module_dir,
         resolver.atomic_download("module", fake_download_fn, module_dir))
     self.assertEqual(tf.compat.v1.gfile.ListDirectory(module_dir), ["file"])
-    self.assertFalse(tf.compat.v1.gfile.Exists(
-        resolver._lock_filename(module_dir)))
+    self.assertFalse(
+        tf.compat.v1.gfile.Exists(resolver._lock_filename(module_dir)))
     parent_dir = os.path.abspath(os.path.join(module_dir, ".."))
     self.assertEqual(
         sorted(tf.compat.v1.gfile.ListDirectory(parent_dir)),
         ["module", "module.descriptor.txt"])
     self.assertRegexpMatches(
         tf_utils.read_file_to_string(
-            resolver._module_descriptor_file(module_dir)),
-        "Module: module\n"
+            resolver._module_descriptor_file(module_dir)), "Module: module\n"
         "Download Time: .*\n"
-        "Downloader Hostname: %s .PID:%d." % (re.escape(socket.gethostname()),
-                                              os.getpid()))
+        "Downloader Hostname: %s .PID:%d." %
+        (re.escape(socket.gethostname()), os.getpid()))
 
   def testModuleConcurrentDownload(self):
     module_dir = os.path.join(self.get_temp_dir(), "module")
@@ -325,9 +334,9 @@ class CompressedResolverTest(tf.test.TestCase):
           os.path.join(module_dir, "file"), "content", False)
       second_download_thread.start()
 
-    self.assertEqual(module_dir,
-                     resolver.atomic_download("module", first_download_fn,
-                                              module_dir))
+    self.assertEqual(
+        module_dir,
+        resolver.atomic_download("module", first_download_fn, module_dir))
     second_download_thread.join(30)
     # The waiting terminates without errors.
 
@@ -347,6 +356,7 @@ class CompressedResolverTest(tf.test.TestCase):
   def testModuleLockLostDownloadKilled(self):
     module_dir = os.path.join(self.get_temp_dir(), "module")
     download_aborted_msg = "Download aborted."
+
     def kill_download(handle, tmp_dir):
       del handle, tmp_dir
       # Simulate lock loss by removing the lock.
@@ -369,6 +379,7 @@ class CompressedResolverTest(tf.test.TestCase):
     # Other errors that may arise from bad network connectivity are ignored by
     # resolver.atomic_download and retried infinitely.
     module_dir = ""
+
     def dummy_download_fn(handle, tmp_dir):
       del handle, tmp_dir
       return

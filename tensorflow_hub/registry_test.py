@@ -66,8 +66,10 @@ class RegistryTest(tf.test.TestCase):
 
     self.assertRaisesRegex(
         RuntimeError,
+        # pylint: disable=line-too-long
         r"Missing implementation that supports: test\(\*\(1,\), \*\*{}\). Tried \['TestImpl'\]",
-        r, 1)
+        r,
+        1)
 
 
 if __name__ == "__main__":

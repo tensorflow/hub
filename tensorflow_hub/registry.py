@@ -14,8 +14,6 @@
 # ==============================================================================
 """Internal. Registry holds python objects that can be injected."""
 
-from absl import logging
-
 
 def _clear():
   """Clear resolvers and loaders."""
@@ -52,8 +50,8 @@ class MultiImplRegister(object):
       else:
         fails.append(type(impl).__name__)
     raise RuntimeError(
-        "Missing implementation that supports: %s(*%r, **%r). Tried %r" % (
-            self._name, args, kwargs, fails))
+        "Missing implementation that supports: %s(*%r, **%r). Tried %r" %
+        (self._name, args, kwargs, fails))
 
 
 resolver = MultiImplRegister("resolver")
