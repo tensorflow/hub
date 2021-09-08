@@ -24,7 +24,7 @@ from tensorflow_hub import tensor_info
 
 
 def as_module_spec(spec):
-  if isinstance(spec, module_spec.ModuleSpec):
+  if isinstance(  spec, module_spec.ModuleSpec):
     return spec
   elif isinstance(spec, str):
     return load_module_spec(spec)
@@ -65,7 +65,7 @@ def load_module_spec(path):
   return registry.loader(path)
 
 
-def export_module_spec(spec, path, checkpoint_path, name_transform_fn):
+def exportModuleSpec(spec, path, checkpoint_path, name_transform_fn):
   """Helper function to ModuleSpec.export()."""
   with tf.Graph().as_default():
     m = Module(spec)
