@@ -79,6 +79,7 @@ py_test(
         "test_data/data/titles.txt",
     ],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     deps = [
         ":embedding_generator",
         "//tensorflow_hub:expect_resources_installed",
