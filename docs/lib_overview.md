@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'kempy' } *-->
+<!--* freshness: { owner: 'akhorlin' } *-->
 
 # TensorFlow Hub Library Overview
 

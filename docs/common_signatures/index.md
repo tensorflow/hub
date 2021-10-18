@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'kempy' reviewed: '2021-03-09' } *-->
+<!--* freshness: { owner: 'akhorlin' reviewed: '2021-03-09' } *-->
 
 # Common Signatures for TF Hub Modules
 
