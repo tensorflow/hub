@@ -245,8 +245,13 @@ def composite_tensor_info_to_type_spec(tensor_info):
     raise ValueError("Expected a TensorInfo with encoding=composite_tensor")
   spec_proto = struct_pb2.StructuredValue(
       type_spec_value=tensor_info.composite_tensor.type_spec)
-  struct_coder = nested_structure_coder.StructureCoder()
-  return struct_coder.decode_proto(spec_proto)
+  # StrcutureCoder.decode_proto was migrated after TF 2.7 to
+  # nested_structure_coder.decode_proto.
+  try:
+    return nested_structure_coder.decode_proto(spec_proto)
+  except AttributeError:
+    struct_coder = nested_structure_coder.StructureCoder()
+    return struct_coder.decode_proto(spec_proto)
 
 
 def composite_tensor_from_components(type_spec, components):
