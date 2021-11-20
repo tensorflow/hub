@@ -68,7 +68,7 @@ $ python
 
 If you are writing a Python program that applies a module many times on input
 data, you can apply the following recipes. (Note: For serving requests in
-production servives, consider
+production services, consider
 [TensorFlow Serving](https://www.tensorflow.org/tfx/guide/serving) or other
 scalable, Python-free solutions.)
 
