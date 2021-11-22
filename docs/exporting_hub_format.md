@@ -91,4 +91,4 @@ To make fine-tuning easier for consumers, please be mindful of the following:
     to overfitting. In batch normalization, the momentum (a.k.a. decay
     coefficient) should be small enough to enable fine-tuning with small
     datasets and/or large batches. For advanced consumers, consider adding a
-    signature that exposes control over critical hyperparameters.
+    signature that exposes control over critcial hyperparameters.

@@ -2,11 +2,11 @@
 
 # Model hosting protocol
 
-This document describes the URL conventions used when hosting all model types on
+This document describes the URL coventions used when hosting all model types on
 [tfhub.dev](https://tfhub.dev) - TFJS, TF Lite and TensorFlow models. It also
 describes the HTTP(S)-based protocol implemented by the `tensorflow_hub` library
 in order to load TensorFlow models from [tfhub.dev](https://tfhub.dev) and
-compatible services into TensorFlow programs.
+compatibe services into TensorFlow programs.
 
 Its key feature is to use the same URL in code to load a model and in a browser
 to view the model documentation.
@@ -24,7 +24,7 @@ to view the model documentation.
     version of the model.
 
 TF Hub models can be downloaded as compressed assets by appending URL parameters
-to the [tfhub.dev](https://tfhub.dev) model URL. However, the URL parameters
+to the [tfhub.dev](https://tfhub.dev) model URL. However, the URL paramters
 required to achieve that depend on the model type:
 
 *   TensorFlow models (both SavedModel and TF1 Hub formats): append

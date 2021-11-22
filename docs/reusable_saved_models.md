@@ -194,7 +194,7 @@ a bare tf.function directly as `tf.foo`.
 Users of Reusable SavedModels are only expected to handle one level
 of nesting (`obj.bar` but not `obj.bar.baz`).
 (Future revisions of this interface may allow deeper nesting,
-and may waive the requirement that the top-level object be callable
+and may waive the reqirement that the top-level object be callable
 itself.)
 
 
