@@ -24,7 +24,7 @@ representations of text, or text feature vectors).
     *   a *preprocessor* that can run inside a tf.data input pipeline and
         converts strings and other variable-length data into numeric Tensors,
     *   an *encoder* that accepts the results of the preprocessor and performs
-        the trainable part of the embbedding computation.
+        the trainable part of the embedding computation.
 
     This split allows inputs to be preprocessed asynchronously before being fed
     into the training loop. In particular, it allows building encoders that can
@@ -107,7 +107,7 @@ SavedModels:
 *   a **preprocessor** that maps a string Tensor of shape `[batch_size]` to a
     dict of numeric Tensors,
 *   an **encoder** that accepts a dict of Tensors as returned by the
-    preprocessor, performs the trainable part of the embbedding computation, and
+    preprocessor, performs the trainable part of the embedding computation, and
     returns a dict of outputs. The output under key `"default"` is a float32
     Tensor of shape `[batch_size, dim]`.
 
@@ -227,7 +227,7 @@ encoder_inputs = preprocessor.bert_pack_inputs(
     seq_length=seq_length)  # Optional argument.
 ```
 
-In Keras, this computation can be expessed as
+In Keras, this computation can be expressed as
 
 ```python
 tokenize = hub.KerasLayer(preprocessor.tokenize)
@@ -302,7 +302,7 @@ The encoder is called on the dict of `encoder_inputs` in the same way as in the
 API for text embeddings with preprocessed inputs (see above), including the
 provisions from the [Reusable SavedModel API](../reusable_saved_models.md).
 
-#### Usage synposis
+#### Usage synopsis
 
 ```python
 enocder = hub.load("path/to/encoder")
@@ -347,7 +347,7 @@ to minimize friction in interchanging encoders and reusing preprocessor models:
     the index of the input segment that gave rise to the input token at the
     respective position. The first input segment (index 0) includes the
     start-of-sequence token and its end-of-segment token. The second and later
-    segments (if present) include their respetive end-of-segment token. Padding
+    segments (if present) include their respective end-of-segment token. Padding
     tokens get index 0 again.
 
 ### Distributed training
