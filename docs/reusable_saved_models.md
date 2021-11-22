@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'akhorlin' reviewed: '2021-03-09' } *-->
+<!--* freshness: { owner: 'akhorlin' reviewed: '2021-11-22' } *-->
 
 # Reusable SavedModels
 
@@ -191,12 +191,10 @@ For the example above, there would be `obj.foo.__call__`,
 Note that this interface does *not* cover the approach of adding
 a bare tf.function directly as `tf.foo`.
 
-Users of Reusable SavedModels are only expected to handle one level
-of nesting (`obj.bar` but not `obj.bar.baz`).
-(Future revisions of this interface may allow deeper nesting,
-and may waive the requirement that the top-level object be callable
-itself.)
-
+Users of Reusable SavedModels are only expected to handle one level of nesting
+(`obj.bar` but not `obj.bar.baz`). (Future revisions of this interface may allow
+deeper nesting, and may waive the requirement that the top-level object be
+callable itself.)
 
 ## Closing remarks
 
