@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2021-06-30' review_interval: '6 months' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2022-01-12'} *-->
 
 # SavedModels from TF Hub in TensorFlow 2
 
