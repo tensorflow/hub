@@ -168,14 +168,12 @@ piece_to_share = tf.keras.Model(sharing_input, sharing_output)
 piece_to_share.save(..., include_optimizer=False)
 ```
 
-[TensorFlow Models](https://github.com/tensorflow/models) on GitHub
-uses the former approach for BERT (see
+[TensorFlow Models](https://github.com/tensorflow/models) on GitHub uses the
+former approach for BERT (see
 [nlp/tools/export_tfhub_lib.py](https://github.com/tensorflow/models/blob/master/official/nlp/tools/export_tfhub_lib.py),
 note the split between `core_model` for export and the `pretrainer` for
-restoring the checkpoint)
-and the the latter approach for ResNet (see
-[vision/image_classification/tfhub_export.py](https://github.com/tensorflow/models/blob/master/official/vision/image_classification/resnet/tfhub_export.py)).
-
+restoring the checkpoint) and the latter approach for ResNet (see
+[legacy/image_classification/tfhub_export.py](https://github.com/tensorflow/models/blob/master/official/legacy/image_classification/resnet/tfhub_export.py)).
 
 ### Saving from low-level TensorFlow
 
