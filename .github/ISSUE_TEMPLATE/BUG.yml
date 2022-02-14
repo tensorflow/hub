@@ -30,7 +30,7 @@ body:
       label: Relevant log output
       description: Please specify relevant log output. This will be automatically formatted into code, so no need for backticks.
       render: shell
-      placeholder: File /.../tensorflow_hub/...: ValueError: expected ...
+      placeholder: "File /.../tensorflow_hub/...: ValueError: expected ..."
     validations:
       required: true
   - type: dropdown
