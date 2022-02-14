@@ -1,0 +1,89 @@
+name: Bug Report
+description: File a bug report
+title: "Bug: "
+labels: ["type:bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: I'm trying to use the model from tfhub.dev/PUBLISHER/MODEL/VERSION for A. While trying to do B, I ran into C.
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Relevant code
+      description: Please specify a minimal, self-contained and complete code snippet to reproduce the error. This will be automatically formatted into code, so no need for backticks.
+      placeholder: import tensorflow_hub as hub \n hub.load("https://tfhub.dev/...")
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please specify relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+      placeholder: File /.../tensorflow_hub/...: ValueError: expected ...
+    validations:
+      required: true
+  - type: dropdown
+    id: hub_version
+    attributes:
+      label: tensorflow_hub Version
+      description: What tensorflow_hub version are you running?
+      options:
+        - 0.13.0.dev (unstable development build)
+        - 0.12.0 (latest stable release)
+        - 0.11.0
+        - other (please specify)
+    validations:
+      required: true
+  - type: dropdown
+    id: tf_version
+    attributes:
+      label: TensorFlow Version
+      description: What tensorflow version are you running?
+      options:
+        - 2.8 (latest stable release)
+        - 2.7
+        - 1.x
+        - other (please specify)
+    validations:
+      required: true
+  - type: textarea
+    id: other_libraries
+    attributes:
+      label: Other libraries
+      description: Please specify other library versions that might be impacting the behavior of the system.
+      placeholder: tensorflow-text==2.8.1, ...
+    validations:
+      required: false
+  - type: dropdown
+    id: python_version
+    attributes:
+      label: Python Version
+      description: What Python version are you running?
+      options:
+        - 3.x
+        - 2.x
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      description: What Operating System are you using?
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - other (please specify)
+    validations:
+      required: true
