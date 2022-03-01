@@ -80,7 +80,7 @@ def run(args):
     print('Loading embeddings in file {} of {}...'.format(
         i + 1, num_files))
     dataset = tf.data.TFRecordDataset(embed_file)
-    for record in dataset.map(_parse_example,num_parallel_calls=tf.data.experimental.AUTOTUNE):
+    for record in dataset.map(_parse_example, num_parallel_calls=tf.data.experimental.AUTOTUNE):
       item = record['item'].numpy().decode('utf-8')
       embedding = record['embedding'].values.numpy()
       mapping[item_counter] = item
