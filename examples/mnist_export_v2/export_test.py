@@ -32,7 +32,7 @@ class ExportTest(tf.test.TestCase):
       image = tf.image.convert_image_dtype(
           255 * tf.random.normal([1, 28, 28, 1]), dtype=tf.uint8, saturate=True)
       return dict(image=image, label=[index])
-    self.mock_dataset = tf.data.Dataset.range(5).map(create_image_and_label,num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    self.mock_dataset = tf.data.Dataset.range(5).map(create_image_and_label, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
   def test_model_exporting(self):
     export.train_and_export(
