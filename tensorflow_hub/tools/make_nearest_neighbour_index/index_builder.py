@@ -42,7 +42,7 @@ def _infer_dimensions(embed_file):
   """Infers the embedding vector size."""
 
   dimensions = None
-  for record in tf.data.TFRecordDataset(embed_file).map(_parse_example):
+  for record in tf.data.TFRecordDataset(embed_file).map(_parse_example, num_parallel_calls=tf.data.experimental.AUTOTUNE):
     dimensions = record['embedding'].shape[0]
     break
   return dimensions
@@ -80,7 +80,7 @@ def run(args):
     print('Loading embeddings in file {} of {}...'.format(
         i + 1, num_files))
     dataset = tf.data.TFRecordDataset(embed_file)
-    for record in dataset.map(_parse_example):
+    for record in dataset.map(_parse_example, num_parallel_calls=tf.data.experimental.AUTOTUNE):
       item = record['item'].numpy().decode('utf-8')
       embedding = record['embedding'].values.numpy()
       mapping[item_counter] = item
