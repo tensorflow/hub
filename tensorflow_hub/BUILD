@@ -64,6 +64,7 @@ py_library(
     deps = [
         ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
     ],
 )
 
@@ -75,6 +76,7 @@ py_test(
     tags = ["notsan"],  # b/111624588
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
         "//tensorflow_hub",
     ],
 )
@@ -100,6 +102,7 @@ py_test(
         ":test_utils",
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
     ],
 )
 
@@ -124,6 +127,7 @@ py_test(
         ":test_utils",
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub:expect_tensorflow_estimator_installed",
     ],
 )
 
@@ -421,6 +425,8 @@ py_test(
         ":tensorflow_hub",
         ":test_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
+        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
+        "//tensorflow_hub:expect_tensorflow_estimator_installed",
     ],
 )
 
@@ -438,6 +444,18 @@ tf_hub_proto_library(
 # `pip install tensorflow`
 py_library(
     name = "expect_tensorflow_installed",
+)
+
+# We expect TensorFlow Estimator to already be installed on the system.
+# This is for internal bookkeeping only and will be true by virtue of having TensorFlow installed.
+py_library(
+    name = "expect_tensorflow_estimator_installed",
+)
+
+# We expect TensorFlow V1 Estimator to already be installed on the system.
+# This is for internal bookkeeping only and will be true by virtue of having TensorFlow installed.
+py_library(
+    name = "expect_tensorflow_compat_v1_estimator_installed",
 )
 
 # We expect numpy to already be installed on the system, e.g. via

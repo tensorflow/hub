@@ -18,6 +18,7 @@ import os
 import tempfile
 
 import tensorflow as tf
+from tensorflow.compat.v1 import estimator as tf_estimator
 import tensorflow_hub as hub
 
 _TEXT_FEATURE_NAME = "text"
@@ -37,7 +38,7 @@ def _input_fn():
 def _serving_input_fn():
   """A serving input fn."""
   text_features = tf.compat.v1.placeholder(dtype=tf.string, shape=[None])
-  return tf.compat.v1.estimator.export.ServingInputReceiver(
+  return tf_estimator.export.ServingInputReceiver(
       features={_TEXT_FEATURE_NAME: text_features},
       receiver_tensors=text_features)
 
@@ -68,7 +69,7 @@ def _get_model_fn(register_module=False):
     global_step = tf.compat.v1.train.get_global_step()
     train_op = tf.compat.v1.assign_add(global_step, 1)
 
-    return tf.compat.v1.estimator.EstimatorSpec(
+    return tf_estimator.EstimatorSpec(
         mode=mode,
         predictions=predictions,
         loss=loss,
@@ -84,7 +85,7 @@ class EstimatorTest(tf.test.TestCase):
     export_base_dir = os.path.join(
         tempfile.mkdtemp(dir=self.get_temp_dir()), "export")
 
-    estimator = tf.compat.v1.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         _get_model_fn(register_module=True), model_dir=model_dir)
     estimator.train(input_fn=_input_fn, steps=1)
 
@@ -113,7 +114,7 @@ class EstimatorTest(tf.test.TestCase):
                                    "export")
     self.assertFalse(tf.compat.v1.gfile.Exists(export_base_dir))
 
-    estimator = tf.compat.v1.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         _get_model_fn(register_module=False), model_dir=model_dir)
     estimator.train(input_fn=_input_fn, steps=1)
 
@@ -131,7 +132,7 @@ class EstimatorTest(tf.test.TestCase):
 
   def test_latest_module_exporter_with_eval_spec(self):
     model_dir = tempfile.mkdtemp(dir=self.get_temp_dir())
-    estimator = tf.compat.v1.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         _get_model_fn(register_module=True), model_dir=model_dir)
     exporter = hub.LatestModuleExporter(
         "tf_hub", _serving_input_fn, exports_to_keep=2)

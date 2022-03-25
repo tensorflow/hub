@@ -18,6 +18,7 @@ import os
 
 from absl import logging
 import tensorflow as tf
+from tensorflow.compat.v1 import estimator as tf_estimator
 from tensorflow_hub import tf_utils
 
 # A collection of pairs (key: string, module: Module) used internally to
@@ -58,7 +59,7 @@ def register_module_for_export(module, export_name):
                                  (export_name, module))
 
 
-class LatestModuleExporter(tf.compat.v1.estimator.Exporter):
+class LatestModuleExporter(tf_estimator.Exporter):
   """Regularly exports registered modules into timestamped directories.
 
   Warning: Deprecated. This belongs to the hub.Module API and TF1 Hub format.
@@ -193,7 +194,7 @@ def _make_estimator_serving_session(estimator, serving_input_fn,
       None.
   """
   with tf.Graph().as_default() as g:
-    mode = tf.compat.v1.estimator.ModeKeys.PREDICT
+    mode = tf_estimator.ModeKeys.PREDICT
     tf.compat.v1.train.create_global_step(g)
     tf.compat.v1.set_random_seed(estimator.config.tf_random_seed)
     serving_input_receiver = serving_input_fn()

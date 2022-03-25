@@ -17,6 +17,7 @@
 import logging
 import os
 import numpy as np
+from tensorflow import estimator as tf_estimator
 import tensorflow.compat.v2 as tf
 import tensorflow_hub as hub
 
@@ -178,7 +179,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     upvotes = tf.feature_column.numeric_column("upvotes")
 
     feature_columns = [comment_embedding_column, upvotes]
-    estimator = tf.estimator.DNNClassifier(
+    estimator = tf_estimator.DNNClassifier(
         hidden_units=[10],
         feature_columns=feature_columns,
         model_dir=self.get_temp_dir())
@@ -215,10 +216,10 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
       data_batches = dataset.repeat().take(30).batch(5)
       return data_batches
 
-    estimator = tf.estimator.DNNEstimator(
+    estimator = tf_estimator.DNNEstimator(
         model_dir=os.path.join(self.get_temp_dir(), "estimator_export"),
         hidden_units=[10],
-        head=tf.estimator.BinaryClassHead(),
+        head=tf_estimator.BinaryClassHead(),
         feature_columns=[description_embeddings])
 
     estimator.train(input_fn=input_fn, max_steps=1)

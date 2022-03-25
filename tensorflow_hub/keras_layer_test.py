@@ -20,6 +20,8 @@ import os
 from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+from tensorflow import estimator as tf_estimator
+from tensorflow.compat.v1 import estimator as tf_compat_v1_estimator
 import tensorflow_hub as hub
 
 # NOTE: A Hub-style SavedModel can either be constructed manually, or by
@@ -718,7 +720,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     imported = hub.KerasLayer(
         params["hub_module"], trainable=params["hub_trainable"])
     model = tf.keras.Sequential([imported])
-    outp = model(inp, training=(mode == tf.estimator.ModeKeys.TRAIN))
+    outp = model(inp, training=(mode == tf_estimator.ModeKeys.TRAIN))
     # https://www.tensorflow.org/alpha/guide/migration_guide#using_a_custom_model_fn
     # recommends model.get_losses_for() instead of model.losses.
     model_losses = model.get_losses_for(None) + model.get_losses_for(inp)
@@ -726,20 +728,20 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     predictions = dict(output=outp, regularization_loss=regularization_loss)
 
     total_loss = None
-    if mode in (tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL):
+    if mode in (tf_estimator.ModeKeys.TRAIN, tf_estimator.ModeKeys.EVAL):
       total_loss = tf.add(
           tf.compat.v1.losses.mean_squared_error(labels, outp),
           regularization_loss)
 
     train_op = None
-    if mode == tf.estimator.ModeKeys.TRAIN:
+    if mode == tf_estimator.ModeKeys.TRAIN:
       optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.002)
       train_op = optimizer.minimize(
           total_loss,
           var_list=model.trainable_variables,
           global_step=tf.compat.v1.train.get_or_create_global_step())
 
-    return tf.estimator.EstimatorSpec(
+    return tf_estimator.EstimatorSpec(
         mode=mode, predictions=predictions, loss=total_loss, train_op=train_op)
 
   @parameterized.parameters(("TF2SavedModel_SavedRaw"),
@@ -748,14 +750,14 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _dispatch_model_format(model_format, _save_half_plus_one_model,
                            _save_half_plus_one_hub_module_v1, export_dir)
-    estimator = tf.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         model_fn=self._half_plus_one_model_fn,
         params=dict(hub_module=export_dir, hub_trainable=True))
 
     # The consumer model computes y = x/2 + 1 as expected.
     predictions = next(
         estimator.predict(
-            tf.compat.v1.estimator.inputs.numpy_input_fn(
+            tf_compat_v1_estimator.inputs.numpy_input_fn(
                 np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
                 shuffle=False),
             yield_single_examples=False))
@@ -769,7 +771,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     x = [[9.], [10.], [11.]] * 10
     y = [[xi[0] / 2. + 6] for xi in x]
     estimator.train(
-        tf.compat.v1.estimator.inputs.numpy_input_fn(
+        tf_compat_v1_estimator.inputs.numpy_input_fn(
             np.array(x, dtype=np.float32),
             np.array(y, dtype=np.float32),
             batch_size=len(x),
@@ -780,7 +782,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     # To compensate, the kernel weight will grow to almost 1.0.
     predictions = next(
         estimator.predict(
-            tf.compat.v1.estimator.inputs.numpy_input_fn(
+            tf_compat_v1_estimator.inputs.numpy_input_fn(
                 np.array([[0.], [10.]], dtype=np.float32), shuffle=False),
             yield_single_examples=False))
     self.assertAllEqual(predictions["output"][0],
@@ -802,14 +804,14 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
     _dispatch_model_format(model_format, _save_half_plus_one_model,
                            _save_half_plus_one_hub_module_v1, export_dir)
-    estimator = tf.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         model_fn=self._half_plus_one_model_fn,
         params=dict(hub_module=export_dir, hub_trainable=False))
 
     # The consumer model computes y = x/2 + 1 as expected.
     predictions = next(
         estimator.predict(
-            tf.compat.v1.estimator.inputs.numpy_input_fn(
+            tf_compat_v1_estimator.inputs.numpy_input_fn(
                 np.array([[0.], [8.], [10.], [12.]], dtype=np.float32),
                 shuffle=False),
             yield_single_examples=False))
@@ -833,7 +835,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
           kernel_initializer=tf.keras.initializers.Constant([[1.5]]),
           use_bias=False)
       model = tf.keras.Sequential([imported, dense])
-    outp = model(inp, training=(mode == tf.estimator.ModeKeys.TRAIN))
+    outp = model(inp, training=(mode == tf_estimator.ModeKeys.TRAIN))
     predictions = dict(
         output=outp,
         beta=var_beta.value(),
@@ -846,11 +848,11 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     update_ops = model.get_updates_for(None) + model.get_updates_for(inp)
 
     loss = None
-    if mode in (tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL):
+    if mode in (tf_estimator.ModeKeys.TRAIN, tf_estimator.ModeKeys.EVAL):
       loss = tf.compat.v1.losses.mean_squared_error(labels, outp)
 
     train_op = None
-    if mode == tf.estimator.ModeKeys.TRAIN:
+    if mode == tf_estimator.ModeKeys.TRAIN:
       optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.1)
       with tf.control_dependencies(update_ops):
         train_op = optimizer.minimize(
@@ -858,7 +860,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
             var_list=model.trainable_variables,
             global_step=tf.compat.v1.train.get_or_create_global_step())
 
-    return tf.estimator.EstimatorSpec(
+    return tf_estimator.EstimatorSpec(
         mode=mode, predictions=predictions, loss=loss, train_op=train_op)
 
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
@@ -866,7 +868,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     """Tests imported batch norm with trainable=True."""
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
-    estimator = tf.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         model_fn=self._batch_norm_model_fn,
         params=dict(hub_module=export_dir, train_batch_norm=True))
 
@@ -876,7 +878,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     # mapping x --> 2*x for the observed mean and variance.
     x = [[11.], [12.], [13.]]
     y = [[2 * xi[0]] for xi in x]
-    train_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+    train_input_fn = tf_compat_v1_estimator.inputs.numpy_input_fn(
         np.array(x, dtype=np.float32),
         np.array(y, dtype=np.float32),
         batch_size=len(x),
@@ -893,7 +895,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     # - Batch statistics are ignored in favor of aggregated statistics,
     #   computing x --> 2*x independent of input distribution.
     # - Update ops are not run, so this doesn't change over time.
-    predict_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+    predict_input_fn = tf_compat_v1_estimator.inputs.numpy_input_fn(
         np.array([[10.], [20.], [30.]], dtype=np.float32),
         batch_size=3,
         num_epochs=100,
@@ -910,12 +912,12 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     """Tests imported batch norm with trainable=False."""
     export_dir = os.path.join(self.get_temp_dir(), "batch-norm")
     _save_batch_norm_model(export_dir, save_from_keras=save_from_keras)
-    estimator = tf.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         model_fn=self._batch_norm_model_fn,
         params=dict(hub_module=export_dir, train_batch_norm=False))
     x = [[1.], [2.], [3.]]
     y = [[2 * xi[0]] for xi in x]
-    input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+    input_fn = tf_compat_v1_estimator.inputs.numpy_input_fn(
         np.array(x, dtype=np.float32),
         np.array(y, dtype=np.float32),
         batch_size=len(x),
@@ -946,7 +948,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     outp = imported(inp)
     model = tf.keras.Model(inp, outp)
 
-    out_list = model(features, training=(mode == tf.estimator.ModeKeys.TRAIN))
+    out_list = model(features, training=(mode == tf_estimator.ModeKeys.TRAIN))
     for j, out in enumerate(out_list):
       i = j + 1  # Sample shapes count from one.
       actual_shape = out.shape.as_list()[1:]  # Without batch size.
@@ -955,7 +957,7 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     predictions = {["one", "two", "three"][i]: out_list[i] for i in range(3)}
     imported.get_config()
 
-    return tf.estimator.EstimatorSpec(
+    return tf_estimator.EstimatorSpec(
         mode=mode, predictions=predictions, loss=None, train_op=None)
 
   @parameterized.named_parameters(("NoOutputShapes", False),
@@ -967,10 +969,10 @@ class EstimatorTest(tf.test.TestCase, parameterized.TestCase):
     params = dict(hub_module=export_dir)
     if pass_output_shapes:
       params["output_shape"] = [[1], [2, 2], [3, 3, 3]]
-    estimator = tf.estimator.Estimator(
+    estimator = tf_estimator.Estimator(
         model_fn=self._output_shape_list_model_fn, params=params)
     x = [[1.], [10.]]
-    input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
+    input_fn = tf_compat_v1_estimator.inputs.numpy_input_fn(
         np.array(x, dtype=np.float32),
         batch_size=len(x),
         num_epochs=None,

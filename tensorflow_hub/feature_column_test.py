@@ -19,6 +19,7 @@ import unittest
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.compat.v1 import estimator as tf_estimator
 import tensorflow_hub as hub
 
 # pylint: disable=g-direct-tensorflow-import
@@ -177,7 +178,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     upvotes = tf.compat.v1.feature_column.numeric_column("upvotes")
 
     feature_columns = [comment_embedding_column, upvotes]
-    estimator = tf.compat.v1.estimator.DNNClassifier(
+    estimator = tf_estimator.DNNClassifier(
         hidden_units=[10],
         feature_columns=feature_columns,
         model_dir=self.get_temp_dir())
@@ -195,7 +196,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         ]),
     }
     labels = np.array([[1], [0]])
-    numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
+    numpy_input_fn = tf_estimator.inputs.numpy_input_fn
     input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
@@ -379,7 +380,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     other_column = tf.compat.v1.feature_column.numeric_column("number")
 
     feature_columns = [image_column, other_column]
-    estimator = tf.compat.v1.estimator.DNNClassifier(
+    estimator = tf_estimator.DNNClassifier(
         hidden_units=[10],
         feature_columns=feature_columns,
         model_dir=self.get_temp_dir())
@@ -395,7 +396,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
             np.array([[20], [1]]),
     }
     labels = np.array([[1], [0]])
-    numpy_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn
+    numpy_input_fn = tf_estimator.inputs.numpy_input_fn
     input_fn = numpy_input_fn(features, labels, shuffle=True)
     estimator.train(input_fn, max_steps=1)
     estimator.evaluate(input_fn, steps=1)
