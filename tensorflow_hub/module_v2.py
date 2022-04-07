@@ -27,7 +27,7 @@ def resolve(handle):
   format.
 
   Resolves a module handle into a path by downloading and caching in
-  location specified by TF_HUB_CACHE_DIR if needed.
+  location specified by TFHUB_CACHE_DIR if needed.
 
   Currently, three types of module handles are supported:
     1) Smart URL resolvers such as tfhub.dev, e.g.:
