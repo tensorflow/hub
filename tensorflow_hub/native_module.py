@@ -172,7 +172,7 @@ def create_module_spec(module_fn, tags_and_args=None, drop_collections=None):
   See `add_signature()` for documentation on adding multiple input/output
   signatures.
 
-  NOTE: The `module_fn` is called on a graph that uses [resource variables](../../guide/migrate/tf1_vs_tf2#resourcevariables_instead_of_referencevariables)
+  NOTE: The `module_fn` is called on a graph that uses resource variables
   by default. If you want old-style variables ("ref variables"), then
   you can use `with tf.variable_scope("", use_resource=False)` in `module_fn`.
 
