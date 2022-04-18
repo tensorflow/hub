@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'akhorlin' reviewed: '2021-10-15'  } *-->
+<!--* freshness: { owner: 'akhorlin' reviewed: '2022-04-16' review_interval: '6 months' } *-->
 
 # Common SavedModel APIs for Image Tasks
 
