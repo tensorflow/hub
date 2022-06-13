@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2021-12-13' review_interval: '6 months'} *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2022-06-13'} *-->
 
 # Model hosting protocol
 

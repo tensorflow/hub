@@ -1,20 +1,20 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2021-12-13' review_interval: '6 months'} *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2022-06-13' } *-->
 
 # Model formats
 
-[tfhub.dev](https://tfhub.dev) hosts the following model formats: SavedModel,
-TF1 Hub format, TF.js and TFLite. This page provides an overview of each model
-format.
+[tfhub.dev](https://tfhub.dev) hosts the following model formats: TF2
+SavedModel, TF1 Hub format, TF.js and TFLite. This page provides an overview of
+each model format.
 
 ## TensorFlow formats
 
-[tfhub.dev](https://tfhub.dev) hosts TensorFlow models in the SavedModel format
-and TF1 Hub format. We recommend using models in the standardized SavedModel
-format instead of the deprecated TF1 Hub format when possible.
+[tfhub.dev](https://tfhub.dev) hosts TensorFlow models in the TF2 SavedModel
+format and TF1 Hub format. We recommend using models in the standardized TF2
+SavedModel format instead of the deprecated TF1 Hub format when possible.
 
 ### SavedModel
 
-SavedModel is the recommended format for sharing TensorFlow models. You can
+TF2 SavedModel is the recommended format for sharing TensorFlow models. You can
 learn more about the SavedModel format in the
 [TensorFlow SavedModel](https://www.tensorflow.org/guide/saved_model) guide.
 
