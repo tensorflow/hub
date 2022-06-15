@@ -22,11 +22,15 @@ import tensorflow as tf
 
 from tensorflow_hub import module_v2
 
-# pylint: disable=g-direct-tensorflow-import
+# pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
 from tensorflow.python.framework import smart_cond
-from tensorflow.python.training.tracking import data_structures
 from tensorflow.python.util import tf_inspect
-# pylint: enable=g-direct-tensorflow-import
+
+try:
+  from tensorflow.python.trackable import data_structures
+except ImportError:
+  from tensorflow.python.training.tracking import data_structures
+# pylint: enable=g-direct-tensorflow-import,g-import-not-at-top
 
 
 class KerasLayer(tf.keras.layers.Layer):
