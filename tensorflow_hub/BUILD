@@ -63,8 +63,8 @@ py_library(
     srcs_version = "PY3",
     deps = [
         ":tf_utils",
-        "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
 
@@ -75,8 +75,8 @@ py_test(
     srcs_version = "PY3",
     tags = ["notsan"],  # b/111624588
     deps = [
-        "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",
     ],
 )
@@ -101,8 +101,8 @@ py_test(
         ":tensorflow_hub",
         ":test_utils",
         "//tensorflow_hub:expect_numpy_installed",
-        "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
 
@@ -126,8 +126,8 @@ py_test(
         ":tensorflow_hub",
         ":test_utils",
         "//tensorflow_hub:expect_numpy_installed",
-        "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub:expect_tensorflow_estimator_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
 
@@ -424,9 +424,9 @@ py_test(
     deps = [
         ":tensorflow_hub",
         ":test_utils",
-        "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
         "//tensorflow_hub:expect_tensorflow_estimator_installed",
+        "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
 
