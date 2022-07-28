@@ -77,6 +77,8 @@ toc:
   style: divider
 - title: Action recognition
   path: /hub/tutorials/action_recognition_with_tf_hub
+- title: Streaming action recognition
+  path: /hub/tutorials/movinet
 - title: Video interpolation
   path: /hub/tutorials/tweening_conv3d
 - title: Text-to-video retrieval
