@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'wgierke' reviewed: '2022-02-06' } *-->
+<!--* freshness: { owner: 'wgierke' reviewed: '2022-08-06' } *-->
 
 # Caching model downloads from TF Hub
 
