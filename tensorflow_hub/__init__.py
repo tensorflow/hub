@@ -85,6 +85,8 @@ def _ensure_tf_install():
 _ensure_tf_install()
 
 
+# pylint: disable=g-import-not-at-top
+# pylint: disable=g-bad-import-order
 from tensorflow_hub.estimator import LatestModuleExporter
 from tensorflow_hub.estimator import register_module_for_export
 from tensorflow_hub.feature_column import image_embedding_column
@@ -108,8 +110,6 @@ from tensorflow_hub.native_module import create_module_spec
 from tensorflow_hub.saved_model_module import create_module_spec_from_saved_model
 from tensorflow_hub.version import __version__
 
-# pylint: disable=g-import-not-at-top
-# pylint: disable=g-bad-import-order
 from tensorflow_hub.config import _run
 _run()
 

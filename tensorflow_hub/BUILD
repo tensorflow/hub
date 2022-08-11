@@ -30,15 +30,16 @@ py_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        ":estimator",
         ":feature_column",
         ":feature_column_v2",
         ":image_util",
         ":keras_layer",
         ":module",
         ":module_v2",
+        ":native_module",
         ":saved_model_module",
         "//tensorflow_hub:expect_tensorflow_installed",
+        ":estimator",
         ":config",
         "//tensorflow_hub/tools:empty_package",
     ],
@@ -75,9 +76,10 @@ py_test(
     srcs_version = "PY3",
     tags = ["notsan"],  # b/111624588
     deps = [
+        ":tensorflow_hub",
         "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
-        "//tensorflow_hub",
+        ":expect_tensorflow_hub_includes_estimator_apis",
     ],
 )
 
@@ -444,6 +446,12 @@ tf_hub_proto_library(
 # `pip install tensorflow`
 py_library(
     name = "expect_tensorflow_installed",
+)
+
+# We expect TensorFlow Hub to support Estimator related APIs (module exporter).
+# This is for internal bookkeeping only and will always be true.
+py_library(
+    name = "expect_tensorflow_hub_includes_estimator_apis",
 )
 
 # We expect TensorFlow Estimator to already be installed on the system.
