@@ -58,7 +58,7 @@ def _ensure_tf_install():
         "https://tensorflow.org/hub/installation.\n\n")
     raise
 
-  import distutils.version
+  from pkg_resources import parse_version
 
   #
   # Update this whenever we need to depend on a newer TensorFlow release.
@@ -66,13 +66,13 @@ def _ensure_tf_install():
   # NOTE: Put only numeric release versions here, like "1.2.3", and be aware
   # that they will also allow release candidates and even any nightly build
   # starting just after the previous release was cut. That's because
-  # distutils.version.LooseVersion does not understand 'dev' and 'rc' tags;
+  # pkg_resources.parse_version does not understand 'dev' and 'rc' tags;
   # it just does a lexicgraphic comparison after splitting on dots
   # and character class transitions.
   #
   required_tensorflow_version = "1.15.0"
-  if (distutils.version.LooseVersion(tf.__version__) <
-      distutils.version.LooseVersion(required_tensorflow_version)):
+  if (parse_version(tf.__version__) <
+      parse_version(required_tensorflow_version)):
     raise ImportError(
         "\n\nThis version of tensorflow_hub requires tensorflow "
         "version >= {required}; Detected an installation of version {present}. "
