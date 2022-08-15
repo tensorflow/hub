@@ -321,7 +321,19 @@ class TFHubStatelessModuleTest(tf.test.TestCase):
         m = hub.Module(module_spec)
       m(v)
 
-    self.assertEqual(g1.as_graph_def(), g2.as_graph_def())
+    # The MLIR Bridge may arbitrarily apply internal-only attributes to graphs
+    # that are not intended to be consumed by external users. In this particular
+    # instance, the bridge will add an internal-only attribute as the result of
+    # using manual control dependencies above. Filter out the internal-only
+    # attributes to allow equality checking on the meaningfully public structure
+    # of the graph.
+    g2_graph_def = g2.as_graph_def()
+    for node in g2_graph_def.node:
+      for attr in list(node.attr.keys()):
+        if attr.startswith("_"):
+          del node.attr[attr]
+
+    self.assertEqual(g1.as_graph_def(), g2_graph_def)
 
     with tf.Graph().as_default() as g3:
       v = tf.compat.v1.placeholder(dtype=tf.int64, name="v")
