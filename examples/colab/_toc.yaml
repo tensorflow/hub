@@ -31,8 +31,6 @@ toc:
     path: /hub/tutorials/bangla_article_classifier
   - title: Explore CORD-19 text embeddings
     path: /hub/tutorials/cord_19_embeddings_keras
-  - title: Retrieval based question answering
-    path: /hub/tutorials/retrieval_with_tf_hub_universal_encoder_qa
   - title: Multilingual universal sentence encoder
     path: /hub/tutorials/cross_lingual_similarity_with_tf_hub_multilingual_universal_encoder
   - title: Text cookbook
@@ -48,6 +46,8 @@ toc:
   path: /hub/tutorials/tf2_image_retraining
 - title: Style transfer
   path: /hub/tutorials/tf2_arbitrary_image_stylization
+- title: Large-scale image retrieval with DELF
+  path: /hub/tutorials/tf_hub_delf_module
 - title: Object detection
   path: /hub/tutorials/tf2_object_detection
 - title: GANs for image generation
@@ -72,6 +72,8 @@ toc:
   path: /hub/tutorials/spice
 - title: Sound classification
   path: /hub/tutorials/yamnet
+- title: Automatic speech recognition with Wav2Vec2
+  path: /hub/tutorials/wav2vec2_saved_model_finetuning
 
 - heading: "Video Tutorials"
   style: divider
