@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-licenses(["notice"])  # Apache 2.0 License
+licenses(["notice"])
 
 package(
     default_visibility = ["//tensorflow_hub:__subpackages__"],
