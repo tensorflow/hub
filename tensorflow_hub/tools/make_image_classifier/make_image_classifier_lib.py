@@ -343,7 +343,7 @@ def train_model(model,
       label_smoothing=hparams.label_smoothing)
   model.compile(
       optimizer=tf.keras.optimizers.SGD(
-          lr=hparams.learning_rate, momentum=hparams.momentum),
+          learning_rate=hparams.learning_rate, momentum=hparams.momentum),
       loss=loss,
       metrics=["accuracy"])
   steps_per_epoch = train_size // hparams.batch_size
