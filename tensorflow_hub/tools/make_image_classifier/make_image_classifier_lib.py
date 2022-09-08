@@ -309,10 +309,10 @@ def build_model(module_layer, hparams, image_size, num_classes):
 
 
 def train_model(model,
-                 hparams,
-                 train_data_and_size,
-                 valid_data_and_size,
-                 log_dir=None):
+                hparams,
+                train_data_and_size,
+                valid_data_and_size,
+                log_dir=None):
   """Trains model with the given data and hyperparameters.
 
   If using a DistributionStrategy, call this under its `.scope()`.
