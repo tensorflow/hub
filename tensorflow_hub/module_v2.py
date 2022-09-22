@@ -14,6 +14,7 @@
 # ==============================================================================
 """TensorFlow Hub Module API for Tensorflow 2.0."""
 
+import os
 import tensorflow as tf
 
 from tensorflow_hub import native_module
@@ -94,6 +95,19 @@ def load(handle, tags=None, options=None):
       native_module.get_module_proto_path(module_path))
   if tags is None and is_hub_module_v1:
     tags = []
+
+  saved_model_path = os.path.join(
+      tf.compat.as_bytes(module_path),
+      tf.compat.as_bytes(tf.saved_model.SAVED_MODEL_FILENAME_PB))
+  saved_model_pbtxt_path = os.path.join(
+      tf.compat.as_bytes(module_path),
+      tf.compat.as_bytes(tf.saved_model.SAVED_MODEL_FILENAME_PBTXT))
+  if (not tf.io.gfile.exists(saved_model_path) and
+      not tf.io.gfile.exists(saved_model_pbtxt_path)):
+    raise ValueError("Trying to load a model of incompatible/unknown type. "
+                     "'%s' contains neither '%s' nor '%s'." %
+                     (module_path, tf.saved_model.SAVED_MODEL_FILENAME_PB,
+                      tf.saved_model.SAVED_MODEL_FILENAME_PBTXT))
 
   if options:
     if not hasattr(getattr(tf, "saved_model", None), "LoadOptions"):

@@ -98,6 +98,13 @@ class ModuleV2Test(tf.test.TestCase, parameterized.TestCase):
     m = module_v2.load(export_dir, tags)
     self.assertEqual(m._is_hub_module_v1, is_hub_module_v1)
 
+  def test_load_incomplete_model_fails(self):
+    temp_dir = self.create_tempdir().full_path
+    self.create_tempfile(os.path.join(temp_dir, 'variables.txt'))
+
+    with self.assertRaisesRegex(ValueError, 'contains neither'):
+      module_v2.load(temp_dir)
+
   def test_load_sparse(self):
     if any(tf.__version__.startswith(bad) for bad in ['1.', '2.0.']):
       self.skipTest('load_v1_in_v2 did not handle sparse tensors correctly'
