@@ -25,7 +25,6 @@ from tensorflow_hub import native_module
 from tensorflow_hub import tf_utils
 
 # pylint: disable=g-direct-tensorflow-import
-from tensorflow.python.eager import function as function_eager
 from tensorflow.python.framework import function
 from tensorflow.python.framework import test_util
 from tensorflow.python.ops.control_flow_ops import ControlFlowContext
@@ -939,7 +938,7 @@ class TFHubStatefulModuleTest(tf.test.TestCase):
       with tf.compat.v1.Session() as sess:
         spec = hub.create_module_spec(stateful_rv_with_input_module_fn)
 
-        @function_eager.defun()
+        @tf.function
         def import_computation(first, second):
           context = TPUReplicateContext()
           context.Enter()
