@@ -80,6 +80,9 @@ toc:
 
 - heading: "Video Tutorials"
   style: divider
+- title: Frame interpolation with FILM
+  path: /hub/tutorials/tf_hub_film_example
+  status: new
 - title: Action recognition
   path: /hub/tutorials/action_recognition_with_tf_hub
 - title: Streaming action recognition
