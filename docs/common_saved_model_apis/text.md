@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'akhorlin' reviewed: '2022-05-22' } *-->
+<!--* freshness: { owner: 'akhorlin' reviewed: '2022-11-28' } *-->
 
 # Common SavedModel APIs for Text Tasks
 
