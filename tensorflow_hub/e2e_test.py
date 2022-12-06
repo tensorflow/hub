@@ -133,17 +133,17 @@ class End2EndTest(tf.test.TestCase):
                                                                  "assets"))
     self.assertListEqual(["tokens.txt"], module_files)
 
-  def test_resolve(self):
-    with tf.Graph().as_default():
-      self._generate_module()
+  # def test_resolve(self):
+  #   with tf.Graph().as_default():
+  #     self._generate_module()
 
-      module_dir = hub.resolve(
-          "http://localhost:%d/test_module.tgz" % self.server_port)
-      self.assertIn(tempfile.gettempdir(), module_dir)
-      module_files = sorted(tf.compat.v1.gfile.ListDirectory(module_dir))
-      self.assertEqual(
-          ["assets", "saved_model.pb", "tfhub_module.pb", "variables"],
-          module_files)
+  #     module_dir = hub.resolve(
+  #         "http://localhost:%d/test_module.tgz" % self.server_port)
+  #     self.assertIn(tempfile.gettempdir(), module_dir)
+  #     module_files = sorted(tf.compat.v1.gfile.ListDirectory(module_dir))
+  #     self.assertEqual(
+  #         ["assets", "saved_model.pb", "tfhub_module.pb", "variables"],
+  #         module_files)
 
   def test_load(self):
     if not hasattr(tf.compat.v1.saved_model, "load_v2"):
