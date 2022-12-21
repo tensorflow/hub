@@ -440,17 +440,22 @@ def load_module(handle, tags=None, load_options=None):
   else:
     try:
       # pylint: disable=g-import-not-at-top
-      # pylint: disable=g-direct-tensorflow-import
-      from tensorflow.python.keras.saving.saved_model import load_context
+      from keras.saving.legacy.saved_model import load_context
       set_load_options = load_options or load_context.get_load_options()
-    except ImportError:  # Expected before TF2.5.
+    except ImportError:  # Expected before TF2.7 when keras is under tensorflow.
       try:
         # pylint: disable=g-import-not-at-top
         # pylint: disable=g-direct-tensorflow-import
-        from tensorflow.python.saved_model import load_context
+        from tensorflow.python.keras.saving.saved_model import load_context
         set_load_options = load_options or load_context.get_load_options()
-      except ImportError:  # Expected before TF2.4.
-        set_load_options = load_options
+      except ImportError:  # Expected before TF2.5.
+        try:
+          # pylint: disable=g-import-not-at-top
+          # pylint: disable=g-direct-tensorflow-import
+          from tensorflow.python.saved_model import load_context
+          set_load_options = load_options or load_context.get_load_options()
+        except ImportError:  # Expected before TF2.4.
+          set_load_options = load_options
     return module_v2.load(handle, tags=tags, options=set_load_options)
 
 
