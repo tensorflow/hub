@@ -129,7 +129,7 @@ class TextEmbeddingModel(tf.train.Checkpoint):
     self._table = tf.lookup.StaticVocabularyTable(
         self._table_initializer, num_oov_buckets=oov_buckets)
     oovs = np.zeros([oov_buckets, self._pretrained_vectors.shape[1]])
-    self._pretrained_vectors.resize([
+    self._pretrained_vectors = np.resize(self._pretrained_vectors, [
         self._pretrained_vectors.shape[0] + oov_buckets,
         self._pretrained_vectors.shape[1]
     ])
