@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'maringeo' reviewed: '2022-07-11' } *-->
+<!--* freshness: { owner: 'maringeo' reviewed: '2023-01-09' } *-->
 
 # Migrating from TF1 to TF2 with TensorFlow Hub
 
@@ -10,8 +10,8 @@ For TF2, TF Hub has switched away from the legacy `hub.Module` API for building
 a `tf.compat.v1.Graph` like `tf.contrib.v1.layers` do. Instead, there is now a
 `hub.KerasLayer` for use alongside other Keras layers for building a
 `tf.keras.Model` (typically in TF2's new
-[eager execution environment](https://www.tensorflow.org/guide/eager_)) and its
-underlying `hub.load()` method for low-level TensorFlow code.
+[eager execution environment](https://www.tensorflow.org/api_docs/python/tf/executing_eagerly))
+and its underlying `hub.load()` method for low-level TensorFlow code.
 
 The `hub.Module` API remains available in the `tensorflow_hub` library for use
 in TF1 and in the TF1 compatibility mode of TF2. It can only load models in the
