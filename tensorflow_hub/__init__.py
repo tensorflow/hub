@@ -110,7 +110,7 @@ from tensorflow_hub.native_module import create_module_spec
 from tensorflow_hub.saved_model_module import create_module_spec_from_saved_model
 from tensorflow_hub.version import __version__
 
-from tensorflow_hub.config import _run
+from tensorflow_hub.config import _run, _get_extra_deps  # pylint: disable=g-multiple-import
 _run()
 
 # The package `tensorflow_hub.tools` is available separately for import, but
@@ -146,4 +146,5 @@ __all__ = [
     "resolve",
 ]
 
+__all__ += _get_extra_deps()
 __all__ += []  # End of initialization.

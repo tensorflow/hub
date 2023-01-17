@@ -41,6 +41,7 @@ py_library(
         "//tensorflow_hub:expect_tensorflow_installed",
         ":estimator",
         ":config",
+        # Internal dependency.,
         "//tensorflow_hub/tools:empty_package",
     ],
 )

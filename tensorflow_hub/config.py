@@ -35,3 +35,7 @@ def _run():
   _install_default_resolvers()
 
   registry.loader.add_implementation(native_module.Loader())
+
+
+def _get_extra_deps():
+  return []
