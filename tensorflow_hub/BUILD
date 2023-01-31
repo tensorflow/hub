@@ -1,15 +1,3 @@
-load("//tools/build_defs/license:license.bzl", "license")
-
-package(
-    default_applicable_licenses = ["//tensorflow_hub:license"],
-    default_visibility = ["//:__subpackages__"],
-)
-
-license(
-    name = "license",
-    package_name = "tensorflow_hub",
-)
-
 # Copyright 2018 The TensorFlow Hub Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +15,8 @@ license(
 licenses(["notice"])
 
 load("//tensorflow_hub:protos.bzl", "tf_hub_proto_library")  # buildifier: disable=load-on-top
+
+package(default_visibility = ["//:__subpackages__"])
 
 exports_files(["LICENSE"])
 
