@@ -1,3 +1,18 @@
+load("@rules_license//rules:license.bzl", "license")
+
+package(
+    default_applicable_licenses = ["//tensorflow_hub:license"],
+    default_visibility = ["//:__subpackages__"],
+)
+
+license(
+    name = "license",
+    package_name = "tensorflow_hub",
+    license_kinds = [
+        "@rules_license//licenses/spdx:Apache-2.0",
+    ],
+)
+
 # Copyright 2018 The TensorFlow Hub Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +30,6 @@
 licenses(["notice"])
 
 load("//tensorflow_hub:protos.bzl", "tf_hub_proto_library")  # buildifier: disable=load-on-top
-
-package(default_visibility = ["//:__subpackages__"])
 
 exports_files(["LICENSE"])
 
