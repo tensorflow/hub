@@ -30,6 +30,9 @@ py_library(
     deps = [
         "//tensorflow_hub:expect_tensorflow_installed",
         "//tensorflow_hub",
+        #  "tensorflow/lite/python:analyzer",
+        #  "tensorflow/lite/python:lite",
+        #  "tensorflow/lite/python/authoring",
     ],
 )
 
