@@ -14,7 +14,10 @@
 # ==============================================================================
 licenses(["notice"])
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_applicable_licenses = ["//tensorflow_hub:license"],
+    default_visibility = ["//visibility:private"],
+)
 
 py_binary(
     name = "build_docs",

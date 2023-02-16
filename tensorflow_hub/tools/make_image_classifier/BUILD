@@ -15,6 +15,7 @@
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//tensorflow_hub:license"],
     default_visibility = [
         "//:__subpackages__",
         "//tensorflow_hub:__subpackages__",

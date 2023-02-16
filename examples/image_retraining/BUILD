@@ -1,6 +1,8 @@
 # Description:
 # Transfer learning example for TensorFlow.
 
+package(default_applicable_licenses = ["//tensorflow_hub:license"])
+
 licenses(["notice"])
 
 py_binary(
