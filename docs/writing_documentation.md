@@ -1,10 +1,13 @@
-<!--* freshness: { owner: 'wgierke' reviewed: '2022-07-27' review_interval: '6 months' } *-->
+<!--* freshness: { owner: 'wgierke' reviewed: '2023-02-27' review_interval: '6 months' } *-->
 
 # Write documentation
 
 For contributing to tfhub.dev, documentation in Markdown format must be
-provided. For a full overview of the process of contributing models to tfhub.dev
-see the [contribute a model](contribute_a_model.md) guide.
+provided. For a full overview of the process of contributing models to
+tfhub.dev, see the [contribute a model](contribute_a_model.md) guide.
+
+**Note:** the term "publisher" is used throughout this documentation -- this
+refers to the owner-of-record for a model hosted on tfhub.dev.
 
 ## Types of Markdown documentation
 

@@ -8,6 +8,10 @@ GitHub Repo. For more information on how to write the Markdown files in the
 first place, please see the
 [writing documentation guide](writing_documentation.md).
 
+**Note:** If you would like your model to be mirrored to other model hubs,
+please use an MIT, CC0, or Apache license. If you would not like your model to
+be mirrored to other model hubs, please use another appropriate license.
+
 ## GitHub Actions checks
 
 The [tensorflow/tfhub.dev](https://github.com/tensorflow/tfhub.dev) repo uses

@@ -25,6 +25,7 @@ A model in TF1 Hub format is imported into a TensorFlow program by creating a
 ```python
 m = hub.Module("path/to/a/module_dir")
 ```
+**Note:** See more information regarding other valid handle types [here](tf2_saved_model.md#model_handles).
 
 This adds the module's variables to the current TensorFlow graph.
 Running their initializers will read their pre-trained values from disk.

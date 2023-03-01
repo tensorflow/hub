@@ -18,7 +18,6 @@ models in TF1 Hub format, within limits, see the
 Users of TensorFlow 1 can update to TF 1.15 and then use the same APIs.
 Older versions of TF1 do not work.
 
-
 ## Using SavedModels from TF Hub
 
 ### Using a SavedModel in Keras
@@ -79,6 +78,14 @@ can be set to override the default temporary location for caching the downloaded
 and uncompressed SavedModels. For details, see [Caching](caching.md).
 
 ### Using a SavedModel in low-level TensorFlow
+#### Model Handles
+
+SavedModels can be loaded from a specified `handle`, where the `handle` is a
+filesystem path, valid TFhub.dev model URL (e.g. "https://tfhub.dev/...").
+Kaggle Models URLs mirror TFhub.dev handles in accordance with our Terms and the
+license associated with the model assets, e.g. "https://www.kaggle.com/...".
+Handles from Kaggle Models are equivalent to their corresponding TFhub.dev
+handle.
 
 The function `hub.load(handle)` downloads and decompresses a SavedModel
 (unless `handle` is already a filesystem path) and then returns the result

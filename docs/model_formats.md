@@ -2,9 +2,15 @@
 
 # Model formats
 
-[tfhub.dev](https://tfhub.dev) hosts the following model formats: TF2
-SavedModel, TF1 Hub format, TF.js and TFLite. This page provides an overview of
-each model format.
+[tfhub.dev](https://tfhub.dev) hosts the following model
+formats: TF2 SavedModel, TF1 Hub format, TF.js and TFLite. This page provides an
+overview of each model format.
+
+Content published to tfhub.dev can be automatically mirrored to other model
+hubs, provided it follows a specified format and is permitted by our Terms
+(https://tfhub.dev/terms). See [our publishing documentation](publish.md) for
+more details, and [our contribution documentation](contribute_a_model.md) if
+you'd like to opt-out of mirroring.
 
 ## TensorFlow formats
 

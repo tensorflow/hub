@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'akhorlin' } *-->
+<!--* freshness: { owner: 'akhorlin' reviewed: '2023-02-17'} *-->
 
 # TensorFlow Hub Library Overview
 
@@ -14,6 +14,8 @@ embed = hub.KerasLayer("https://tfhub.dev/google/nnlm-en-dim128/2")
 embeddings = embed(["A long sentence.", "single-word", "http://example.com"])
 print(embeddings.shape, embeddings.dtype)
 ```
+**Note:** This documentation uses TFhub.dev URL handles in examples. See more
+information regarding other valid handle types [here](tf2_saved_model.md#model_handles).
 
 ## Setting the cache location for downloads.
 

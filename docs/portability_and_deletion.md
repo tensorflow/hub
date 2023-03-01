@@ -6,7 +6,6 @@ Yes. If you’d like the TensorFlow Hub team to **send you a copy** of all of th
 data you have uploaded, please send us an email at [hi-tf-hub@google.com](mailto:hi-tf-hub@google.com)
 and we’ll respond as soon as possible.
 
-
 ## How do I delete what I’ve uploaded to TensorFlow Hub?
 
 Similarly, if you’d like us to **delete or remove content**, please send us an

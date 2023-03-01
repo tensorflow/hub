@@ -55,4 +55,4 @@ $ pip install --upgrade tf-hub-nightly
     -   [Image classification](https://github.com/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
     -   Additional examples
         [on GitHub](https://github.com/tensorflow/hub/blob/master/examples/README.md)
--   Find models on [tfhub.dev](https://tfhub.dev)
+-   Find models on [tfhub.dev](https://tfhub.dev).

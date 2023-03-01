@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'wgierke' reviewed: '2022-08-06' } *-->
+<!--* freshness: { owner: 'wgierke' reviewed: '2023-02-27' } *-->
 
 # Caching model downloads from TF Hub
 
@@ -84,3 +84,4 @@ load_options =
 tf.saved_model.LoadOptions(experimental_io_device='/job:localhost')
 reloaded_model = hub.load("https://tfhub.dev/...", options=load_options)
 ```
+**Note:** See more information regarding valid handles [here](tf2_saved_model.md#model_handles).

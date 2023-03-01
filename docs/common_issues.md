@@ -6,6 +6,9 @@ If your issue is not listed here, please search the
 [github issues](https://github.com/tensorflow/hub/issues) before filling a new
 one.
 
+**Note:** This documentation uses TFhub.dev URL handles in examples. See more
+information regarding other valid handle types [here](tf2_saved_model.md#model_handles).
+
 ## TypeError: 'AutoTrackable' object is not callable
 
 ```python
