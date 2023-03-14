@@ -314,7 +314,7 @@ class EvalFunctionForModuleTest(tf.test.TestCase):
            [[[20, 21, 22], [30, 35, 38], [0, 2, 0]]]],
           ragged_rank=2)
 
-      self.assertAllEqual(f(rt, signature="ragged"),
+      self.assertAllEqual(f(rt, signature="ragged").to_list(),
                           [[[[2, 4, 6], [8, 10, 12]], [[14, 16, 18]]],
                            [[[40, 42, 44], [60, 70, 76], [0, 4, 0]]]])
 
