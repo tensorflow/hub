@@ -14,18 +14,31 @@
 # ==============================================================================
 workspace(name = "org_tensorflow_hub")
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# For use by //tensorflow_hub:protos.bzl.
-git_repository(
-    name = "com_google_protobuf",
-    # v3.8.0
-    commit = "09745575a923640154bcf307fba8aedff47f240a",
-    remote = "https://github.com/google/protobuf.git",
+# Needed by com_google_protobuf.
+http_archive(
+    name = "rules_python",  # 2023-01-10T22:00:51Z
+    sha256 = "5de54486a60ad8948dabe49605bb1c08053e04001a431ab3e96745b4d97a4419",
+    strip_prefix = "rules_python-70cce26432187a60b4e950118791385e6fb3c26f",
+    urls = ["https://github.com/bazelbuild/rules_python/archive/70cce26432187a60b4e950118791385e6fb3c26f.zip"],
 )
 
-# Required by protobuf 3.8.0.
+# For use by //tensorflow_hub:protos.bzl.
+# 3.19.x is the minimum possible protoc that will generate compiled proto code that is
+# compatible with protobuf runtimes >= 4, as discussed here:
+# https://developers.google.com/protocol-buffers/docs/news/2022-05-06
+http_archive(
+    name = "com_google_protobuf",
+    sha256 = "9a301cf94a8ddcb380b901e7aac852780b826595075577bb967004050c835056",
+    strip_prefix = "protobuf-3.19.6",
+    urls = [
+        "http://mirror.tensorflow.org/github.com/protocolbuffers/protobuf/archive/v3.19.6.tar.gz",
+        "https://github.com/protocolbuffers/protobuf/archive/v3.19.6.tar.gz",  # 2022-09-29
+    ],
+)
+
+# Required by protobuf 3.19.6.
 http_archive(
     name = "zlib",
     build_file = "@com_google_protobuf//:third_party/zlib.BUILD",
@@ -46,10 +59,9 @@ http_archive(
   ],
 )
 
-# Required by protobuf 3.8.0.
+# Required by protobuf 3.19.6.
 http_archive(
     name = "bazel_skylib",
-    sha256 = "bbccf674aa441c266df9894182d80de104cabd19be98be002f6d478aaa31574d",
-    strip_prefix = "bazel-skylib-2169ae1c374aab4a09aa90e65efe1a3aad4e279b",
-    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/2169ae1c374aab4a09aa90e65efe1a3aad4e279b.tar.gz"],
+    sha256 = "f7be3474d42aae265405a592bb7da8e171919d74c16f082a5457840f06054728",  # Last updated 2022-05-18
+    urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.2.1/bazel-skylib-1.2.1.tar.gz"],
 )

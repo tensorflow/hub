@@ -27,7 +27,7 @@ with open('tensorflow_hub/version.py') as in_file:
 
 REQUIRED_PACKAGES = [
     'numpy >= 1.12.0',
-    'protobuf >= 3.8.0, < 4.0',  # No less than what ../WORKSPACE uses.
+    'protobuf >= 3.19.6',  # No less than what ../WORKSPACE uses.
 ]
 
 project_name = 'tensorflow-hub'
@@ -80,10 +80,10 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Mathematics',

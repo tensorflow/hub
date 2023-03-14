@@ -307,16 +307,17 @@ class EvalFunctionForModuleTest(tf.test.TestCase):
             signature="sparse"),
           [2, 0])
 
-  def testRaggedInput(self):
-    with module.eval_function_for_module(_ModuleSpec(), tags={"special"}) as f:
-      rt = tf.compat.v1.ragged.constant_value(
-          [[[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]],
-           [[[20, 21, 22], [30, 35, 38], [0, 2, 0]]]],
-          ragged_rank=2)
+  # TODO(b/273203177): Enable once dtype can be propagated to numpy.
+  # def testRaggedInput(self):
+  #   with module.eval_function_for_module(_ModuleSpec(), tags={"special"}) as f:
+  #     rt = tf.compat.v1.ragged.constant_value(
+  #         [[[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]],
+  #          [[[20, 21, 22], [30, 35, 38], [0, 2, 0]]]],
+  #         ragged_rank=2)
 
-      self.assertAllEqual(f(rt, signature="ragged").to_list(),
-                          [[[[2, 4, 6], [8, 10, 12]], [[14, 16, 18]]],
-                           [[[40, 42, 44], [60, 70, 76], [0, 4, 0]]]])
+  #     self.assertAllEqual(f(rt, signature="ragged").to_list(),
+  #                         [[[[2, 4, 6], [8, 10, 12]], [[14, 16, 18]]],
+  #                          [[[40, 42, 44], [60, 70, 76], [0, 4, 0]]]])
 
   def testDictInput(self):
     with module.eval_function_for_module(_ModuleSpec()) as f:
