@@ -114,7 +114,7 @@ def main(argv):
       "display.max_rows", None,
       "display.max_columns", None,
       "display.precision", 3,
-      "max_colwidth", -1,  # Don't truncate columns (e.g. module name).
+      "max_colwidth", None,  # Don't truncate columns (e.g. module name).
       "display.expand_frame_repr", False,  # Don't wrap output.
   ):
     print("# Module ranking for %s" % data_spec)
