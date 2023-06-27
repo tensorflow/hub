@@ -69,7 +69,3 @@ Simple example of how to create a TensorFlow Hub Module.
 #### [`text_embeddings_v2`](text_embeddings)
 
 Example tool to generate a text embedding module in TF2 format.
-
-#### [`mnist`](mnist_export_v2)
-
-Example tool to train and export a simple MNIST classifier in TF2 format.

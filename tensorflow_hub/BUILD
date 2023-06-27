@@ -486,12 +486,6 @@ py_library(
     name = "expect_numpy_installed",
 )
 
-# We expect tensorflow_datasets to already be installed on the system, e.g. via
-# `pip install tensorflow-datasets`
-py_library(
-    name = "expect_tensorflow_datasets_installed",
-)
-
 # We expect absl to already be installed on the system, e.g. via
 # `pip install absl-py`
 py_library(
