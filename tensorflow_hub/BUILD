@@ -517,18 +517,6 @@ py_library(
     name = "expect_protobuf_installed",
 )
 
-# We expect apache_beam to already be installed on the system, e.g. via
-# `pip install apache_beam`
-py_library(
-    name = "expect_apache_beam_installed",
-)
-
-# We expect annoy to already be installed on the system, e.g. via
-# `pip install annoy`
-py_library(
-    name = "expect_annoy_installed",
-)
-
 # An expectation for resources import
 py_library(
     name = "expect_resources_installed",

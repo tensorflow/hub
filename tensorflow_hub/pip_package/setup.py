@@ -57,19 +57,12 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     extras_require={
         'make_image_classifier': ['keras_preprocessing[image]'],
-        'make_nearest_neighbour_index': [
-            'apache_beam',
-            'annoy',
-        ],
     },
     entry_points={
         'console_scripts': [
             ('make_image_classifier = '
              'tensorflow_hub.tools.make_image_classifier.'
              'make_image_classifier:run_main [make_image_classifier]'),
-            ('make_nearest_neighbour_index = tensorflow_hub.tools.'
-             'make_nearest_neighbour_index.make_nearest_neighbour_index:main '
-             '[make_nearest_neighbour_index]'),
         ],
     },
     # PyPI package information.
