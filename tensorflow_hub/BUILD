@@ -492,28 +492,11 @@ py_library(
     name = "expect_absl_py_installed",
 )
 
-# We expect pandas to already be installed on the system, e.g. via
-# `pip install pandas`
-py_library(
-    name = "expect_pandas_installed",
-)
-
-# We expect sklearn to already be installed on the system, e.g. via
-# `pip install sklearn`
-py_library(
-    name = "expect_sklearn_installed",
-)
-
 # We expect the runtime libraries for generated Python protocol messages
 # to already be installed on the system, e.g. via
 # `pip install protobuf`
 py_library(
     name = "expect_protobuf_installed",
-)
-
-# An expectation for resources import
-py_library(
-    name = "expect_resources_installed",
 )
 
 py_library(
