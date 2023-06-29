@@ -46,25 +46,19 @@ if project_name == 'tf-hub-nightly':
 setup(
     name=project_name,  # Automatic: tensorflow_hub, etc. Case insensitive.
     version=version.replace('-', ''),
-    description=('TensorFlow Hub is a library to foster the publication, '
-                 'discovery, and consumption of reusable parts of machine '
-                 'learning models.'),
+    description=(
+        'TensorFlow Hub is a library to foster the publication, '
+        'discovery, and consumption of reusable parts of machine '
+        'learning models.'
+    ),
     long_description='',
     url='https://github.com/tensorflow/hub',
     author='Google LLC',
     author_email='packages@tensorflow.org',
     packages=find_packages(),
     install_requires=REQUIRED_PACKAGES,
-    extras_require={
-        'make_image_classifier': ['keras_preprocessing[image]'],
-    },
-    entry_points={
-        'console_scripts': [
-            ('make_image_classifier = '
-             'tensorflow_hub.tools.make_image_classifier.'
-             'make_image_classifier:run_main [make_image_classifier]'),
-        ],
-    },
+    extras_require={},
+    entry_points={},
     # PyPI package information.
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -86,6 +80,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     license='Apache 2.0',
-    keywords=('tensorflow machine learning share module subgraph component hub '
-              'embedding retraining transfer'),
+    keywords=(
+        'tensorflow machine learning share module subgraph component hub '
+        'embedding retraining transfer'
+    ),
 )

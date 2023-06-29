@@ -25,6 +25,5 @@ sh_binary(
     srcs = ["build_pip_package.sh"],
     data = [
         "//tensorflow_hub",
-        "//tensorflow_hub/tools/make_image_classifier",
     ],
 )

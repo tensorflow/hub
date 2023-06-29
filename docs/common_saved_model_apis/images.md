@@ -1,4 +1,4 @@
-<!--* freshness: { owner: 'akhorlin' reviewed: '2022-10-17' review_interval: '6 months' } *-->
+<!--* freshness: { owner: 'akhorlin' reviewed: '2023-06-28' review_interval: '6 months' } *-->
 
 # Common SavedModel APIs for Image Tasks
 
@@ -72,8 +72,6 @@ Reusable SavedModels for image feature vectors are used in
 
 *   the Colab tutorial
     [Retraining an Image Classifier](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb),
-*   the command-line tool
-    [make_image_classifier](https://github.com/tensorflow/hub/tree/master/tensorflow_hub/tools/make_image_classifier).
 
 <a name="classification"></a>
 

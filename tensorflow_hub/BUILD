@@ -486,12 +486,6 @@ py_library(
     name = "expect_numpy_installed",
 )
 
-# We expect absl to already be installed on the system, e.g. via
-# `pip install absl-py`
-py_library(
-    name = "expect_absl_py_installed",
-)
-
 # We expect the runtime libraries for generated Python protocol messages
 # to already be installed on the system, e.g. via
 # `pip install protobuf`
