@@ -242,10 +242,7 @@ py_test(
     python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":saved_model_lib",
-        ":saved_model_module",
         ":tensorflow_hub",
-        ":tf_utils",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
