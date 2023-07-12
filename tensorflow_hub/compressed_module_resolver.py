@@ -15,6 +15,7 @@
 """Functions to resolve TF-Hub Module stored in compressed TGZ format."""
 
 import hashlib
+import logging
 import urllib
 
 import tensorflow as tf
@@ -22,7 +23,10 @@ from tensorflow_hub import resolver
 
 
 LOCK_FILE_TIMEOUT_SEC = 10 * 60  # 10 minutes
-
+_HUB_TF_GOOGLE_CN = "https://hub.tensorflow.google.cn/"
+_GCS_GOOGLE_CN_TEMPLATE = (
+    "https://gcs.tensorflow.google.cn/tfhub-modules/%s.tar.gz"
+)
 _COMPRESSED_FORMAT_QUERY = ("tf-hub-format", "compressed")
 
 
@@ -58,6 +62,16 @@ class HttpCompressedFileResolver(resolver.HttpResolverBase):
 
     def download(handle, tmp_dir):
       """Fetch a module via HTTP(S), handling redirect and download headers."""
+      # Directly load the model from GCS.
+      if handle.startswith(_HUB_TF_GOOGLE_CN):
+        full_model_name = handle[len(_HUB_TF_GOOGLE_CN):]
+        gcs_cn_url = _GCS_GOOGLE_CN_TEMPLATE % full_model_name
+        logging.info("Directly downloading %s", gcs_cn_url)
+        response = self._call_urlopen(gcs_cn_url)
+        return resolver.DownloadManager(handle).download_and_uncompress(
+            response, tmp_dir
+        )
+
       request = urllib.request.Request(
           self._append_compressed_format_query(handle))
       response = self._call_urlopen(request)

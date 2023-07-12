@@ -21,16 +21,18 @@ import ssl
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
+import urllib.request
 import uuid
 
 from absl import flags
 from absl.testing import parameterized
 import tensorflow as tf
-
 from tensorflow_hub import compressed_module_resolver
 from tensorflow_hub import resolver
 from tensorflow_hub import test_utils
 from tensorflow_hub import tf_utils
+
 
 FLAGS = flags.FLAGS
 
@@ -38,6 +40,7 @@ FLAGS = flags.FLAGS
 class HttpCompressedFileResolverTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
+    super().setUp()
     # Set current directory to test temp directory where we can create
     # files and serve them through the HTTP server.
     os.chdir(self.get_temp_dir())
@@ -234,6 +237,27 @@ class HttpCompressedFileResolverTest(tf.test.TestCase, parameterized.TestCase):
       self.assertEqual(
           "http://localhost:%d/bad_archive.tar.gz does not appear "
           "to be a valid module." % self.redirect_server_port, str(e))
+
+  def testLoadFromCn(self):
+    http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
+
+    with mock.patch.object(
+        urllib.request,
+        "urlopen",
+        autospec=True,
+        return_value=urllib.request.urlopen(
+            "http://localhost:%d/mock_module.tar.gz" % self.server_port
+        ),
+    ) as mock_urlopen:
+      path = http_resolver(
+          "https://hub.tensorflow.google.cn/google/bit/s-r50x1/1"
+      )
+
+    mock_urlopen.assert_called_once_with(
+        "https://gcs.tensorflow.google.cn/tfhub-modules/google/bit/s-r50x1/1.tar.gz",
+        context=mock.ANY,
+    )
+    self.assertCountEqual(os.listdir(path), ["file1", "file2", "file3"])
 
 
 if __name__ == "__main__":
