@@ -12,9 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
-# Current version 0.15.0-dev
-  * Under development
-
 # Current version 0.14.0
   * Remove make_image_classifier and make_nearest_neighbour_index.
   * Directly load https://hub.tensorflow.google.cn/* handles from GCS.
