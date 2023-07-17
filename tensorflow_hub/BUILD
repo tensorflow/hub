@@ -43,7 +43,6 @@ py_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        ":feature_column",
         ":image_util",
         ":keras_layer",
         ":module",
@@ -52,6 +51,7 @@ py_library(
         ":saved_model_module",
         "//tensorflow_hub:expect_tensorflow_installed",
         ":estimator",
+        ":feature_column",
         ":feature_column_v2",
         ":config",
         # Internal dependency.,
@@ -119,6 +119,7 @@ py_test(
         "//tensorflow_hub:expect_numpy_installed",
         "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
+        ":expect_tensorflow_hub_includes_feature_column_apis",
     ],
 )
 
@@ -470,6 +471,12 @@ py_library(
 # This is for internal bookkeeping only and will always be true.
 py_library(
     name = "expect_tensorflow_hub_includes_feature_column_v2_apis",
+)
+
+# We expect TensorFlow Hub to support feature_column related APIs.
+# This is for internal bookkeeping only and will always be true.
+py_library(
+    name = "expect_tensorflow_hub_includes_feature_column_apis",
 )
 
 # We expect TensorFlow Estimator to already be installed on the system.
