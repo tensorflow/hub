@@ -55,7 +55,6 @@ py_library(
         ":feature_column_v2",
         ":config",
         # Internal dependency.,
-        "//tensorflow_hub/tools:empty_package",
     ],
 )
 
