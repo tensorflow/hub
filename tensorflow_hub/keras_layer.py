@@ -120,6 +120,9 @@ class KerasLayer(tf.keras.layers.Layer):
     load_options: Optional, `tf.saved_model.LoadOptions` object that specifies
       options for loading when a Python string is provided as `handle`. This
       argument can only be used from TensorFlow 2.3 onwards.
+    force_keras_loading: Whether model should be wrapped around
+      tf.keras.models.Model which is equivalent as being loaded as
+      tf.keras.models.load_model.
     **kwargs: Forwarded to Keras' base Layer constructor.
   """
 
@@ -135,6 +138,7 @@ class KerasLayer(tf.keras.layers.Layer):
       output_key=None,
       output_shape=None,
       load_options=None,
+      force_keras_loading=False,
       **kwargs):
     # Note: for compatibility with keras-model serialization this layer is
     # json-serializable. If you add or change arguments here, please also update
@@ -154,7 +158,12 @@ class KerasLayer(tf.keras.layers.Layer):
           _convert_nest_to_shapes(output_shape))
 
     self._load_options = load_options
-    self._func = load_module(handle, tags, self._load_options)
+    self._func = load_module(
+        handle,
+        tags,
+        self._load_options,
+        force_keras_loading=force_keras_loading,
+    )
     self._is_hub_module_v1 = getattr(self._func, "_is_hub_module_v1", False)
 
     # Update with the defaults when using legacy TF1 Hub format.
@@ -428,7 +437,8 @@ def _convert_nest_from_shapes(x):
   return tf.nest.map_structure(_shape_as_tuple, x)
 
 
-def load_module(handle, tags=None, load_options=None):
+def load_module(
+    handle, tags=None, load_options=None, force_keras_loading=False):
   if callable(handle):
     if tags is not None:
       raise ValueError("Passing a callable handle is mutually exclusive "
@@ -456,7 +466,11 @@ def load_module(handle, tags=None, load_options=None):
           set_load_options = load_options or load_context.get_load_options()
         except ImportError:  # Expected before TF2.4.
           set_load_options = load_options
-    return module_v2.load(handle, tags=tags, options=set_load_options)
+    return module_v2.load(
+        handle, tags=tags,
+        options=set_load_options,
+        force_keras_loading=force_keras_loading,
+    )
 
 
 def func_has_training_argument(func):

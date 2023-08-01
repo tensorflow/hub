@@ -142,6 +142,21 @@ class ModuleV2Test(tf.test.TestCase, parameterized.TestCase):
     with self.assertRaisesRegex(ValueError, 'Expected a string, got.*'):
       module_v2.load(0)
 
+  def test_load_force_keras_loading_loads_keras_model_instance(self):
+    export_dir = os.path.join(self.get_temp_dir(), 'keras_model')
+    _save_plus_one_saved_model_v2(export_dir)
+
+    loaded_model = module_v2.load(export_dir, force_keras_loading=True)
+
+    self.assertIsInstance(loaded_model, tf.keras.Model)
+
+  def test_load_force_keras_loading_raises_exception_on_tf1(self):
+    export_dir = os.path.join(self.get_temp_dir(), 'keras_model')
+    exception_mesage = '`force_keras_loading` is not supported for v1 modules.'
+    _save_plus_one_hub_module_v1(export_dir)
+
+    with self.assertRaisesRegex(ValueError, exception_mesage):
+      module_v2.load(export_dir, force_keras_loading=True)
 
 if __name__ == '__main__':
   # In TF 1.15.x, we need to enable V2-like behavior, notably eager execution.
