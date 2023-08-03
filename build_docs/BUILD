@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 # Copyright 2019 The TensorFlow Hub Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

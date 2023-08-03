@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
 package(default_applicable_licenses = ["//tensorflow_hub:license"])
 
 # Copyright 2019 The TensorFlow Hub Authors. All Rights Reserved.
