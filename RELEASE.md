@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================-->
 # Current version 0.15.0-dev
   * Under development
+  * Require Python 3.9+.
 
 # Current version 0.14.0
   * Remove make_image_classifier and make_nearest_neighbour_index.
