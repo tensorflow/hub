@@ -55,7 +55,7 @@ function main() {
 
   cp "tensorflow_hub/pip_package/setup.py" "${TMPDIR}"
   cp "tensorflow_hub/pip_package/setup.cfg" "${TMPDIR}"
-  cp "LICENSE" "${TMPDIR}/LICENSE.txt"
+  cp "tensorflow_hub/LICENSE" "${TMPDIR}/LICENSE.txt"
   cp -R "${RUNFILES}/tensorflow_hub" "${TMPDIR}"
 
   pushd ${TMPDIR}
