@@ -12,9 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
-# Current version 0.15.0-dev
+# Current version 0.16.0-dev
   * Under development
+
+# Current version 0.15.0
   * Require Python 3.9+.
+  * Bump rules_license to 0.0.4.
+  * Move `LICENSE` to `tensorflow_hub/LICENSE`.
+  * Use `license_files` instead of `license_file` in `setup.cfg`.
+  * Remove empty `tools` directory.
 
 # Current version 0.14.0
   * Remove make_image_classifier and make_nearest_neighbour_index.
