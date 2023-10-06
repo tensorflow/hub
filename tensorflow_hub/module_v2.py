@@ -48,7 +48,7 @@ def resolve(handle):
   return registry.resolver(handle)
 
 
-def load(handle, tags=None, options=None, force_keras_loading=False):
+def load(handle, tags=None, options=None):
   """Resolves a handle and loads the resulting module.
 
   This is the preferred API to load a Hub module in low-level TensorFlow 2.
@@ -80,9 +80,6 @@ def load(handle, tags=None, options=None, force_keras_loading=False):
     options: Optional, `tf.saved_model.LoadOptions` object that specifies
       options for loading. This argument can only be used from TensorFlow 2.3
       onwards.
-    force_keras_loading: Whether model should be wrapped around
-      tf.keras.models.Model which is equivalent as being loaded as
-      tf.keras.models.load_model.
 
   Returns:
     A trackable object (see tf.saved_model.load() documentation for details).
@@ -98,9 +95,6 @@ def load(handle, tags=None, options=None, force_keras_loading=False):
       native_module.get_module_proto_path(module_path))
   if tags is None and is_hub_module_v1:
     tags = []
-
-  if force_keras_loading and is_hub_module_v1:
-    raise ValueError("`force_keras_loading` is not supported for v1 modules.")
 
   saved_model_path = os.path.join(
       tf.compat.as_bytes(module_path),
@@ -124,8 +118,5 @@ def load(handle, tags=None, options=None, force_keras_loading=False):
         module_path, tags=tags, options=options)
   else:
     obj = tf.compat.v1.saved_model.load_v2(module_path, tags=tags)
-
-  if force_keras_loading:
-    obj = tf.keras.models.Model(obj)
   obj._is_hub_module_v1 = is_hub_module_v1  # pylint: disable=protected-access
   return obj
