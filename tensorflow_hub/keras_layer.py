@@ -22,7 +22,15 @@ import tensorflow as tf
 
 from tensorflow_hub import module_v2
 
-# pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
+# pylint: disable=g-import-not-at-top
+# Use Keras 2.
+version_fn = getattr(tf.keras, "version", None)
+if version_fn and version_fn().startswith("3."):
+  import tf_keras as keras
+else:
+  keras = tf.keras
+
+# pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import smart_cond
 from tensorflow.python.util import tf_inspect
 
@@ -33,7 +41,7 @@ except ImportError:
 # pylint: enable=g-direct-tensorflow-import,g-import-not-at-top
 
 
-class KerasLayer(tf.keras.layers.Layer):
+class KerasLayer(keras.layers.Layer):
   """Wraps a SavedModel (or a legacy TF1 Hub format) as a Keras Layer.
 
   This layer wraps a callable object for use as a Keras layer. The callable
@@ -51,7 +59,7 @@ class KerasLayer(tf.keras.layers.Layer):
   or a nest of tensors containing the inputs to the layer. If the callable
   accepts a `training` argument, a Python boolean is passed for it. It is True
   if this layer is marked trainable *and* called for training, analogous to
-  tf.keras.layers.BatchNormalization. (By contrast, tf.keras.layers.Dropout
+  keras.layers.BatchNormalization. (By contrast, keras.layers.Dropout
   ignores the trainable state and applies the training argument verbatim.)
 
   If present, the following attributes of callable are understood to have
@@ -86,7 +94,7 @@ class KerasLayer(tf.keras.layers.Layer):
   `tf.estimator.RunConfig`. (This option was experimental from TF1.14 to TF2.1.)
 
   Note: The data types used by a saved model have been fixed at saving time.
-  Using tf.keras.mixed_precision etc. has no effect on the saved model
+  Using keras.mixed_precision etc. has no effect on the saved model
   that gets loaded by a hub.KerasLayer.
 
   Attributes:
@@ -227,7 +235,7 @@ class KerasLayer(tf.keras.layers.Layer):
     f = functools.partial(self._callable, *args, **kwargs)
     # ...but we may also have to pass a Python boolean for `training`, which
     # is the logical "and" of this layer's trainability and what the surrounding
-    # model is doing (analogous to tf.keras.layers.BatchNormalization in TF2).
+    # model is doing (analogous to keras.layers.BatchNormalization in TF2).
     # For the latter, we have to look in two places: the `training` argument,
     # or else Keras' global `learning_phase`, which might actually be a tensor.
     if not self._has_training_argument:
@@ -235,7 +243,7 @@ class KerasLayer(tf.keras.layers.Layer):
     else:
       if self.trainable:
         if training is None:
-          training = tf.keras.backend.learning_phase()
+          training = keras.backend.learning_phase()
       else:
         # Behave like BatchNormalization. (Dropout is different, b/181839368.)
         training = False
@@ -383,7 +391,7 @@ class KerasLayer(tf.keras.layers.Layer):
     """Computes the output shape of the layer.
 
     This relies on the `output_shape` provided during initialization, if any,
-    else falls back to the default behavior from `tf.keras.layers.Layer`.
+    else falls back to the default behavior from `keras.layers.Layer`.
 
     Args:
       input_shape: Shape tuple (tuple of integers) or list of shape tuples (one

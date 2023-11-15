@@ -24,6 +24,16 @@ from tensorflow_hub import module_def_pb2
 from tensorflow_hub import native_module
 from tensorflow_hub import tf_utils
 
+# pylint: disable=g-import-not-at-top
+# Use Keras 2.
+version_fn = getattr(tf.keras, "version", None)
+if version_fn and version_fn().startswith("3."):
+  import tf_keras  # pylint: disable=unused-import
+  from tf_keras.api._v1 import keras as tf_keras_v1  # pylint: disable=unused-import
+else:
+  tf_keras = tf.keras  # Keras 2
+  tf_keras_v1 = tf.compat.v1.keras
+
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import function
 from tensorflow.python.framework import test_util
@@ -49,7 +59,9 @@ def multi_signature_module():
 
 def batch_norm_module(training):
   x = tf.compat.v1.placeholder(tf.float32, shape=[None, 3])
-  y = tf.compat.v1.layers.batch_normalization(x, training=training)
+  y = tf_keras_v1.__internal__.legacy.layers.batch_normalization(
+      x, training=training
+  )
   native_module.add_signature(inputs=x, outputs=y)
 
 
@@ -1051,11 +1063,9 @@ def layers_module_fn():
     with tf.control_dependencies([weights]):
       return 2.0 * tf.compat.v1.nn.l2_loss(weights)
 
-  h = tf.compat.v1.layers.dense(
-      x, 2,
-      activation=None,
-      kernel_regularizer=l2,
-      bias_regularizer=l2)
+  h = tf_keras_v1.__internal__.legacy.layers.dense(
+      x, 2, activation=None, kernel_regularizer=l2, bias_regularizer=l2
+  )
   hub.add_signature(inputs=x, outputs=h)
 
 
@@ -1317,11 +1327,9 @@ class TFHubUpdateOpsTest(tf.test.TestCase):
 def batch_norm_module_fn(is_training):
   """Module that exercises batch normalization, incl. UPDATE_OPS."""
   x = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, 1], name="x")
-  y = tf.compat.v1.layers.batch_normalization(
-      momentum=0.4,
-      inputs=x,
-      fused=False,
-      training=is_training)
+  y = tf_keras_v1.__internal__.legacy.layers.batch_normalization(
+      momentum=0.4, inputs=x, fused=False, training=is_training
+  )
   hub.add_signature(inputs=x, outputs=y)
 
 
@@ -1883,7 +1891,7 @@ class TFHubOpsTest(tf.test.TestCase):
 class TFHubExportSpecTest(tf.test.TestCase):
 
   def f(self, x, dim=10):
-    return tf.compat.v1.layers.dense(x, dim)
+    return tf_keras_v1.__internal__.legacy.layers.dense(x, dim)
 
   def module_fn(self, dim=10):
     x = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, dim])
@@ -1900,7 +1908,7 @@ class TFHubExportSpecTest(tf.test.TestCase):
           y = self.f(x)
       else:
         y = self.f(x)
-      tf.compat.v1.layers.dense(y, 20)
+      tf_keras_v1.__internal__.legacy.layers.dense(y, 20)
 
       saver = tf.compat.v1.train.Saver()
       init_op = tf.compat.v1.initializers.global_variables()

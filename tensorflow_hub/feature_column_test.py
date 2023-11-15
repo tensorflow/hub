@@ -20,6 +20,14 @@ import unittest
 import tensorflow as tf
 import tensorflow_hub as hub
 
+# pylint: disable=g-import-not-at-top
+# Use Keras 2.
+version_fn = getattr(tf.keras, "version", None)
+if version_fn and version_fn().startswith("3."):
+  import tf_keras as keras
+else:
+  keras = tf.keras
+
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.feature_column import feature_column_v2
 from tensorflow.python.ops.lookup_ops import HashTable
@@ -130,7 +138,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     with tf.Graph().as_default():
       # We want to test with dense_features_v2.DenseFeatures. This symbol was
       # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
-      feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
+      feature_layer = keras.layers.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf.compat.v1.train.MonitoredSession() as sess:
         output = sess.run(feature_layer_out)
@@ -150,7 +158,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     with tf.Graph().as_default():
       # We want to test with dense_features_v2.DenseFeatures. This symbol was
       # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
-      feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
+      feature_layer = keras.layers.DenseFeatures(feature_columns)
       feature_layer_out_1 = feature_layer(features)
       feature_layer_out_2 = feature_layer(features)
 
@@ -311,7 +319,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     with tf.Graph().as_default():
       # We want to test with dense_features_v2.DenseFeatures. This symbol was
       # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
-      feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
+      feature_layer = keras.layers.DenseFeatures(feature_columns)
       feature_layer_out = feature_layer(features)
       with tf.compat.v1.train.MonitoredSession() as sess:
         output = sess.run(feature_layer_out)
@@ -333,7 +341,7 @@ class ImageEmbeddingColumnTest(tf.test.TestCase):
     with tf.Graph().as_default():
       # We want to test with dense_features_v2.DenseFeatures. This symbol was
       # added in https://github.com/tensorflow/tensorflow/commit/64586f18724f737393071125a91b19adf013cf8a.
-      feature_layer = tf.compat.v2.keras.layers.DenseFeatures(feature_columns)
+      feature_layer = keras.layers.DenseFeatures(feature_columns)
       feature_layer_out_1 = feature_layer(features)
       feature_layer_out_2 = feature_layer(features)
 

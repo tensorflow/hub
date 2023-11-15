@@ -20,6 +20,13 @@ import numpy as np
 import tensorflow.compat.v2 as tf
 import tensorflow_hub as hub
 
+# pylint: disable=g-import-not-at-top
+# Use Keras 2.
+version_fn = getattr(tf.keras, "version", None)
+if version_fn and version_fn().startswith("3."):
+  import tf_keras as keras
+else:
+  keras = tf.keras
 
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.feature_column import feature_column_v2
@@ -100,7 +107,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         hub.text_embedding_column_v2("text_a", self.model, trainable=False),
         hub.text_embedding_column_v2("text_b", self.model, trainable=False),
     ]
-    feature_layer = tf.keras.layers.DenseFeatures(feature_columns)
+    feature_layer = keras.layers.DenseFeatures(feature_columns)
     feature_layer_out = feature_layer(features)
     self.assertAllEqual(feature_layer_out,
                         [[1, 2, 3, 4, 1, 2, 3, 4], [5, 5, 5, 5, 0, 0, 0, 0]])
@@ -114,12 +121,13 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         hub.text_embedding_column_v2("text", self.model, trainable=True),
     ]
     input_features = dict(
-        text=tf.keras.layers.Input(name="text", shape=[None], dtype=tf.string))
-    dense_features = tf.keras.layers.DenseFeatures(feature_columns)
+        text=keras.layers.Input(name="text", shape=[None], dtype=tf.string)
+    )
+    dense_features = keras.layers.DenseFeatures(feature_columns)
     x = dense_features(input_features)
-    x = tf.keras.layers.Dense(16, activation="relu")(x)
-    logits = tf.keras.layers.Dense(1, activation="linear")(x)
-    model = tf.keras.Model(inputs=input_features, outputs=logits)
+    x = keras.layers.Dense(16, activation="relu")(x)
+    logits = keras.layers.Dense(1, activation="linear")(x)
+    model = keras.Model(inputs=input_features, outputs=logits)
     model.compile(
         optimizer="rmsprop", loss="binary_crossentropy", metrics=["accuracy"])
     model.fit(x=features, y=label, epochs=10)
@@ -135,13 +143,13 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     ]
     # Build the first model.
     input_features = dict(
-        text_1=tf.keras.layers.Input(
-            name="text_1", shape=[None], dtype=tf.string))
-    dense_features = tf.keras.layers.DenseFeatures(feature_columns)
+        text_1=keras.layers.Input(name="text_1", shape=[None], dtype=tf.string)
+    )
+    dense_features = keras.layers.DenseFeatures(feature_columns)
     x = dense_features(input_features)
-    x = tf.keras.layers.Dense(16, activation="relu")(x)
-    logits = tf.keras.layers.Dense(1, activation="linear")(x)
-    model_1 = tf.keras.Model(inputs=input_features, outputs=logits)
+    x = keras.layers.Dense(16, activation="relu")(x)
+    logits = keras.layers.Dense(1, activation="linear")(x)
+    model_1 = keras.Model(inputs=input_features, outputs=logits)
     model_1.compile(
         optimizer="rmsprop", loss="binary_crossentropy", metrics=["accuracy"])
     model_1.fit(x=features, y=label, epochs=10)
@@ -155,13 +163,13 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
         hub.text_embedding_column_v2("text_2", self.model, trainable=True),
     ]
     input_features = dict(
-        text_2=tf.keras.layers.Input(
-            name="text_2", shape=[None], dtype=tf.string))
-    dense_features = tf.keras.layers.DenseFeatures(feature_columns)
+        text_2=keras.layers.Input(name="text_2", shape=[None], dtype=tf.string)
+    )
+    dense_features = keras.layers.DenseFeatures(feature_columns)
     x = dense_features(input_features)
-    x = tf.keras.layers.Dense(16, activation="relu")(x)
-    logits = tf.keras.layers.Dense(1, activation="linear")(x)
-    model_2 = tf.keras.Model(inputs=input_features, outputs=logits)
+    x = keras.layers.Dense(16, activation="relu")(x)
+    logits = keras.layers.Dense(1, activation="linear")(x)
+    model_2 = keras.Model(inputs=input_features, outputs=logits)
     model_2.compile(
         optimizer="rmsprop", loss="binary_crossentropy", metrics=["accuracy"])
 
