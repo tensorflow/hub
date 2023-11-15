@@ -17,7 +17,6 @@
 import logging
 import os
 import numpy as np
-from tensorflow import estimator as tf_estimator
 import tensorflow.compat.v2 as tf
 import tensorflow_hub as hub
 
@@ -171,59 +170,6 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
     with self.assertRaisesRegexp(AssertionError,
                                  ".*not bound to checkpointed values.*"):
       model_2.load_weights(checkpoint_path).assert_consumed()
-
-  def testWorksWithTF2DnnClassifier(self):
-    self.skipTest("b/154115879 - needs more investigation for timeout.")
-    comment_embedding_column = hub.text_embedding_column_v2(
-        "comment", self.model, trainable=False)
-    upvotes = tf.feature_column.numeric_column("upvotes")
-
-    feature_columns = [comment_embedding_column, upvotes]
-    estimator = tf_estimator.DNNClassifier(
-        hidden_units=[10],
-        feature_columns=feature_columns,
-        model_dir=self.get_temp_dir())
-
-    # This only tests that estimator apis are working with the feature
-    # column without throwing exceptions.
-    def input_fn():
-      features = {
-          "comment": np.array([
-              ["the quick brown fox"],
-              ["spam spam spam"],
-          ]),
-          "upvotes": np.array([
-              [20],
-              [1],
-          ]),
-      }
-      labels = np.array([[1], [0]])
-      return features, labels
-    estimator.train(input_fn, max_steps=1)
-    estimator.evaluate(input_fn, steps=1)
-    estimator.predict(input_fn)
-
-  def testWorksWithDNNEstimatorAndDataset(self):
-    self.skipTest("b/154115879 - needs more investigation for timeout.")
-    description_embeddings = hub.text_embedding_column_v2(
-        "descriptions", self.model_returning_dicts, output_key="outputs")
-
-    def input_fn():
-      features = dict(descriptions=tf.constant([["sentence"]]))
-      labels = tf.constant([[1]])
-      dataset = tf.data.Dataset.from_tensor_slices((features, labels))
-
-      data_batches = dataset.repeat().take(30).batch(5)
-      return data_batches
-
-    estimator = tf_estimator.DNNEstimator(
-        model_dir=os.path.join(self.get_temp_dir(), "estimator_export"),
-        hidden_units=[10],
-        head=tf_estimator.BinaryClassHead(),
-        feature_columns=[description_embeddings])
-
-    estimator.train(input_fn=input_fn, max_steps=1)
-
 
 if __name__ == "__main__":
   # This test is only supported in TF2 mode and only in TensorFlow version that

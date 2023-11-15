@@ -44,14 +44,13 @@ py_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        # Dependencies of the tensorflow_hub library.
         ":image_util",
         ":keras_layer",
         ":module",
         ":module_v2",
         ":native_module",
         ":saved_model_module",
-        "//tensorflow_hub:expect_tensorflow_installed",
-        ":estimator",
         ":feature_column",
         ":feature_column_v2",
         ":config",
@@ -69,31 +68,6 @@ py_library(
         ":registry",
         ":resolver",
         ":uncompressed_module_resolver",
-    ],
-)
-
-py_library(
-    name = "estimator",
-    srcs = ["estimator.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":tf_utils",
-        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_test(
-    name = "estimator_test",
-    srcs = ["estimator_test.py"],
-    python_version = "PY3",
-    srcs_version = "PY3",
-    tags = ["notsan"],  # b/111624588
-    deps = [
-        ":tensorflow_hub",
-        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
-        "//tensorflow_hub:expect_tensorflow_installed",
-        ":expect_tensorflow_hub_includes_estimator_apis",
     ],
 )
 
@@ -117,7 +91,6 @@ py_test(
         ":tensorflow_hub",
         ":test_utils",
         "//tensorflow_hub:expect_numpy_installed",
-        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
         ":expect_tensorflow_hub_includes_feature_column_apis",
     ],
@@ -143,7 +116,6 @@ py_test(
         ":tensorflow_hub",
         ":test_utils",
         "//tensorflow_hub:expect_numpy_installed",
-        "//tensorflow_hub:expect_tensorflow_estimator_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
         ":expect_tensorflow_hub_includes_feature_column_v2_apis",
     ],
@@ -439,8 +411,6 @@ py_test(
     deps = [
         ":tensorflow_hub",
         ":test_utils",
-        "//tensorflow_hub:expect_tensorflow_compat_v1_estimator_installed",
-        "//tensorflow_hub:expect_tensorflow_estimator_installed",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -461,12 +431,6 @@ py_library(
     name = "expect_tensorflow_installed",
 )
 
-# We expect TensorFlow Hub to support Estimator related APIs (module exporter).
-# This is for internal bookkeeping only and will always be true.
-py_library(
-    name = "expect_tensorflow_hub_includes_estimator_apis",
-)
-
 # We expect TensorFlow Hub to support feature_column_v2 related APIs.
 # This is for internal bookkeeping only and will always be true.
 py_library(
@@ -477,18 +441,6 @@ py_library(
 # This is for internal bookkeeping only and will always be true.
 py_library(
     name = "expect_tensorflow_hub_includes_feature_column_apis",
-)
-
-# We expect TensorFlow Estimator to already be installed on the system.
-# This is for internal bookkeeping only and will be true by virtue of having TensorFlow installed.
-py_library(
-    name = "expect_tensorflow_estimator_installed",
-)
-
-# We expect TensorFlow V1 Estimator to already be installed on the system.
-# This is for internal bookkeeping only and will be true by virtue of having TensorFlow installed.
-py_library(
-    name = "expect_tensorflow_compat_v1_estimator_installed",
 )
 
 # We expect numpy to already be installed on the system, e.g. via
@@ -565,6 +517,8 @@ py_library(
     srcs_version = "PY3",
     deps = [":resolver"],
 )
+
+# End of BUILD rules.
 
 exports_files([
     "copy.bara.sky",

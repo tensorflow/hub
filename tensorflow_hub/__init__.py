@@ -87,8 +87,7 @@ _ensure_tf_install()
 
 # pylint: disable=g-import-not-at-top
 # pylint: disable=g-bad-import-order
-from tensorflow_hub.estimator import LatestModuleExporter
-from tensorflow_hub.estimator import register_module_for_export
+# Symbols exposed via tensorflow_hub.
 from tensorflow_hub.feature_column_v2 import text_embedding_column_v2
 from tensorflow_hub.feature_column import image_embedding_column
 from tensorflow_hub.feature_column import sparse_text_embedding_column

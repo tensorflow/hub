@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================-->
 # Current version 0.16.0-dev
   * Under development
+  * Removed deprecated LatestModuleExporter and register_module_for_export API
 
 # Current version 0.15.0
   * Require Python 3.9+.
