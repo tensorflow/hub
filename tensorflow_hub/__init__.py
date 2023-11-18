@@ -85,6 +85,32 @@ def _ensure_tf_install():
 _ensure_tf_install()
 
 
+def _ensure_keras_2_importable():
+  """Check that Keras 2 can be used by attempting to import tf_keras.
+
+  Raises:
+    ImportError: if using tf.keras would mean using Keras 3 and tf_keras is not
+      installed.
+  """
+  import tensorflow as tf
+
+  version_fn = getattr(tf.keras, "version", None)
+  if version_fn and version_fn().startswith("3."):
+    try:
+      import tf_keras as keras
+    except ImportError:
+      # Print more informative error message, then reraise.
+      print(
+          "\n\nFailed to import tf_keras. Please note that tf_keras is not"
+          " installed by default when you install tensorflow_hub. This is so"
+          " that users can decide which tf_keras package to use. To use"
+          " tensorflow_hub, please install a current version of tf_keras.\n\n"
+      )
+      raise
+
+_ensure_keras_2_importable()
+
+
 # pylint: disable=g-import-not-at-top
 # pylint: disable=g-bad-import-order
 # Symbols exposed via tensorflow_hub.
