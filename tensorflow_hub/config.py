@@ -14,8 +14,8 @@
 # ==============================================================================
 """Configuration to bind implementations on the API."""
 
+# Begin imports for config.py.
 from tensorflow_hub import compressed_module_resolver
-from tensorflow_hub import native_module
 from tensorflow_hub import registry
 from tensorflow_hub import resolver
 from tensorflow_hub import uncompressed_module_resolver
@@ -34,7 +34,7 @@ def _install_default_resolvers():
 def _run():
   _install_default_resolvers()
 
-  registry.loader.add_implementation(native_module.Loader())
+  # End add resolvers.
 
 
 def _get_extra_deps():

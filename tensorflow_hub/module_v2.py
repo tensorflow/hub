@@ -17,8 +17,15 @@
 import os
 import tensorflow as tf
 
-from tensorflow_hub import native_module
 from tensorflow_hub import registry
+
+_MODULE_PROTO_FILENAME_PB = "tfhub_module.pb"
+
+
+def _get_module_proto_path(module_dir):
+  return os.path.join(
+      tf.compat.as_bytes(module_dir),
+      tf.compat.as_bytes(_MODULE_PROTO_FILENAME_PB))
 
 
 def resolve(handle):
@@ -91,8 +98,7 @@ def load(handle, tags=None, options=None):
   if not isinstance(handle, str):
     raise ValueError("Expected a string, got %s" % handle)
   module_path = resolve(handle)
-  is_hub_module_v1 = tf.io.gfile.exists(
-      native_module.get_module_proto_path(module_path))
+  is_hub_module_v1 = tf.io.gfile.exists(_get_module_proto_path(module_path))
   if tags is None and is_hub_module_v1:
     tags = []
 

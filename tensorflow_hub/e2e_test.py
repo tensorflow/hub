@@ -16,18 +16,12 @@
 
 import os
 import tarfile
-import tempfile
 
 from absl import logging
 import tensorflow as tf
 import tensorflow_hub as hub
 
 from tensorflow_hub import test_utils
-from tensorflow_hub import tf_utils
-
-# pylint: disable=g-direct-tensorflow-import
-from tensorflow.python.ops.lookup_ops import index_to_string_table_from_file
-# pylint: enable=g-direct-tensorflow-import
 
 
 class End2EndTest(tf.test.TestCase):
@@ -64,86 +58,36 @@ class End2EndTest(tf.test.TestCase):
     self._create_tgz(module_export_path)
 
   def test_http_locations(self):
-    with tf.Graph().as_default():
-      self._generate_module()
+    self._generate_module()
 
-      m = hub.Module("http://localhost:%d/test_module.tgz" % self.server_port)
-      out = m(11)
-      with tf.compat.v1.Session() as sess:
-        self.assertAllClose(sess.run(out), 121)
+    m = hub.load("http://localhost:%d/test_module.tgz" % self.server_port)
+    self.assertAllClose(m(11), 121)
 
-      # Test caching using custom filesystem (file://) to make sure that the
-      # TF Hub library can operate on such paths.
-      try:
-        root_dir = "file://%s" % self.get_temp_dir()
-        cache_dir = "%s_%s" % (root_dir, "cache")
-        tf.compat.v1.gfile.MakeDirs(cache_dir)
-        os.environ["TFHUB_CACHE_DIR"] = cache_dir
-        m = hub.Module("http://localhost:%d/test_module.tgz" % self.server_port)
-        out = m(11)
-        with tf.compat.v1.train.MonitoredSession() as sess:
-          self.assertAllClose(sess.run(out), 121)
+    # Test caching using custom filesystem (file://) to make sure that the
+    # TF Hub library can operate on such paths.
+    try:
+      root_dir = "file://%s" % self.get_temp_dir()
+      cache_dir = "%s_%s" % (root_dir, "cache")
+      tf.compat.v1.gfile.MakeDirs(cache_dir)
+      os.environ["TFHUB_CACHE_DIR"] = cache_dir
+      m = hub.load("http://localhost:%d/test_module.tgz" % self.server_port)
+      self.assertAllClose(m(11), 121)
 
-        cache_content = sorted(tf.compat.v1.gfile.ListDirectory(cache_dir))
-        logging.info("Cache context: %s", str(cache_content))
-        self.assertEqual(2, len(cache_content))
-        self.assertTrue(cache_content[1].endswith(".descriptor.txt"))
-        module_files = sorted(tf.compat.v1.gfile.ListDirectory(
-            os.path.join(cache_dir, cache_content[0])))
-        self.assertListEqual(
-            ["assets", "saved_model.pb", "tfhub_module.pb", "variables"],
-            module_files)
-      finally:
-        os.unsetenv("TFHUB_CACHE_DIR")
-
-  def test_module_export_vocab_on_custom_fs(self):
-    root_dir = "file://%s" % self.get_temp_dir()
-    export_dir = "%s_%s" % (root_dir, "export")
-    tf.compat.v1.gfile.MakeDirs(export_dir)
-    # Create a module with a vocab file located on a custom filesystem.
-    vocab_dir = os.path.join(root_dir, "vocab_location")
-    tf.compat.v1.gfile.MakeDirs(vocab_dir)
-    vocab_filename = os.path.join(vocab_dir, "tokens.txt")
-    tf_utils.atomic_write_string_to_file(vocab_filename, "one", False)
-
-    def create_assets_module_fn():
-
-      def assets_module_fn():
-        indices = tf.compat.v1.placeholder(dtype=tf.int64, name="indices")
-        table = index_to_string_table_from_file(
-            vocabulary_file=vocab_filename, default_value="UNKNOWN")
-        outputs = table.lookup(indices)
-        hub.add_signature(inputs=indices, outputs=outputs)
-
-      return assets_module_fn
-
-    with tf.Graph().as_default():
-      assets_module_fn = create_assets_module_fn()
-      spec = hub.create_module_spec(assets_module_fn)
-      embedding_module = hub.Module(spec)
-      with tf.compat.v1.Session() as sess:
-        sess.run(tf.compat.v1.tables_initializer())
-        embedding_module.export(export_dir, sess)
-
-    module_files = tf.compat.v1.gfile.ListDirectory(export_dir)
-    self.assertListEqual(
-        ["assets", "saved_model.pb", "tfhub_module.pb", "variables"],
-        sorted(module_files))
-    module_files = tf.compat.v1.gfile.ListDirectory(os.path.join(export_dir,
-                                                                 "assets"))
-    self.assertListEqual(["tokens.txt"], module_files)
-
-  # def test_resolve(self):
-  #   with tf.Graph().as_default():
-  #     self._generate_module()
-
-  #     module_dir = hub.resolve(
-  #         "http://localhost:%d/test_module.tgz" % self.server_port)
-  #     self.assertIn(tempfile.gettempdir(), module_dir)
-  #     module_files = sorted(tf.compat.v1.gfile.ListDirectory(module_dir))
-  #     self.assertEqual(
-  #         ["assets", "saved_model.pb", "tfhub_module.pb", "variables"],
-  #         module_files)
+      cache_content = sorted(tf.compat.v1.gfile.ListDirectory(cache_dir))
+      logging.info("Cache context: %s", str(cache_content))
+      self.assertEqual(2, len(cache_content))
+      self.assertTrue(cache_content[1].endswith(".descriptor.txt"))
+      module_files = sorted(
+          tf.compat.v1.gfile.ListDirectory(
+              os.path.join(cache_dir, cache_content[0])
+          )
+      )
+      self.assertListEqual(
+          ["assets", "fingerprint.pb", "saved_model.pb", "variables"],
+          module_files,
+      )
+    finally:
+      os.unsetenv("TFHUB_CACHE_DIR")
 
   def test_load(self):
     if not hasattr(tf.compat.v1.saved_model, "load_v2"):

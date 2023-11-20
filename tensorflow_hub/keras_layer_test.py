@@ -91,32 +91,6 @@ def _save_half_plus_one_model(export_dir, save_from_keras=False):
   tf.saved_model.save(obj, export_dir)
 
 
-def _save_half_plus_one_hub_module_v1(path):
-  """Writes a model in TF1 Hub format to compute y = wx + 1, with w trainable."""
-
-  def half_plus_one():
-    x = tf.compat.v1.placeholder(shape=(None, 1), dtype=tf.float32)
-    # Use TF1 native tf_keras_v2.layers instead of tf_keras_v2.layers as they
-    # correctly update TF collections, such as REGULARIZATION_LOSS.
-    times_w = tf_keras_v2.layers.Dense(
-        units=1,
-        kernel_initializer=tf_keras_v2.initializers.Constant([[0.5]]),
-        kernel_regularizer=tf_keras_v2.regularizers.l2(0.01),
-        use_bias=False,
-    )
-    plus_1 = tf_keras_v2.layers.Dense(
-        units=1,
-        kernel_initializer=tf_keras_v2.initializers.Constant([[1.0]]),
-        bias_initializer=tf_keras_v2.initializers.Constant([1.0]),
-        trainable=False,
-    )
-    y = plus_1(times_w(x))
-    hub.add_signature(inputs=x, outputs=y)
-
-  spec = hub.create_module_spec(half_plus_one)
-  _export_module_spec_with_init_weights(spec, path)
-
-
 def _save_2d_text_embedding(export_dir, save_from_keras=False):
   """Writes SavedModel to compute y = length(text)*w, with w trainable."""
 
@@ -352,35 +326,12 @@ def _save_plus_one_saved_model_v2_keras_default_callable(path):
   tf.saved_model.save(obj, path, signatures={"plus_one": obj.plus_one})
 
 
-def _save_plus_one_hub_module_v1(path):
-  """Writes a model in TF1 Hub format that increments the input by one."""
-
-  def plus_one():
-    x = tf.compat.v1.placeholder(dtype=tf.float32, name="x")
-    y = x + 1
-    hub.add_signature(inputs=x, outputs=y)
-
-  spec = hub.create_module_spec(plus_one)
-  _export_module_spec_with_init_weights(spec, path)
-
-
-def _export_module_spec_with_init_weights(spec, path):
-  """Initializes initial weights of a TF1.x HubModule and saves it."""
-  with tf.compat.v1.Graph().as_default():
-    module = hub.Module(spec, trainable=True)
-    with tf.compat.v1.Session() as session:
-      session.run(tf.compat.v1.global_variables_initializer())
-      module.export(path, session)
-
-
-def _dispatch_model_format(model_format, saved_model_fn, hub_module_fn, *args):
+def _dispatch_model_format(model_format, saved_model_fn, *args):
   """Dispatches the correct save function based on the model format."""
   if model_format == "TF2SavedModel_SavedRaw":
     saved_model_fn(*args, save_from_keras=False)
   elif model_format == "TF2SavedModel_SavedFromKeras":
     saved_model_fn(*args, save_from_keras=True)
-  elif model_format == "TF1HubModule":
-    hub_module_fn(*args)
   else:
     raise ValueError("Unrecognized format: " + format)
 
@@ -392,8 +343,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
                             ("TF2SavedModel_SavedFromKeras"))
   def testHalfPlusOneRetraining(self, model_format):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
-    _dispatch_model_format(model_format, _save_half_plus_one_model,
-                           _save_half_plus_one_hub_module_v1, export_dir)
+    _dispatch_model_format(model_format, _save_half_plus_one_model, export_dir)
     # Import the half-plus-one model into a consumer model.
     inp = tf_keras_v2.layers.Input(shape=(1,), dtype=tf.float32)
     imported = hub.KerasLayer(export_dir, trainable=True)
@@ -440,8 +390,7 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
                             ("TF2SavedModel_SavedFromKeras"))
   def testRegularizationLoss(self, model_format):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
-    _dispatch_model_format(model_format, _save_half_plus_one_model,
-                           _save_half_plus_one_hub_module_v1, export_dir)
+    _dispatch_model_format(model_format, _save_half_plus_one_model, export_dir)
     # Import the half-plus-one model into a consumer model.
     inp = tf_keras_v2.layers.Input(shape=(1,), dtype=tf.float32)
     imported = hub.KerasLayer(export_dir, trainable=False)
@@ -675,18 +624,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
     finally:
       tf_keras_v2.mixed_precision.set_global_policy("float32")
 
-  def testComputeOutputShapeNonEager(self):
-    export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
-    _save_half_plus_one_hub_module_v1(export_dir)
-
-    with tf.compat.v1.Graph().as_default():
-      # Output shape is required when computing output shape outside of eager
-      # mode.
-      layer = hub.KerasLayer(export_dir, output_shape=(1,))
-      self.assertEqual([None, 1],
-                       layer.compute_output_shape((None, 1)).as_list())
-      self.assertEqual([3, 1], layer.compute_output_shape((3, 1)).as_list())
-
   @parameterized.named_parameters(("SavedRaw", False), ("SavedFromKeras", True))
   def testGetConfigFromConfig(self, save_from_keras):
     export_dir = os.path.join(self.get_temp_dir(), "half-plus-one")
@@ -736,40 +673,16 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
 class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
   """Unit tests for KerasLayer."""
 
-  @parameterized.parameters(("TF1HubModule"), ("TF2SavedModel_SavedRaw"))
-  def test_load_with_defaults(self, model_format):
+  def test_load_with_defaults(self):
+    model_format = "TF2SavedModel_SavedRaw"
     export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
-    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
-                           _save_plus_one_hub_module_v1, export_dir)
+    _dispatch_model_format(
+        model_format, _save_plus_one_saved_model_v2, export_dir
+    )
     inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
     layer = hub.KerasLayer(export_dir)
     output = layer(inputs)
     self.assertEqual(output, expected_outputs)
-
-  @parameterized.parameters(
-      ("TF1HubModule", None, None, True),
-      ("TF1HubModule", None, None, False),
-      ("TF1HubModule", "default", None, True),
-      ("TF1HubModule", None, "default", False),
-      ("TF1HubModule", "default", "default", False),
-  )
-  def test_load_legacy_hub_module_v1_with_signature(self, model_format,
-                                                    signature, output_key,
-                                                    as_dict):
-    export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
-    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
-                           _save_plus_one_hub_module_v1, export_dir)
-    inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
-    layer = hub.KerasLayer(
-        export_dir,
-        signature=signature,
-        output_key=output_key,
-        signature_outputs_as_dict=as_dict)
-    output = layer(inputs)
-    if as_dict:
-      self.assertEqual(output, {"default": expected_outputs})
-    else:
-      self.assertEqual(output, expected_outputs)
 
   @parameterized.parameters(
       ("TF2SavedModel_SavedRaw", None, None, False),
@@ -780,8 +693,9 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
                                                        signature, output_key,
                                                        as_dict):
     export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
-    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
-                           _save_plus_one_hub_module_v1, export_dir)
+    _dispatch_model_format(
+        model_format, _save_plus_one_saved_model_v2, export_dir
+    )
     inputs, expected_outputs = 10., 11.  # Test modules perform increment op.
     layer = hub.KerasLayer(
         export_dir,
@@ -807,20 +721,16 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(output["output_0"], expected_outputs)
 
   @parameterized.parameters(
-      ("TF1HubModule", None, None, True),
-      ("TF1HubModule", None, None, False),
-      ("TF1HubModule", "default", None, True),
-      ("TF1HubModule", None, "default", False),
-      ("TF1HubModule", "default", "default", False),
-      ("TF2SavedModel_SavedRaw", None, None, False),
-      ("TF2SavedModel_SavedRaw", "serving_default", None, True),
-      ("TF2SavedModel_SavedRaw", "serving_default", "output_0", False),
+      (None, None, False),
+      ("serving_default", None, True),
+      ("serving_default", "output_0", False),
   )
-  def test_keras_layer_get_config(self, model_format, signature, output_key,
-                                  as_dict):
+  def test_keras_layer_get_config(self, signature, output_key, as_dict):
+    model_format = "TF2SavedModel_SavedRaw"
     export_dir = os.path.join(self.get_temp_dir(), "plus_one_" + model_format)
-    _dispatch_model_format(model_format, _save_plus_one_saved_model_v2,
-                           _save_plus_one_hub_module_v1, export_dir)
+    _dispatch_model_format(
+        model_format, _save_plus_one_saved_model_v2, export_dir
+    )
     inputs = 10.  # Test modules perform increment op.
     layer = hub.KerasLayer(
         export_dir,
@@ -873,21 +783,6 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
     layer = hub.KerasLayer(export_dir, output_key="output_0")
     with self.assertRaisesRegex(
         ValueError, "Specifying `output_key` is forbidden if output type *"):
-      layer(10.)
-
-  def test_keras_layer_fails_if_output_key_not_in_layer_outputs(self):
-    export_dir = os.path.join(self.get_temp_dir(), "hub_module_v1_mini")
-    _save_plus_one_hub_module_v1(export_dir)
-    layer = hub.KerasLayer(export_dir, output_key="unknown")
-    with self.assertRaisesRegex(
-        ValueError, "KerasLayer output does not contain the output key*"):
-      layer(10.)
-
-  def test_keras_layer_fails_if_hub_module_trainable(self):
-    export_dir = os.path.join(self.get_temp_dir(), "hub_module_v1_mini")
-    _save_plus_one_hub_module_v1(export_dir)
-    layer = hub.KerasLayer(export_dir, trainable=True)
-    with self.assertRaisesRegex(ValueError, "trainable.*=.*True.*unsupported"):
       layer(10.)
 
   def test_keras_layer_fails_if_signature_trainable(self):

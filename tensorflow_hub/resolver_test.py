@@ -408,7 +408,7 @@ class UncompressedResolverTest(tf.test.TestCase):
           "_request_gcs_location",
           return_value=module_export_path) as mocked_urlopen:
         with test_utils.UncompressedLoadFormatContext():
-          m = hub.Module("https://tfhub.dev/google/model/1")
+          m = hub.load("https://tfhub.dev/google/model/1")
         mocked_urlopen.assert_called_once_with(
             "https://tfhub.dev/google/model/1?tf-hub-format=uncompressed")
       out = m(11)
@@ -424,7 +424,7 @@ class LoadFormatResolverBehaviorTest(tf.test.TestCase):
     with mock.patch.object(
         http_resolver, "__call__", side_effect=ValueError) as mocked_call:
       try:
-        hub.Module(module_url)
+        hub.load(module_url)
         self.fail("Failure expected since mock raises it as side effect.")
       except ValueError:
         pass

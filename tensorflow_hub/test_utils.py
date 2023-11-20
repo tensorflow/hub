@@ -21,7 +21,6 @@ import threading
 
 from absl import flags
 import tensorflow as tf
-import tensorflow_hub as hub
 from tensorflow_hub import resolver
 
 
@@ -159,17 +158,16 @@ def get_test_data_path(file_or_dirname):
 def export_module(module_export_path):
   """Create and export a simple module to the specified path."""
 
-  def _stateless_module_fn():
+  class SquareModule(tf.Module):
     """Simple module that squares an input."""
-    x = tf.compat.v1.placeholder(tf.int64)
-    y = x * x
-    hub.add_signature(inputs=x, outputs=y)
 
-  spec = hub.create_module_spec(_stateless_module_fn)
-  m = hub.Module(spec, name="test_module")
-  with tf.compat.v1.Session() as sess:
-    sess.run(tf.compat.v1.global_variables_initializer())
-    m.export(module_export_path, sess)
+    @tf.function
+    def __call__(self, x):
+      return x * x
+
+  module = SquareModule()
+  module(tf.constant(0.0))
+  tf.saved_model.save(module, module_export_path)
 
 
 class EnvVariableContextManager(object):

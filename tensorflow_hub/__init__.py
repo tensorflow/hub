@@ -114,25 +114,9 @@ _ensure_keras_2_importable()
 # pylint: disable=g-import-not-at-top
 # pylint: disable=g-bad-import-order
 # Symbols exposed via tensorflow_hub.
-from tensorflow_hub.feature_column_v2 import text_embedding_column_v2
-from tensorflow_hub.feature_column import image_embedding_column
-from tensorflow_hub.feature_column import sparse_text_embedding_column
-from tensorflow_hub.feature_column import text_embedding_column
-from tensorflow_hub.image_util import attach_image_module_info
-from tensorflow_hub.image_util import get_expected_image_size
-from tensorflow_hub.image_util import get_num_image_channels
-from tensorflow_hub.image_util import ImageModuleInfo
 from tensorflow_hub.keras_layer import KerasLayer
-from tensorflow_hub.module import eval_function_for_module
-from tensorflow_hub.module import load_module_spec
-from tensorflow_hub.module import Module
-from tensorflow_hub.module_spec import ModuleSpec
 from tensorflow_hub.module_v2 import load
 from tensorflow_hub.module_v2 import resolve
-from tensorflow_hub.native_module import add_signature
-from tensorflow_hub.native_module import attach_message
-from tensorflow_hub.native_module import create_module_spec
-from tensorflow_hub.saved_model_module import create_module_spec_from_saved_model
 from tensorflow_hub.version import __version__
 
 from tensorflow_hub.config import _run, _get_extra_deps  # pylint: disable=g-multiple-import

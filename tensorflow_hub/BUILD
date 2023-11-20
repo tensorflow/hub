@@ -45,14 +45,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         # Dependencies of the tensorflow_hub library.
-        ":image_util",
-        ":keras_layer",
-        ":module",
         ":module_v2",
-        ":native_module",
-        ":saved_model_module",
-        ":feature_column",
-        ":feature_column_v2",
+        ":keras_layer",
         ":config",
         # Internal dependency.,
     ],
@@ -63,61 +57,11 @@ py_library(
     srcs = ["config.py"],
     srcs_version = "PY3",
     deps = [
+        # Deps of config.
         ":compressed_module_resolver",
-        ":native_module",
         ":registry",
         ":resolver",
         ":uncompressed_module_resolver",
-    ],
-)
-
-py_library(
-    name = "feature_column",
-    srcs = ["feature_column.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":module",
-        "//tensorflow_hub:expect_tensorflow_installed",
-        #  "tensorflow/python/feature_column",
-    ],
-)
-
-py_test(
-    name = "feature_column_test",
-    srcs = ["feature_column_test.py"],
-    python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":tensorflow_hub",
-        ":test_utils",
-        "//tensorflow_hub:expect_numpy_installed",
-        "//tensorflow_hub:expect_tensorflow_installed",
-        ":expect_tensorflow_hub_includes_feature_column_apis",
-    ],
-)
-
-py_library(
-    name = "feature_column_v2",
-    srcs = ["feature_column_v2.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":module",
-        "//tensorflow_hub:expect_tensorflow_installed",
-        #  "tensorflow/python/feature_column",
-    ],
-)
-
-py_test(
-    name = "feature_column_v2_test",
-    srcs = ["feature_column_v2_test.py"],
-    python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":tensorflow_hub",
-        ":test_utils",
-        "//tensorflow_hub:expect_numpy_installed",
-        "//tensorflow_hub:expect_tensorflow_installed",
-        ":expect_tensorflow_hub_includes_feature_column_v2_apis",
     ],
 )
 
@@ -147,108 +91,6 @@ py_test(
 )
 
 py_library(
-    name = "image_util",
-    srcs = ["image_util.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":all_protos_py_pb2",
-        ":native_module",
-    ],
-)
-
-py_test(
-    name = "image_util_test",
-    srcs = ["image_util_test.py"],
-    python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":image_util",
-        ":module",
-        ":native_module",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_library(
-    name = "module",
-    srcs = [
-        "module.py",
-        "module_impl.py",
-        "module_spec.py",
-    ],
-    srcs_version = "PY3",
-    deps = [
-        ":registry",
-        ":tensor_info",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_test(
-    name = "module_test",
-    srcs = ["module_test.py"],
-    python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":module",
-        ":tensor_info",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_library(
-    name = "saved_model_module",
-    srcs = ["saved_model_module.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":module",
-        ":native_module",
-        ":saved_model_lib",
-        ":tf_utils",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_test(
-    name = "saved_model_module_test",
-    srcs = ["saved_model_module_test.py"],
-    python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":tensorflow_hub",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_library(
-    name = "native_module",
-    srcs = ["native_module.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":all_protos_py_pb2",
-        ":meta_graph_lib",
-        ":module",
-        ":saved_model_lib",
-        ":tf_utils",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_test(
-    name = "native_module_test",
-    srcs = ["native_module_test.py"],
-    python_version = "PY3",
-    srcs_version = "PY3",
-    deps = [
-        ":all_protos_py_pb2",
-        ":native_module",
-        ":tensorflow_hub",
-        "//tensorflow_hub:expect_numpy_installed",
-        "//tensorflow_hub:expect_tensorflow_installed",
-    ],
-)
-
-py_library(
     name = "resolver",
     srcs = ["resolver.py"],
     srcs_version = "PY3",
@@ -266,10 +108,13 @@ py_test(
     python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":compressed_module_resolver",
+        ":registry",
         ":resolver",
         ":tensorflow_hub",
         ":test_utils",
         ":tf_utils",
+        ":uncompressed_module_resolver",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
@@ -420,7 +265,7 @@ tf_hub_proto_library(
     srcs = [
         "image_module_info.proto",
         "module_attachment.proto",
-        "module_def.proto",
+        # End proto files.
     ],
     visibility = ["//:__subpackages__"],
 )
@@ -429,18 +274,6 @@ tf_hub_proto_library(
 # `pip install tensorflow`
 py_library(
     name = "expect_tensorflow_installed",
-)
-
-# We expect TensorFlow Hub to support feature_column_v2 related APIs.
-# This is for internal bookkeeping only and will always be true.
-py_library(
-    name = "expect_tensorflow_hub_includes_feature_column_v2_apis",
-)
-
-# We expect TensorFlow Hub to support feature_column related APIs.
-# This is for internal bookkeeping only and will always be true.
-py_library(
-    name = "expect_tensorflow_hub_includes_feature_column_apis",
 )
 
 # We expect numpy to already be installed on the system, e.g. via
@@ -461,8 +294,7 @@ py_library(
     srcs = ["module_v2.py"],
     srcs_version = "PY3",
     deps = [
-        ":module",
-        ":native_module",
+        ":registry",
         "//tensorflow_hub:expect_tensorflow_installed",
     ],
 )
