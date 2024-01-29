@@ -12,8 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================-->
-# Current version 0.17.0-dev
-  * Under development
+# Current version 0.16.1
+  * Require `tf-keras` to be installed
 
 # Release 0.16.0
   * Enforce using Keras 2 by checking for installation of `tf_keras`
