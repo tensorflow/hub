@@ -99,14 +99,12 @@ def _ensure_keras_2_importable():
     try:
       import tf_keras as keras
     except ImportError:
-      # Print more informative error message, then reraise.
+      # Print more informative error message.
       print(
-          "\n\nFailed to import tf_keras. Please note that tf_keras is not"
-          " installed by default when you install tensorflow_hub. This is so"
-          " that users can decide which tf_keras package to use. To use"
-          " tensorflow_hub, please install a current version of tf_keras.\n\n"
+          "\n\nThis version of tensorflow_hub does not support Keras 3. It requires"
+          " tf_keras to be installed to use Keras 2. Without it, APIs like "
+          "`hub.KerasLayer` will not work.\n\n"
       )
-      raise
 
 _ensure_keras_2_importable()
 
