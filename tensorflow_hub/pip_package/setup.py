@@ -28,6 +28,7 @@ with open('tensorflow_hub/version.py') as in_file:
 REQUIRED_PACKAGES = [
     'numpy >= 1.12.0',
     'protobuf >= 3.19.6',  # No less than what ../WORKSPACE uses.
+    'tf-keras >= 2.14.1',
 ]
 
 project_name = 'tensorflow-hub'
