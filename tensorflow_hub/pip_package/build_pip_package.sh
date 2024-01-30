@@ -58,6 +58,15 @@ function main() {
   cp "tensorflow_hub/LICENSE" "${TMPDIR}/LICENSE.txt"
   cp -R "${RUNFILES}/tensorflow_hub" "${TMPDIR}"
 
+  # Remove this once the library supports Keras 3.
+  # Install tf-keras-nightly instead if tf-nightly is installed.
+  if [[ $TENSORFLOW_VERSION == *tf-nightly ]]
+  then
+    sed -i "s|tf-keras|tf-keras-nightly|g" "${TMPDIR}/setup.py"
+  else
+    echo "Did not replace dependency on tf-keras"
+  fi
+
   pushd ${TMPDIR}
   rm -f MANIFEST
 
