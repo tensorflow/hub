@@ -15,10 +15,12 @@
 """Setup for pip package."""
 
 from datetime import datetime
+import os
+import sys
+
 from setuptools import find_packages
 from setuptools import setup
 
-import sys
 
 # Can't import the module during setup.py.
 # Use execfile to find __version__.
@@ -28,7 +30,6 @@ with open('tensorflow_hub/version.py') as in_file:
 REQUIRED_PACKAGES = [
     'numpy >= 1.12.0',
     'protobuf >= 3.19.6',  # No less than what ../WORKSPACE uses.
-    'tf-keras >= 2.14.1',
 ]
 
 project_name = 'tensorflow-hub'
@@ -41,8 +42,18 @@ if '--project_name' in sys.argv:
 # If we're dealing with a nightly build we need to make sure that the
 # version changes for every release.
 version = __version__
+is_nightly = False
 if project_name == 'tf-hub-nightly':
+  is_nightly = True
   version += datetime.now().strftime('%Y%m%d%H%M')
+
+if os.environ.get('TENSORFLOW_VERSION', '').endswith('tf-nightly'):
+  is_nightly = True
+
+if is_nightly:
+  REQUIRED_PACKAGES += ['tf-keras-nightly']
+else:
+  REQUIRED_PACKAGES += ['tf-keras >= 2.14.1']
 
 setup(
     name=project_name,  # Automatic: tensorflow_hub, etc. Case insensitive.
