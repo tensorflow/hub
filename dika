@@ -1,0 +1,8 @@
+git clone https://github.com/UrayDika/hub.git
+cd hub
+mkdir -p tfhub_dev/assets/publisher/model
+cp my_markdown_file.md hub/tfhub_dev/assets/publisher/model/1.md
+git add *
+git commit -m "Added model file."
+git push origin master
+- Github GUI
