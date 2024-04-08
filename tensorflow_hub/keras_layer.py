@@ -338,7 +338,6 @@ class KerasLayer(keras.layers.Layer):
     if not isinstance(self._handle, str):
       # Need to raise this type in order for tf.saved_model.save() to fall back
       # to not using config, instead of crashing.
-      # TODO(b/134528831): Reconsider the usability implications.
       raise NotImplementedError(
           "Can only generate a valid config for `hub.KerasLayer(handle, ...)`"
           "that uses a string `handle`.\n\n"

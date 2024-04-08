@@ -602,9 +602,6 @@ class KerasTest(tf.test.TestCase, parameterized.TestCase):
                     "only available in TF 2.4 or above")
     export_dir1 = os.path.join(self.get_temp_dir(), "mixed-precision")
     export_dir2 = os.path.join(self.get_temp_dir(), "mixed-precision2")
-    # TODO(b/193472950): Currently, KerasLayer only works with mixed precision
-    # when the model takes non-floating point inputs, which is why an embedding
-    # model is used in this test.
     _save_2d_text_embedding(export_dir1, save_from_keras=save_from_keras)
     try:
       tf_keras_v2.mixed_precision.set_global_policy("mixed_float16")

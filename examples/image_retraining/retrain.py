@@ -900,7 +900,7 @@ def build_eval_session(module_spec, class_count):
 
 
 def save_graph_to_file(graph_file_name, module_spec, class_count):
-  """Saves an graph to file, creating a valid quantized one if necessary."""
+  """Saves a graph to file, creating a valid quantized one if necessary."""
   sess, _, _, _, _, _ = build_eval_session(module_spec, class_count)
   graph = sess.graph
 
@@ -1109,9 +1109,6 @@ def main(_):
                      datetime.now(), i, train_accuracy * 100)
         logging.info('%s: Step %d: Cross entropy = %f',
                      datetime.now(), i, cross_entropy_value)
-        # TODO: Make this use an eval graph, to avoid quantization
-        # moving averages being updated by the validation set, though in
-        # practice this makes a negligable difference.
         validation_bottlenecks, validation_ground_truth, _ = (
             get_random_cached_bottlenecks(
                 sess, image_lists, FLAGS.validation_batch_size, 'validation',

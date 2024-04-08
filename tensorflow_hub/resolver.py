@@ -401,9 +401,6 @@ def atomic_download(handle,
               tf.errors.UnimplementedError):
         raise
       # All other errors are retried.
-      # TODO(b/144424849): Retrying an AlreadyExistsError from the atomic write
-      # should be good enough, but see discussion about misc filesystem types.
-      # TODO(b/144475403): How atomic is the overwrite=False check?
       except tf.errors.OpError:
         pass
 
@@ -542,4 +539,3 @@ class HttpResolverBase(Resolver):
       self._context.check_hostname = False
       self._context.verify_mode = ssl.CERT_NONE
       logging.warning("Disabled certificate validation for resolving handles.")
-
