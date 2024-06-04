@@ -129,25 +129,8 @@ _run()
 # objects (__all__ defines which symbols you get with
 # `from tensorflow_hub import *`).
 __all__ = [
-    "LatestModuleExporter",
-    "register_module_for_export",
-    "image_embedding_column",
-    "sparse_text_embedding_column",
-    "text_embedding_column",
-    "text_embedding_column_v2",
-    "attach_image_module_info",
-    "get_expected_image_size",
-    "get_num_image_channels",
-    "ImageModuleInfo",
     "KerasLayer",
-    "Module",
-    "ModuleSpec",
-    "add_signature",
-    "attach_message",
-    "create_module_spec",
-    "create_module_spec_from_saved_model",
     "load",
-    "load_module_spec",
     "resolve",
 ]
 
