@@ -72,8 +72,8 @@ as well as other associated code and documentation.
       * [Build from source](docs/build_from_source.md)
       * [Hosting a module](docs/hosting.md)
   * Tutorials
-      * [TF2 Image Retraining](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_image_retraining.ipynb)
-      * [TF2 Text Classification](https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/tf2_text_classification.ipynb)
+      * [TF2 Image Retraining](https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/hub/tutorials/tf2_image_retraining.ipynb)
+      * [TF2 Text Classification](https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/hub/tutorials/tf2_text_classification.ipynb)
       * [Additional TF1 and TF2 examples](examples/README.md)
 
 
