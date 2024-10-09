@@ -59,18 +59,19 @@ as well as other associated code and documentation.
 
   * [Introduction](https://www.tensorflow.org/hub/)
   * The asset types of [tfhub.dev](https://tfhub.dev/)
-      * [SavedModels for TensorFlow 2](docs/tf2_saved_model.md)
-        and the [Reusable SavedModel interface](docs/reusable_saved_models.md).
-      * Deprecated: [Models in TF1 Hub format](docs/tf1_hub_module.md) and
-        their [Common Signatures](docs/common_signatures/index.md) collection.
+      * [SavedModels for TensorFlow 2](https://github.com/tensorflow/docs/blob/master/site/en/hub/tf2_saved_model.md)
+        and the [Reusable SavedModel interface](https://github.com/tensorflow/docs/blob/master/site/en/hub/reusable_saved_models.md).
+      * Deprecated: [Models in TF1 Hub format](https://github.com/tensorflow/docs/blob/master/site/en/hub/tf1_hub_module.md)
+        and their [Common Signatures](https://github.com/tensorflow/docs/blob/master/site/en/hub/common_signatures/index.md)
+        collection.
   * Using the library
-      * [Installation](docs/installation.md)
-      * [Caching model downloads](docs/caching.md)
-      * [Migration to TF2](docs/migration_tf2.md)
-      * [Model compatibility for TF1/TF2](docs/model_compatibility.md)
-      * [Common issues](docs/common_issues.md)
-      * [Build from source](docs/build_from_source.md)
-      * [Hosting a module](docs/hosting.md)
+      * [Installation](https://github.com/tensorflow/docs/blob/master/site/en/hub/installation.md)
+      * [Caching model downloads](https://github.com/tensorflow/docs/blob/master/site/en/hub/caching.md)
+      * [Migration to TF2](https://github.com/tensorflow/docs/blob/master/site/en/hub/migration_tf2.md)
+      * [Model compatibility for TF1/TF2](https://github.com/tensorflow/docs/blob/master/site/en/hub/model_compatibility.md)
+      * [Common issues](https://github.com/tensorflow/docs/blob/master/site/en/hub/common_issues.md)
+      * [Build from source](https://github.com/tensorflow/docs/blob/master/site/en/hub/build_from_source.md)
+      * [Hosting a module](https://github.com/tensorflow/docs/blob/master/site/en/hub/hosting.md)
   * Tutorials
       * [TF2 Image Retraining](https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/hub/tutorials/tf2_image_retraining.ipynb)
       * [TF2 Text Classification](https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/hub/tutorials/tf2_text_classification.ipynb)
@@ -82,7 +83,7 @@ as well as other associated code and documentation.
 If you'd like to contribute to TensorFlow Hub, be sure to review the
 [contribution guidelines](CONTRIBUTING.md). To contribute code to the
 library itself (not examples), you will probably need to
-[build from source](docs/build_from_source.md).
+[build from source](https://github.com/tensorflow/docs/blob/master/site/en/hub/build_from_source.md).
 
 This project adheres to TensorFlow's
 [code of conduct](https://github.com/tensorflow/tensorflow/blob/master/CODE_OF_CONDUCT.md).
