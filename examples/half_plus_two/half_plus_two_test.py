@@ -34,7 +34,7 @@ class HalfPlusTwoTest(tf.test.TestCase):
     module_path = os.path.join(self.get_temp_dir(), "half-plus-two-module")
 
     export_tool_path = os.path.join(test_utils.test_srcdir(), EXPORT_TOOL_PATH)
-    self.assertEquals(0, subprocess.call([export_tool_path, module_path]))
+    self.assertEqual(0, subprocess.call([export_tool_path, module_path]))
 
     # Test the Module computes (0.5*input + 2).
     with tf.Graph().as_default():

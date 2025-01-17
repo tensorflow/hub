@@ -182,7 +182,7 @@ class TensorInfoTest(tf.test.TestCase):
 
       # check sparsity
       in1 = tf.compat.v1.sparse_placeholder(tf.int32, [])
-      with self.assertRaisesRegexp(TypeError,
+      with self.assertRaisesRegex(TypeError,
                                    "Got SparseTensor. Expected Tensor."):
         tensor_info.convert_dict_to_compatible_tensor({"a": in1}, targets)
 

@@ -803,7 +803,7 @@ class KerasLayerTest(tf.test.TestCase, parameterized.TestCase):
         layer([[10.]])
         layer([[10.]])
       self.assertLen(logs.records, 1)  # Duplicate logging is avoided.
-      self.assertRegexpMatches(logs.records[0].msg, "zero trainable weights")
+      self.assertRegex(logs.records[0].msg, "zero trainable weights")
     else:
       # Just test that it runs at all.
       layer([[10.]])

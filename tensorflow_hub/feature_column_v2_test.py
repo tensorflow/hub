@@ -175,7 +175,7 @@ class TextEmbeddingColumnTest(tf.test.TestCase):
 
     # Loading of checkpoints from the first model into the second model should
     # fail.
-    with self.assertRaisesRegexp(AssertionError,
+    with self.assertRaisesRegex(AssertionError,
                                  ".*not bound to checkpointed values.*"):
       model_2.load_weights(checkpoint_path).assert_consumed()
 

@@ -106,7 +106,7 @@ class HttpCompressedFileResolverTest(tf.test.TestCase, parameterized.TestCase):
     http_resolver = compressed_module_resolver.HttpCompressedFileResolver()
     path = http_resolver(self.module_handle)
     desc = tf_utils.read_file_to_string(resolver._module_descriptor_file(path))
-    self.assertRegexpMatches(
+    self.assertRegex(
         desc, "Module: %s\n"
         "Download Time: .*\n"
         "Downloader Hostname: %s .PID:%d." % (re.escape(

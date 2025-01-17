@@ -89,7 +89,7 @@ class CompressedResolverTest(tf.test.TestCase):
     self.assertEqual(cache_dir, None)
     # Use temp dir.
     cache_dir = resolver.tfhub_cache_dir(use_temp=True)
-    self.assertEquals(cache_dir,
+    self.assertEqual(cache_dir,
                       os.path.join(tempfile.gettempdir(), "tfhub_modules"))
     # Use override
     cache_dir = resolver.tfhub_cache_dir(default_cache_dir="/d", use_temp=True)
@@ -138,10 +138,10 @@ class CompressedResolverTest(tf.test.TestCase):
     self.assertEqual(0, resolver._locked_tmp_dir_size(fake_lock_filename))
 
   def testLockFileName(self):
-    self.assertEquals("/a/b/c.lock", resolver._lock_filename("/a/b/c/"))
+    self.assertEqual("/a/b/c.lock", resolver._lock_filename("/a/b/c/"))
 
   def testTempDownloadDir(self):
-    self.assertEquals("/a/b.t.tmp", resolver._temp_download_dir("/a/b/", "t"))
+    self.assertEqual("/a/b.t.tmp", resolver._temp_download_dir("/a/b/", "t"))
 
   def testReadTaskUidFromLockFile(self):
     module_dir = os.path.join(self.get_temp_dir(), "module")
@@ -250,7 +250,7 @@ class CompressedResolverTest(tf.test.TestCase):
     self.assertEqual(
         sorted(tf.compat.v1.gfile.ListDirectory(parent_dir)),
         ["module", "module.descriptor.txt"])
-    self.assertRegexpMatches(
+    self.assertRegex(
         tf_utils.read_file_to_string(
             resolver._module_descriptor_file(module_dir)), "Module: module\n"
         "Download Time: .*\n"
@@ -300,7 +300,7 @@ class CompressedResolverTest(tf.test.TestCase):
     self.assertEqual(
         sorted(tf.compat.v1.gfile.ListDirectory(parent_dir)),
         ["module", "module.descriptor.txt"])
-    self.assertRegexpMatches(
+    self.assertRegex(
         tf_utils.read_file_to_string(
             resolver._module_descriptor_file(module_dir)), "Module: module\n"
         "Download Time: .*\n"
