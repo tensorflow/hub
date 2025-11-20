@@ -58,7 +58,7 @@ def _ensure_tf_install():
         "https://tensorflow.org/hub/installation.\n\n")
     raise
 
-  from pkg_resources import parse_version
+  from packaging.version import parse as parse_version
 
   #
   # Update this whenever we need to depend on a newer TensorFlow release.
